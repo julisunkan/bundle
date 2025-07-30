@@ -918,7 +918,6 @@ EndGlobal'''
         return f'''using System;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.Web.WebView2.Core;
 
 namespace {app_name}
 {{
@@ -934,7 +933,7 @@ namespace {app_name}
         {{
             try
             {{
-                await WebView.EnsureCoreWebView2Async();
+                await WebView.EnsureCoreWebView2Async(null);
                 WebView.Source = new System.Uri("{target_url}");
             }}
             catch (System.Exception ex)

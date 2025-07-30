@@ -30,6 +30,7 @@ Preferred communication style: Simple, everyday language.
 - ✓ Updated Windows project NuGet package references (CommunityToolkit.Win32.WebView2 → Microsoft.Web.WebView2)
 - ✓ Added Visual Studio launch settings (Properties/launchSettings.json) to fix debug profile issues
 - ✓ Fixed Windows C# async/await compilation issues by adding required using statements
+- ✓ Resolved CoreWebView2 type conflict between Microsoft.Web.WebView2.Core and Microsoft.WinUI packages
 
 ### Automatic Icon Generation System (July 30, 2025)
 - ✓ Created comprehensive IconGenerator service for all platforms
