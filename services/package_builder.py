@@ -915,7 +915,10 @@ EndGlobal'''
 </Page>'''
     
     def _generate_main_xaml_cs(self, app_name, target_url):
-        return f'''using Microsoft.UI.Xaml.Controls;
+        return f'''using System;
+using System.Threading.Tasks;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.Web.WebView2.Core;
 
 namespace {app_name}
 {{
