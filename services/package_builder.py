@@ -217,6 +217,11 @@ class PackageBuilder:
         self._create_file(proj_dir, 'App.xaml', self._generate_app_xaml(app_name))
         self._create_file(proj_dir, 'App.xaml.cs', self._generate_app_xaml_cs(app_name))
         
+        # Create Properties directory and launch settings
+        properties_dir = os.path.join(proj_dir, 'Properties')
+        os.makedirs(properties_dir, exist_ok=True)
+        self._create_file(properties_dir, 'launchSettings.json', self._generate_launch_settings(app_name))
+        
         # Create assets directory
         assets_dir = os.path.join(proj_dir, 'Assets')
         os.makedirs(assets_dir, exist_ok=True)
@@ -1057,3 +1062,16 @@ This is a Visual Studio project that wraps the website [{target_url}]({target_ur
 Original website: {target_url}
 Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 '''
+    
+    def _generate_launch_settings(self, app_name):
+        """Generate launchSettings.json for Visual Studio debugging"""
+        return f'''{{
+  "profiles": {{
+    "{app_name} (Package)": {{
+      "commandName": "MsixPackage"
+    }},
+    "{app_name} (Unpackaged)": {{
+      "commandName": "Project"
+    }}
+  }}
+}}'''
