@@ -1499,27 +1499,42 @@ REM Setup Gradle Wrapper for Android Build
 
 echo Setting up Gradle wrapper...
 
+REM Navigate to android directory 
+cd android
+
 REM Create gradle wrapper directory if it doesn't exist
 if not exist "gradle\\wrapper" mkdir gradle\\wrapper
 
 REM Download gradle wrapper jar if it doesn't exist
 if not exist "gradle\\wrapper\\gradle-wrapper.jar" (
-    echo Downloading Gradle wrapper...
-    curl -L https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar -o gradle\\wrapper\\gradle-wrapper.jar
+    echo Downloading Gradle wrapper jar...
+    powershell -Command "try { Invoke-WebRequest -Uri 'https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar' -OutFile 'gradle\\wrapper\\gradle-wrapper.jar' -UseBasicParsing } catch { Write-Host 'PowerShell download failed, trying curl...'; exit 1 }"
     
-    REM If curl fails, try with PowerShell
+    REM If PowerShell fails, try with curl
     if %errorlevel% neq 0 (
-        echo Trying with PowerShell...
-        powershell -Command "Invoke-WebRequest -Uri 'https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar' -OutFile 'gradle\\wrapper\\gradle-wrapper.jar'"
+        echo Trying with curl...
+        curl -L -o gradle\\wrapper\\gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar
     )
+)
+
+REM Also try downloading from services.gradle.org if GitHub fails
+if not exist "gradle\\wrapper\\gradle-wrapper.jar" (
+    echo Trying alternative download source...
+    powershell -Command "try { Invoke-WebRequest -Uri 'https://services.gradle.org/distributions-snapshots/gradle-8.1-20230123230022+0000-wrapper.jar' -OutFile 'gradle\\wrapper\\gradle-wrapper.jar' -UseBasicParsing } catch { Write-Host 'Alternative download failed' }"
 )
 
 if exist "gradle\\wrapper\\gradle-wrapper.jar" (
     echo Gradle wrapper setup complete!
+    echo File size: 
+    dir gradle\\wrapper\\gradle-wrapper.jar
 ) else (
-    echo Failed to download Gradle wrapper. Please ensure you have internet connection.
-    echo You can manually download gradle-wrapper.jar and place it in gradle\\wrapper\\ directory.
+    echo Failed to download Gradle wrapper automatically.
+    echo Please manually download gradle-wrapper.jar from:
+    echo https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar
+    echo And place it in android\\gradle\\wrapper\\ directory.
 )
+
+cd ..
 '''
 
     def _generate_gradle_setup_script_linux(self):
@@ -1529,12 +1544,15 @@ if exist "gradle\\wrapper\\gradle-wrapper.jar" (
 
 echo "Setting up Gradle wrapper..."
 
+# Navigate to android directory
+cd android
+
 # Create gradle wrapper directory if it doesn't exist
 mkdir -p gradle/wrapper
 
 # Download gradle wrapper jar if it doesn't exist
 if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-    echo "Downloading Gradle wrapper..."
+    echo "Downloading Gradle wrapper jar..."
     curl -L https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
     
     # If curl fails, try with wget
@@ -1542,15 +1560,26 @@ if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
         echo "Trying with wget..."
         wget https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar -O gradle/wrapper/gradle-wrapper.jar
     fi
+    
+    # Try alternative source if both fail
+    if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+        echo "Trying alternative download source..."
+        curl -L https://services.gradle.org/distributions-snapshots/gradle-8.1-20230123230022+0000-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+    fi
 fi
 
 if [ -f "gradle/wrapper/gradle-wrapper.jar" ]; then
     echo "Gradle wrapper setup complete!"
-    chmod +x ../gradlew
+    echo "File size: $(ls -la gradle/wrapper/gradle-wrapper.jar)"
+    chmod +x gradlew
 else
-    echo "Failed to download Gradle wrapper. Please ensure you have internet connection."
-    echo "You can manually download gradle-wrapper.jar and place it in gradle/wrapper/ directory."
+    echo "Failed to download Gradle wrapper automatically."
+    echo "Please manually download gradle-wrapper.jar from:"
+    echo "https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar"
+    echo "And place it in android/gradle/wrapper/ directory."
 fi
+
+cd ..
 '''
     
     # Electron generators for Windows
@@ -2390,16 +2419,14 @@ call npx cap sync android
 
 REM Build APK
 echo Building APK...
-cd android
 
 REM Check if gradle wrapper exists, if not, set it up
-if not exist "gradle\wrapper\gradle-wrapper.jar" (
+if not exist "android\gradle\wrapper\gradle-wrapper.jar" (
     echo Setting up Gradle wrapper...
-    cd ..
     call setup-gradle.bat
-    cd android
 )
 
+cd android
 call gradlew.bat assembleDebug
 cd ..
 
