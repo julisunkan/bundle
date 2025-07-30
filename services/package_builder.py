@@ -123,6 +123,11 @@ class PackageBuilder:
         self._create_file(android_dir, 'gradlew.bat', self._generate_gradle_wrapper_bat())
         self._create_file(android_dir, 'gradlew', self._generate_gradle_wrapper_sh())
         
+        # Create gradle wrapper directory and jar (required for Gradle builds)
+        gradle_wrapper_dir = os.path.join(android_dir, 'gradle', 'wrapper')
+        os.makedirs(gradle_wrapper_dir, exist_ok=True)
+        self._create_file(gradle_wrapper_dir, 'gradle-wrapper.properties', self._generate_gradle_wrapper_properties())
+        
         # Create app directory structure
         app_dir = os.path.join(project_dir, 'app')
         os.makedirs(app_dir, exist_ok=True)
@@ -1463,6 +1468,16 @@ DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
 
 exec "$JAVACMD" "$@"
 '''
+
+    def _generate_gradle_wrapper_properties(self):
+        """Generate gradle-wrapper.properties file"""
+        return '''distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\\://services.gradle.org/distributions/gradle-8.1-bin.zip
+networkTimeout=10000
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+'''
     
     # Electron generators for Windows
     def _generate_electron_package_json(self, app_name, metadata):
@@ -2020,7 +2035,7 @@ Original website: {target_url}
     "cap:android": "npx cap add android && npx cap sync android && npx cap open android",
     "cap:ios": "npx cap add ios && npx cap sync ios && npx cap open ios",
     "cap:electron": "npx cap add @capacitor-community/electron && npx cap sync @capacitor-community/electron && npx cap open @capacitor-community/electron",
-    "build:android": "npm run build:web && npx cap sync android && cd android && .\\gradlew.bat assembleDebug",
+    "build:android": "npm run build:web && npx cap sync android && cd android && gradlew.bat assembleDebug",
     "build:android:release": "npm run build:web && npx cap sync android && cd android && ./gradlew assembleRelease",
     "build:android:bundle": "npm run build:web && npx cap sync android && cd android && ./gradlew bundleRelease",
     "build:ios": "npm run build:web && npx cap sync ios && cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -destination generic/platform=iOS build",
