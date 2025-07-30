@@ -300,7 +300,7 @@ pre {
         <div class="modal-content">
             <div class="modal-header" style="border-bottom-color: #495057 !important;">
                 <h5 class="modal-title" id="fileModalTitle" style="color: #ffffff !important;">File Content</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1);"></button>
+                <button type="button" class="btn-close" onclick="closeModal()" style="filter: invert(1);"></button>
             </div>
             <div class="modal-body">
                 <div class="d-flex justify-content-end mb-3">
@@ -340,45 +340,96 @@ function downloadAllFiles() {
 
 function viewFileContent(filename, content) {
     console.log('Opening modal for:', filename);
+    console.log('Content length:', content.length);
+    console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
+    
     currentFileContent = content;
-    document.getElementById('fileModalTitle').textContent = filename;
-    document.getElementById('fileContent').textContent = content;
+    
+    // Set modal title and content
+    const titleElement = document.getElementById('fileModalTitle');
+    const contentElement = document.getElementById('fileContent');
+    
+    if (!titleElement || !contentElement) {
+        console.error('Modal elements not found');
+        alert('Modal elements not found. Content:\n\n' + content);
+        return;
+    }
+    
+    titleElement.textContent = filename;
+    contentElement.textContent = content;
     
     // Syntax highlighting based on file type
-    const codeElement = document.getElementById('fileContent');
     if (filename.endsWith('.json')) {
-        codeElement.className = 'language-json';
+        contentElement.className = 'language-json';
     } else if (filename.endsWith('.js')) {
-        codeElement.className = 'language-javascript';
+        contentElement.className = 'language-javascript';
     } else if (filename.endsWith('.html')) {
-        codeElement.className = 'language-html';
+        contentElement.className = 'language-html';
     } else if (filename.endsWith('.md')) {
-        codeElement.className = 'language-markdown';
+        contentElement.className = 'language-markdown';
     } else {
-        codeElement.className = 'language-text';
+        contentElement.className = 'language-text';
     }
     
-    // Try different ways to show the modal
+    // Show the modal
+    const modalElement = document.getElementById('fileContentModal');
+    if (!modalElement) {
+        console.error('Modal element not found');
+        alert('Modal not found. Content:\n\n' + content);
+        return;
+    }
+    
     try {
-        const modalElement = document.getElementById('fileContentModal');
+        // Force show modal with direct DOM manipulation
+        modalElement.style.display = 'block';
+        modalElement.classList.add('show', 'fade');
+        modalElement.setAttribute('aria-hidden', 'false');
+        
+        // Add modal backdrop
+        const backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop fade show';
+        backdrop.id = 'modalBackdrop';
+        document.body.appendChild(backdrop);
+        
+        // Add modal-open class to body
+        document.body.classList.add('modal-open');
+        
+        console.log('Modal shown successfully');
+        
+        // Try Bootstrap modal if available as backup
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            new bootstrap.Modal(modalElement).show();
-        } else {
-            // Fallback - show modal using jQuery if Bootstrap 5 isn't available
-            if (typeof $ !== 'undefined') {
-                $('#fileContentModal').modal('show');
-            } else {
-                // Manual fallback
-                modalElement.style.display = 'block';
-                modalElement.classList.add('show');
-                document.body.classList.add('modal-open');
-            }
+            setTimeout(() => {
+                try {
+                    const bsModal = new bootstrap.Modal(modalElement);
+                    bsModal.show();
+                } catch (e) {
+                    console.log('Bootstrap modal failed, using manual approach');
+                }
+            }, 100);
         }
+        
     } catch (error) {
         console.error('Error showing modal:', error);
-        // Fallback - show content in alert
-        alert(filename + '\n\n' + content);
+        alert(filename + '\n\nContent:\n' + content);
     }
+}
+
+// Function to close modal manually
+function closeModal() {
+    const modalElement = document.getElementById('fileContentModal');
+    const backdrop = document.getElementById('modalBackdrop');
+    
+    if (modalElement) {
+        modalElement.style.display = 'none';
+        modalElement.classList.remove('show');
+        modalElement.setAttribute('aria-hidden', 'true');
+    }
+    
+    if (backdrop) {
+        backdrop.remove();
+    }
+    
+    document.body.classList.remove('modal-open');
 }
 
 function copyFileContent() {
@@ -397,12 +448,33 @@ function copyFileContent() {
     });
 }
 
-// Initialize tooltips
+// Initialize tooltips and modal event handlers
 document.addEventListener('DOMContentLoaded', function() {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+    console.log('DOM loaded, initializing...');
+    
+    // Initialize tooltips
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+    
+    // Add click handler to modal backdrop for closing
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'modalBackdrop') {
+            closeModal();
+        }
     });
+    
+    // Add escape key handler
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+    
+    console.log('Initialization complete');
 });
 </script>
 {% endblock %}
