@@ -250,9 +250,9 @@ pre {
 <div class="modal fade" id="fileContentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="fileModalTitle">File Content</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header" style="border-bottom-color: #495057 !important;">
+                <h5 class="modal-title" id="fileModalTitle" style="color: #ffffff !important;">File Content</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1);"></button>
             </div>
             <div class="modal-body">
                 <div class="d-flex justify-content-end mb-3">
@@ -260,7 +260,7 @@ pre {
                         <i class="fas fa-copy me-1"></i>Copy
                     </button>
                 </div>
-                <pre id="fileContentPre" class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"><code id="fileContent"></code></pre>
+                <pre id="fileContentPre" style="max-height: 400px; overflow-y: auto; background-color: #1e1e1e !important; color: #d4d4d4 !important; border: 1px solid #495057 !important; padding: 1rem; border-radius: 6px;"><code id="fileContent"></code></pre>
             </div>
         </div>
     </div>
@@ -291,6 +291,7 @@ function downloadAllFiles() {
 }
 
 function viewFileContent(filename, content) {
+    console.log('Opening modal for:', filename);
     currentFileContent = content;
     document.getElementById('fileModalTitle').textContent = filename;
     document.getElementById('fileContent').textContent = content;
@@ -309,7 +310,27 @@ function viewFileContent(filename, content) {
         codeElement.className = 'language-text';
     }
     
-    new bootstrap.Modal(document.getElementById('fileContentModal')).show();
+    // Try different ways to show the modal
+    try {
+        const modalElement = document.getElementById('fileContentModal');
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            new bootstrap.Modal(modalElement).show();
+        } else {
+            // Fallback - show modal using jQuery if Bootstrap 5 isn't available
+            if (typeof $ !== 'undefined') {
+                $('#fileContentModal').modal('show');
+            } else {
+                // Manual fallback
+                modalElement.style.display = 'block';
+                modalElement.classList.add('show');
+                document.body.classList.add('modal-open');
+            }
+        }
+    } catch (error) {
+        console.error('Error showing modal:', error);
+        // Fallback - show content in alert
+        alert(filename + '\n\n' + content);
+    }
 }
 
 function copyFileContent() {
