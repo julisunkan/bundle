@@ -822,16 +822,19 @@ EndGlobal'''
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <RootNamespace>{app_name}</RootNamespace>
+    <RootNamespace>{self._sanitize_namespace(app_name)}</RootNamespace>
     <Platforms>x86;x64;ARM64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <UseWPF>false</UseWPF>
+    <UseWindowsForms>false</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Assets\\*.png" />
+    <Content Include="Assets\\**" />
     <Content Include="web\\**\\*" />
   </ItemGroup>
 
@@ -841,7 +844,7 @@ EndGlobal'''
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Assets\\*.png" />
+    <None Remove="Assets\\**" />
     <None Remove="web\\**\\*" />
   </ItemGroup>
 </Project>'''
@@ -883,7 +886,7 @@ EndGlobal'''
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
         DisplayName="{metadata.title}"
-        Description="{getattr(metadata, 'description', metadata.title)}"
+        Description="{getattr(metadata, 'description', metadata.title) if hasattr(metadata, 'description') and metadata.description else metadata.title}"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\\Square150x150Logo.png"
         Square44x44Logo="Assets\\Square44x44Logo.png">
@@ -906,10 +909,26 @@ EndGlobal'''
     xmlns:local="using:{app_name}"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    Background="{{ThemeResource ApplicationPageBackgroundThemeBrush}}">
 
     <Grid>
-        <WebView2 x:Name="WebView" />
+        <WebView2 x:Name="WebView" 
+                  Source="about:blank"
+                  NavigationStarting="WebView_NavigationStarting"
+                  NavigationCompleted="WebView_NavigationCompleted" />
+        <ProgressRing x:Name="LoadingRing" 
+                      IsActive="True" 
+                      HorizontalAlignment="Center" 
+                      VerticalAlignment="Center"
+                      Width="50" 
+                      Height="50" />
+        <TextBlock x:Name="ErrorText" 
+                   Text="Failed to load website. Please check your internet connection."
+                   HorizontalAlignment="Center" 
+                   VerticalAlignment="Center"
+                   Visibility="Collapsed"
+                   Foreground="Red" />
     </Grid>
 </Page>'''
     
@@ -932,12 +951,32 @@ namespace {app_name}
         {{
             try
             {{
+                LoadingRing.IsActive = true;
+                ErrorText.Visibility = Visibility.Collapsed;
+                
                 await WebView.EnsureCoreWebView2Async();
                 WebView.Source = new System.Uri("{target_url}");
             }}
             catch (System.Exception ex)
             {{
                 System.Diagnostics.Debug.WriteLine($"Error loading website: {{ex.Message}}");
+                LoadingRing.IsActive = false;
+                ErrorText.Visibility = Visibility.Visible;
+            }}
+        }}
+
+        private void WebView_NavigationStarting(object sender, Microsoft.UI.Xaml.Controls.WebView2NavigationStartingEventArgs args)
+        {{
+            LoadingRing.IsActive = true;
+            ErrorText.Visibility = Visibility.Collapsed;
+        }}
+
+        private void WebView_NavigationCompleted(object sender, Microsoft.UI.Xaml.Controls.WebView2NavigationCompletedEventArgs args)
+        {{
+            LoadingRing.IsActive = false;
+            if (!args.IsSuccess)
+            {{
+                ErrorText.Visibility = Visibility.Visible;
             }}
         }}
     }}
@@ -965,6 +1004,8 @@ namespace {app_name}
 {{
     public partial class App : Application
     {{
+        private Window m_window;
+
         public App()
         {{
             this.InitializeComponent();
@@ -976,8 +1017,6 @@ namespace {app_name}
             m_window.Content = new MainPage();
             m_window.Activate();
         }}
-
-        private Window m_window;
     }}
 }}'''
     
@@ -1006,6 +1045,7 @@ namespace {app_name}
         {{
             this.InitializeComponent();
             this.Title = "{app_name}";
+            this.ExtendsContentIntoTitleBar = true;
         }}
     }}
 }}'''
@@ -1076,3 +1116,13 @@ Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
     }}
   }}
 }}'''
+    
+    def _sanitize_namespace(self, name):
+        """Sanitize namespace to be valid C# identifier"""
+        import re
+        # Remove invalid characters and replace with underscore
+        sanitized = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+        # Ensure it starts with letter or underscore
+        if sanitized and sanitized[0].isdigit():
+            sanitized = f'App_{sanitized}'
+        return sanitized or 'App'
