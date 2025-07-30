@@ -10,6 +10,8 @@ from models import BuildJob, AppMetadata
 from services.web_scraper import scrape_website_metadata
 from services.package_builder import PackageBuilder
 from services.manifest_generator import generate_manifest
+from services.pwa_detector import analyze_website_pwa_status
+from services.pwa_generator import PWAGenerator
 
 @app.route('/')
 def index():
@@ -22,6 +24,112 @@ def index():
                          android_icon=android_icon,
                          apple_icon=apple_icon,
                          windows_icon=windows_icon)
+
+@app.route('/analyze', methods=['POST'])
+def analyze_pwa():
+    """Analyze if a website is PWA-ready"""
+    url = request.form.get('url', '').strip()
+    
+    # Validate URL
+    if not url:
+        return jsonify({'error': 'Please enter a valid URL'}), 400
+    
+    try:
+        parsed_url = urlparse(url)
+        if not parsed_url.scheme or not parsed_url.netloc:
+            return jsonify({'error': 'Please enter a valid URL with http:// or https://'}), 400
+    except Exception:
+        return jsonify({'error': 'Invalid URL format'}), 400
+    
+    try:
+        # Scrape website metadata
+        metadata = scrape_website_metadata(url)
+        
+        # Analyze PWA readiness
+        pwa_assessment = analyze_website_pwa_status(url)
+        
+        # Store metadata if not exists
+        existing_metadata = AppMetadata.query.filter_by(url=url).first()
+        if not existing_metadata:
+            app_metadata = AppMetadata(
+                url=url,
+                title=metadata.title,
+                description=metadata.description,
+                icon_url=metadata.icon_url,
+                theme_color=metadata.theme_color,
+                metadata_json=json.dumps(metadata.__dict__)
+            )
+            db.session.add(app_metadata)
+            db.session.commit()
+        
+        return jsonify({
+            'metadata': metadata.__dict__,
+            'pwa_assessment': pwa_assessment
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to analyze website: {str(e)}'}), 500
+
+@app.route('/generate-pwa', methods=['POST'])
+def generate_pwa():
+    """Generate PWA files for a website"""
+    url = request.form.get('url', '').strip()
+    
+    if not url:
+        return jsonify({'error': 'URL is required'}), 400
+    
+    try:
+        # Get existing metadata
+        existing_metadata = AppMetadata.query.filter_by(url=url).first()
+        if not existing_metadata:
+            # Scrape metadata if not exists
+            metadata = scrape_website_metadata(url)
+            app_metadata = AppMetadata(
+                url=url,
+                title=metadata.title,
+                description=metadata.description,
+                icon_url=metadata.icon_url,
+                theme_color=metadata.theme_color,
+                metadata_json=json.dumps(metadata.__dict__)
+            )
+            db.session.add(app_metadata)
+            db.session.commit()
+        else:
+            # Reconstruct metadata from stored data
+            metadata_dict = json.loads(existing_metadata.metadata_json)
+            metadata = type('Metadata', (), metadata_dict)()
+        
+        # Analyze PWA status
+        pwa_assessment = analyze_website_pwa_status(url)
+        
+        # Generate PWA files
+        pwa_generator = PWAGenerator(metadata, pwa_assessment)
+        pwa_files = pwa_generator.generate_pwa_files()
+        
+        # Create a build job for PWA files
+        job_id = str(uuid.uuid4())
+        build_job = BuildJob(
+            id=job_id,
+            url=url,
+            package_type='pwa',
+            status='completed',
+            app_name=metadata.title,
+            created_at=datetime.utcnow(),
+            completed_at=datetime.utcnow()
+        )
+        db.session.add(build_job)
+        db.session.commit()
+        
+        # Store PWA files (in practice, you'd save them to disk)
+        # For now, we'll return them in the response
+        return jsonify({
+            'job_id': job_id,
+            'pwa_files': pwa_files,
+            'pwa_assessment': pwa_assessment
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to generate PWA files: {str(e)}'}), 500
 
 @app.route('/build', methods=['POST'])
 def build_package():

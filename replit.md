@@ -27,6 +27,8 @@ The application uses a service-oriented architecture with specialized services:
 - `web_scraper.py`: Website metadata extraction with comprehensive content analysis
 - `manifest_generator.py`: PWA manifest generation with platform-specific configurations
 - `package_builder.py`: Real native app package creation for all supported platforms
+- `pwa_detector.py`: PWA detection service to check if websites are already PWA-ready
+- `pwa_generator.py`: PWA generator service that creates conversion instructions and generates PWA files
 
 ## Key Components
 
@@ -51,13 +53,21 @@ The application uses a service-oriented architecture with specialized services:
 
 ## Data Flow
 
+### PWA Analysis Flow
+1. **PWA Detection**: User requests PWA analysis of a website
+2. **Comprehensive Analysis**: System analyzes PWA readiness (manifest, service worker, HTTPS, icons, etc.)
+3. **PWA Score Calculation**: Generates readiness score and detailed recommendations
+4. **PWA File Generation**: If not PWA-ready, generates all necessary PWA files with setup instructions
+
+### App Package Building Flow
 1. **User Input**: User submits website URL and selects package type
 2. **URL Validation**: System validates URL format and accessibility
 3. **Metadata Extraction**: Web scraper extracts website information (cached for efficiency)
-4. **Manifest Generation**: System creates PWA manifest from extracted metadata
-5. **Package Building**: Service creates platform-specific app package
-6. **Status Tracking**: Build job status is tracked in database
-7. **Download Delivery**: Completed packages are served to users
+4. **PWA Check**: System determines if website is PWA-ready or needs WebView approach
+5. **Package Strategy**: Uses PWA approach for ready sites, WebView with offline support for others
+6. **Package Building**: Service creates platform-specific app package
+7. **Status Tracking**: Build job status is tracked in database
+8. **Download Delivery**: Completed packages are served to users
 
 ## External Dependencies
 

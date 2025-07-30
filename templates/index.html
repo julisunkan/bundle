@@ -113,14 +113,39 @@
                             </div>
                         </div>
 
-                        <!-- Build Button -->
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-cogs me-2"></i>
-                                Build Mobile App Package
-                            </button>
+                        <!-- Action Buttons -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-info btn-lg" id="analyzeBtn">
+                                        <i class="fas fa-search me-2"></i>
+                                        Check PWA Status
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="buildBtn">
+                                        <i class="fas fa-cogs me-2"></i>
+                                        Build App Package
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </form>
+                </div>
+            </div>
+            
+            <!-- PWA Analysis Results -->
+            <div class="card shadow-lg border-0 mt-4" id="pwaResults" style="display: none;">
+                <div class="card-body p-4">
+                    <h4 class="card-title">
+                        <i class="fas fa-chart-line text-info me-2"></i>
+                        PWA Analysis Results
+                    </h4>
+                    <div id="pwaContent">
+                        <!-- Results will be populated here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -170,6 +195,245 @@
 
 {% block scripts %}
 <script>
+// PWA Analysis functionality
+document.getElementById('analyzeBtn').addEventListener('click', async function() {
+    const url = document.getElementById('url').value;
+    const analyzeBtn = this;
+    const originalText = analyzeBtn.innerHTML;
+    
+    if (!url) {
+        alert('Please enter a URL first');
+        return;
+    }
+    
+    // Show loading state
+    analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
+    analyzeBtn.disabled = true;
+    
+    try {
+        const formData = new FormData();
+        formData.append('url', url);
+        
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Analysis failed');
+        }
+        
+        const data = await response.json();
+        displayPWAResults(data);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to analyze website. Please check the URL and try again.');
+    } finally {
+        // Restore button
+        analyzeBtn.innerHTML = originalText;
+        analyzeBtn.disabled = false;
+    }
+});
+
+function displayPWAResults(data) {
+    const resultsCard = document.getElementById('pwaResults');
+    const content = document.getElementById('pwaContent');
+    const assessment = data.pwa_assessment;
+    const metadata = data.metadata;
+    
+    let html = `
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card bg-${assessment.is_pwa_ready ? 'success' : 'warning'} text-white">
+                    <div class="card-body text-center">
+                        <h2 class="display-4">${assessment.pwa_score}%</h2>
+                        <p class="mb-0">PWA Readiness Score</p>
+                        <small>${assessment.is_pwa_ready ? 'PWA Ready!' : 'Needs Improvements'}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-dark">
+                    <div class="card-body">
+                        <h6 class="card-title">Website Info</h6>
+                        <p class="mb-1"><strong>Title:</strong> ${metadata.title || 'Not found'}</p>
+                        <p class="mb-1"><strong>Description:</strong> ${metadata.description || 'Not found'}</p>
+                        <p class="mb-0"><strong>Theme Color:</strong> 
+                            <span class="badge" style="background-color: ${metadata.theme_color || '#666'}">${metadata.theme_color || 'Not set'}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // PWA Checks
+    html += '<h5>PWA Features Check</h5><div class="row">';
+    
+    Object.entries(assessment.checks).forEach(([key, check]) => {
+        const icon = check.passed ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger';
+        const status = check.passed ? 'PASS' : 'FAIL';
+        
+        html += `
+            <div class="col-md-6 mb-3">
+                <div class="card bg-dark">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="${icon} me-2"></i>
+                            ${key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </h6>
+                        <small class="text-muted">${check.details}</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    
+    // Recommendations
+    if (assessment.recommendations && assessment.recommendations.length > 0) {
+        html += '<h5 class="mt-4">Recommendations</h5>';
+        assessment.recommendations.forEach(rec => {
+            const priorityColor = {
+                'critical': 'danger',
+                'high': 'warning', 
+                'medium': 'info',
+                'low': 'success'
+            }[rec.priority] || 'secondary';
+            
+            html += `
+                <div class="alert alert-${priorityColor} mb-2">
+                    <h6 class="alert-heading">${rec.title}</h6>
+                    <p class="mb-1">${rec.description}</p>
+                    <small><strong>Action:</strong> ${rec.action}</small>
+                </div>
+            `;
+        });
+    }
+    
+    // PWA Generation Button
+    if (!assessment.is_pwa_ready) {
+        html += `
+            <div class="mt-4 text-center">
+                <button class="btn btn-success btn-lg" id="generatePWABtn">
+                    <i class="fas fa-magic me-2"></i>
+                    Generate PWA Files & Instructions
+                </button>
+            </div>
+        `;
+    } else {
+        html += `
+            <div class="alert alert-success mt-4">
+                <h6 class="alert-heading">Great News!</h6>
+                <p class="mb-0">This website is already PWA-ready! You can still generate app packages using the build button above.</p>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = html;
+    resultsCard.style.display = 'block';
+    resultsCard.scrollIntoView({ behavior: 'smooth' });
+    
+    // Add event listener for PWA generation
+    const generateBtn = document.getElementById('generatePWABtn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', generatePWAFiles);
+    }
+}
+
+async function generatePWAFiles() {
+    const url = document.getElementById('url').value;
+    const generateBtn = document.getElementById('generatePWABtn');
+    const originalText = generateBtn.innerHTML;
+    
+    generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+    generateBtn.disabled = true;
+    
+    try {
+        const formData = new FormData();
+        formData.append('url', url);
+        
+        const response = await fetch('/generate-pwa', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('PWA generation failed');
+        }
+        
+        const data = await response.json();
+        displayPWAFiles(data);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to generate PWA files. Please try again.');
+    } finally {
+        generateBtn.innerHTML = originalText;
+        generateBtn.disabled = false;
+    }
+}
+
+function displayPWAFiles(data) {
+    const content = document.getElementById('pwaContent');
+    const files = data.pwa_files;
+    
+    let html = `
+        <div class="alert alert-success">
+            <h6 class="alert-heading">PWA Files Generated Successfully!</h6>
+            <p class="mb-0">Your PWA conversion files are ready. Download and follow the instructions below.</p>
+        </div>
+        
+        <h5>Generated Files</h5>
+        <div class="row">
+    `;
+    
+    Object.entries(files).forEach(([filename, content]) => {
+        const icon = {
+            'manifest.json': 'fas fa-file-code text-info',
+            'sw.js': 'fas fa-cogs text-warning', 
+            'index.html': 'fas fa-file-code text-success',
+            'offline.html': 'fas fa-file-alt text-secondary',
+            'PWA_SETUP_INSTRUCTIONS.md': 'fas fa-book text-primary'
+        }[filename] || 'fas fa-file';
+        
+        html += `
+            <div class="col-md-6 mb-3">
+                <div class="card bg-dark">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="${icon} me-2"></i>
+                            ${filename}
+                        </h6>
+                        <button class="btn btn-sm btn-outline-primary" onclick="downloadFile('${filename}', \`${content.replace(/`/g, '\\`')}\`)">
+                            <i class="fas fa-download me-1"></i>Download
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    
+    content.innerHTML = html;
+}
+
+function downloadFile(filename, content) {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+
+// Build form functionality
 document.getElementById('buildForm').addEventListener('submit', function(e) {
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
