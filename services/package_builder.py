@@ -128,10 +128,9 @@ class PackageBuilder:
         os.makedirs(gradle_wrapper_dir, exist_ok=True)
         self._create_file(gradle_wrapper_dir, 'gradle-wrapper.properties', self._generate_gradle_wrapper_properties())
         
-        # Create a minimal gradle-wrapper.jar placeholder (real jar would be downloaded by Gradle)
-        # For now, create setup instructions instead of the actual jar
-        self._create_file(android_dir, 'setup-gradle.bat', self._generate_gradle_setup_script())
-        self._create_file(android_dir, 'setup-gradle.sh', self._generate_gradle_setup_script_linux())
+        # Create Gradle setup scripts in the project root for easy access
+        self._create_file(project_dir, 'setup-gradle.bat', self._generate_gradle_setup_script())
+        self._create_file(project_dir, 'setup-gradle.sh', self._generate_gradle_setup_script_linux())
         
         # Create app directory structure
         app_dir = os.path.join(project_dir, 'app')
@@ -2387,7 +2386,9 @@ cd android
 REM Check if gradle wrapper exists, if not, set it up
 if not exist "gradle\wrapper\gradle-wrapper.jar" (
     echo Setting up Gradle wrapper...
-    call ..\setup-gradle.bat
+    cd ..
+    call setup-gradle.bat
+    cd android
 )
 
 call gradlew.bat assembleDebug
