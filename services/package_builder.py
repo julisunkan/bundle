@@ -5,10 +5,12 @@ import zipfile
 import tempfile
 from datetime import datetime
 from app import app
+from .icon_generator import IconGenerator
 
 class PackageBuilder:
     def __init__(self):
         self.output_dir = app.config['UPLOAD_FOLDER']
+        self.icon_generator = IconGenerator()
     
     def build_apk(self, metadata, manifest_data, job_id, target_url):
         """Build an Android Studio project structure that can be imported"""
@@ -72,6 +74,16 @@ class PackageBuilder:
         app_name = self._sanitize_name(metadata.title)
         package_name = f"com.pwabuilder.{app_name.lower()}"
         
+        # Generate all required icons for Android
+        app_metadata = {
+            'title': metadata.title,
+            'description': metadata.description,
+            'icon_url': metadata.icon_url,
+            'url': metadata.url
+        }
+        all_icons = self.icon_generator.generate_all_icons(app_metadata, app_name)
+        android_icons = all_icons.get('android', {})
+        
         # Create build.gradle (Project)
         self._create_file(project_dir, 'build.gradle', self._generate_project_gradle())
         
@@ -117,6 +129,11 @@ class PackageBuilder:
         self._create_file(assets_dir, 'index.html', self._generate_webview_html(metadata, target_url))
         self._create_file(assets_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
         
+        # Save generated icons to project
+        if android_icons:
+            self.icon_generator.save_icons_to_package(android_icons, project_dir, 'android')
+            app.logger.info(f"Generated {len(android_icons)} Android icons for {app_name}")
+        
         # Create README
         self._create_file(project_dir, 'README.md', self._generate_android_readme(metadata, target_url))
     
@@ -125,6 +142,16 @@ class PackageBuilder:
         os.makedirs(project_dir, exist_ok=True)
         
         app_name = self._sanitize_name(metadata.title)
+        
+        # Generate all required icons for iOS
+        app_metadata = {
+            'title': metadata.title,
+            'description': metadata.description,
+            'icon_url': metadata.icon_url,
+            'url': metadata.url
+        }
+        all_icons = self.icon_generator.generate_all_icons(app_metadata, app_name)
+        ios_icons = all_icons.get('ios', {})
         
         # Create project structure
         project_file_dir = os.path.join(project_dir, f'{app_name}.xcodeproj')
@@ -149,6 +176,11 @@ class PackageBuilder:
         self._create_file(assets_dir, 'index.html', self._generate_webview_html(metadata, target_url))
         self._create_file(assets_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
         
+        # Save generated icons to project
+        if ios_icons:
+            self.icon_generator.save_icons_to_package(ios_icons, project_dir, 'ios')
+            app.logger.info(f"Generated {len(ios_icons)} iOS icons for {app_name}")
+        
         # Create README
         self._create_file(project_dir, 'README.md', self._generate_ios_readme(metadata, target_url))
     
@@ -157,6 +189,16 @@ class PackageBuilder:
         os.makedirs(project_dir, exist_ok=True)
         
         app_name = self._sanitize_name(metadata.title)
+        
+        # Generate all required icons for Windows
+        app_metadata = {
+            'title': metadata.title,
+            'description': metadata.description,
+            'icon_url': metadata.icon_url,
+            'url': metadata.url
+        }
+        all_icons = self.icon_generator.generate_all_icons(app_metadata, app_name)
+        windows_icons = all_icons.get('windows', {})
         
         # Create solution file
         self._create_file(project_dir, f'{app_name}.sln', self._generate_solution_file(app_name))
@@ -182,6 +224,11 @@ class PackageBuilder:
         os.makedirs(web_dir, exist_ok=True)
         self._create_file(web_dir, 'index.html', self._generate_webview_html(metadata, target_url))
         self._create_file(web_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
+        
+        # Save generated icons to project
+        if windows_icons:
+            self.icon_generator.save_icons_to_package(windows_icons, project_dir, 'windows')
+            app.logger.info(f"Generated {len(windows_icons)} Windows icons for {app_name}")
         
         # Create README
         self._create_file(project_dir, 'README.md', self._generate_windows_readme(metadata, target_url))
@@ -484,38 +531,38 @@ Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
     def _generate_pbxproj(self, app_name):
         return f'''// !$*UTF8*$!
 {{
-	archiveVersion = 1;
-	classes = {{
-	}};
-	objectVersion = 56;
-	objects = {{
-		/* Begin PBXProject section */
-		1234567890ABCDEF12345678 /* Project object */ = {{
-			isa = PBXProject;
-			attributes = {{
-				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1430;
-				LastUpgradeCheck = 1430;
-			}};
-			buildConfigurationList = 1234567890ABCDEF12345679 /* Build configuration list for PBXProject "{app_name}" */;
-			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = en;
-			hasScannedForEncodings = 0;
-			knownRegions = (
-				en,
-				Base,
-			);
-			mainGroup = 1234567890ABCDEF1234567A;
-			productRefGroup = 1234567890ABCDEF1234567B /* Products */;
-			projectDirPath = "";
-			projectRoot = "";
-			targets = (
-				1234567890ABCDEF1234567C /* {app_name} */,
-			);
-		}};
-		/* End PBXProject section */
-	}};
-	rootObject = 1234567890ABCDEF12345678 /* Project object */;
+        archiveVersion = 1;
+        classes = {{
+        }};
+        objectVersion = 56;
+        objects = {{
+                /* Begin PBXProject section */
+                1234567890ABCDEF12345678 /* Project object */ = {{
+                        isa = PBXProject;
+                        attributes = {{
+                                BuildIndependentTargetsInParallel = 1;
+                                LastSwiftUpdateCheck = 1430;
+                                LastUpgradeCheck = 1430;
+                        }};
+                        buildConfigurationList = 1234567890ABCDEF12345679 /* Build configuration list for PBXProject "{app_name}" */;
+                        compatibilityVersion = "Xcode 14.0";
+                        developmentRegion = en;
+                        hasScannedForEncodings = 0;
+                        knownRegions = (
+                                en,
+                                Base,
+                        );
+                        mainGroup = 1234567890ABCDEF1234567A;
+                        productRefGroup = 1234567890ABCDEF1234567B /* Products */;
+                        projectDirPath = "";
+                        projectRoot = "";
+                        targets = (
+                                1234567890ABCDEF1234567C /* {app_name} */,
+                        );
+                }};
+                /* End PBXProject section */
+        }};
+        rootObject = 1234567890ABCDEF12345678 /* Project object */;
 }}'''
     
     def _generate_app_delegate(self, app_name, metadata):
@@ -578,50 +625,50 @@ class ViewController: UIViewController, WKNavigationDelegate {{
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleDisplayName</key>
-	<string>{metadata.title}</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
-	<key>CFBundlePackageType</key>
-	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
-	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
-	<key>CFBundleVersion</key>
-	<string>1</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>UIApplicationSceneManifest</key>
-	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key>
-		<false/>
-		<key>UISceneConfigurations</key>
-		<dict>
-			<key>UIWindowSceneSessionRoleApplication</key>
-			<array>
-				<dict>
-					<key>UISceneConfigurationName</key>
-					<string>Default Configuration</string>
-					<key>UISceneDelegateClassName</key>
-					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
-					<key>UISceneStoryboardFile</key>
-					<string>Main</string>
-				</dict>
-			</array>
-		</dict>
-	</dict>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
+        <key>CFBundleDevelopmentRegion</key>
+        <string>$(DEVELOPMENT_LANGUAGE)</string>
+        <key>CFBundleDisplayName</key>
+        <string>{metadata.title}</string>
+        <key>CFBundleExecutable</key>
+        <string>$(EXECUTABLE_NAME)</string>
+        <key>CFBundleIdentifier</key>
+        <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>6.0</string>
+        <key>CFBundleName</key>
+        <string>$(PRODUCT_NAME)</string>
+        <key>CFBundlePackageType</key>
+        <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+        <key>CFBundleShortVersionString</key>
+        <string>1.0</string>
+        <key>CFBundleVersion</key>
+        <string>1</string>
+        <key>LSRequiresIPhoneOS</key>
+        <true/>
+        <key>UIApplicationSceneManifest</key>
+        <dict>
+                <key>UIApplicationSupportsMultipleScenes</key>
+                <false/>
+                <key>UISceneConfigurations</key>
+                <dict>
+                        <key>UIWindowSceneSessionRoleApplication</key>
+                        <array>
+                                <dict>
+                                        <key>UISceneConfigurationName</key>
+                                        <string>Default Configuration</string>
+                                        <key>UISceneDelegateClassName</key>
+                                        <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+                                        <key>UISceneStoryboardFile</key>
+                                        <string>Main</string>
+                                </dict>
+                        </array>
+                </dict>
+        </dict>
+        <key>NSAppTransportSecurity</key>
+        <dict>
+                <key>NSAllowsArbitraryLoads</key>
+                <true/>
+        </dict>
 </dict>
 </plist>'''
     
@@ -729,37 +776,37 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}") = "{app_name}", "{app_name}\\{app_name}.csproj", "{{12345678-1234-1234-1234-123456789ABC}}"
 EndProject
 Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Debug|ARM = Debug|ARM
-		Debug|ARM64 = Debug|ARM64
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
-		Release|ARM = Release|ARM
-		Release|ARM64 = Release|ARM64
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{{12345678-1234-1234-1234-123456789ABC}}.Debug|x64.ActiveCfg = Debug|x64
-		{{12345678-1234-1234-1234-123456789ABC}}.Debug|x64.Build.0 = Debug|x64
-		{{12345678-1234-1234-1234-123456789ABC}}.Debug|x86.ActiveCfg = Debug|x86
-		{{12345678-1234-1234-1234-123456789ABC}}.Debug|x86.Build.0 = Debug|x86
-		{{12345678-1234-1234-1234-123456789ABC}}.Debug|ARM.ActiveCfg = Debug|ARM
-		{{12345678-1234-1234-1234-123456789ABC}}.Debug|ARM.Build.0 = Debug|ARM
-		{{12345678-1234-1234-1234-123456789ABC}}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{{12345678-1234-1234-1234-123456789ABC}}.Debug|ARM64.Build.0 = Debug|ARM64
-		{{12345678-1234-1234-1234-123456789ABC}}.Release|x64.ActiveCfg = Release|x64
-		{{12345678-1234-1234-1234-123456789ABC}}.Release|x64.Build.0 = Release|x64
-		{{12345678-1234-1234-1234-123456789ABC}}.Release|x86.ActiveCfg = Release|x86
-		{{12345678-1234-1234-1234-123456789ABC}}.Release|x86.Build.0 = Release|x86
-		{{12345678-1234-1234-1234-123456789ABC}}.Release|ARM.ActiveCfg = Release|ARM
-		{{12345678-1234-1234-1234-123456789ABC}}.Release|ARM.Build.0 = Release|ARM
-		{{12345678-1234-1234-1234-123456789ABC}}.Release|ARM64.ActiveCfg = Release|ARM64
-		{{12345678-1234-1234-1234-123456789ABC}}.Release|ARM64.Build.0 = Release|ARM64
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
+        GlobalSection(SolutionConfigurationPlatforms) = preSolution
+                Debug|x64 = Debug|x64
+                Debug|x86 = Debug|x86
+                Debug|ARM = Debug|ARM
+                Debug|ARM64 = Debug|ARM64
+                Release|x64 = Release|x64
+                Release|x86 = Release|x86
+                Release|ARM = Release|ARM
+                Release|ARM64 = Release|ARM64
+        EndGlobalSection
+        GlobalSection(ProjectConfigurationPlatforms) = postSolution
+                {{12345678-1234-1234-1234-123456789ABC}}.Debug|x64.ActiveCfg = Debug|x64
+                {{12345678-1234-1234-1234-123456789ABC}}.Debug|x64.Build.0 = Debug|x64
+                {{12345678-1234-1234-1234-123456789ABC}}.Debug|x86.ActiveCfg = Debug|x86
+                {{12345678-1234-1234-1234-123456789ABC}}.Debug|x86.Build.0 = Debug|x86
+                {{12345678-1234-1234-1234-123456789ABC}}.Debug|ARM.ActiveCfg = Debug|ARM
+                {{12345678-1234-1234-1234-123456789ABC}}.Debug|ARM.Build.0 = Debug|ARM
+                {{12345678-1234-1234-1234-123456789ABC}}.Debug|ARM64.ActiveCfg = Debug|ARM64
+                {{12345678-1234-1234-1234-123456789ABC}}.Debug|ARM64.Build.0 = Debug|ARM64
+                {{12345678-1234-1234-1234-123456789ABC}}.Release|x64.ActiveCfg = Release|x64
+                {{12345678-1234-1234-1234-123456789ABC}}.Release|x64.Build.0 = Release|x64
+                {{12345678-1234-1234-1234-123456789ABC}}.Release|x86.ActiveCfg = Release|x86
+                {{12345678-1234-1234-1234-123456789ABC}}.Release|x86.Build.0 = Release|x86
+                {{12345678-1234-1234-1234-123456789ABC}}.Release|ARM.ActiveCfg = Release|ARM
+                {{12345678-1234-1234-1234-123456789ABC}}.Release|ARM.Build.0 = Release|ARM
+                {{12345678-1234-1234-1234-123456789ABC}}.Release|ARM64.ActiveCfg = Release|ARM64
+                {{12345678-1234-1234-1234-123456789ABC}}.Release|ARM64.Build.0 = Release|ARM64
+        EndGlobalSection
+        GlobalSection(SolutionProperties) = preSolution
+                HideSolutionNode = FALSE
+        EndGlobalSection
 EndGlobal'''
     
     def _generate_csproj(self, app_name, metadata):
