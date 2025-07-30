@@ -24,6 +24,8 @@ Preferred communication style: Simple, everyday language.
 - ✓ Configured secure session secrets and environment variables
 - ✓ Updated UI theme to brighter light theme with improved visibility
 - ✓ Fixed template syntax errors and improved responsive design
+- ✓ Switched from PostgreSQL to SQLite for static database storage (July 30, 2025)
+- ✓ Updated database configuration to use SQLite by default with PostgreSQL fallback
 
 ### Automatic Icon Generation System (July 30, 2025)
 - ✓ Created comprehensive IconGenerator service for all platforms
