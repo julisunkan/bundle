@@ -144,10 +144,7 @@ class PackageBuilder:
         self._create_file(project_dir, 'setup-gradle.bat', self._generate_gradle_setup_script())
         self._create_file(project_dir, 'setup-gradle.sh', self._generate_gradle_setup_script_linux())
         
-        # Create capacitor-cordova-android-plugins directory structure
-        cordova_plugins_dir = os.path.join(android_dir, 'capacitor-cordova-android-plugins')
-        os.makedirs(cordova_plugins_dir, exist_ok=True)
-        self._create_file(cordova_plugins_dir, 'build.gradle', self._generate_cordova_plugins_gradle())
+        # Skip capacitor-cordova-android-plugins to simplify project structure
         
         # Create app directory structure
         app_dir = os.path.join(android_dir, 'app')
@@ -168,8 +165,8 @@ class PackageBuilder:
         os.makedirs(os.path.join(res_dir, 'drawable'), exist_ok=True)
         os.makedirs(assets_dir, exist_ok=True)
         
-        # Create capacitor.build.gradle file for app
-        self._create_file(app_dir, 'capacitor.build.gradle', self._generate_capacitor_build_gradle())
+        # Create simple capacitor.build.gradle file for app
+        self._create_file(app_dir, 'capacitor.build.gradle', self._generate_simple_capacitor_gradle())
         
         # Create AndroidManifest.xml for Capacitor
         self._create_file(main_dir, 'AndroidManifest.xml', self._generate_capacitor_manifest(package_name, metadata))
@@ -1191,7 +1188,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "android"
 include ':app'
-include ':capacitor-cordova-android-plugins'
 project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
 
 apply from: 'capacitor.settings.gradle'
@@ -1687,8 +1683,8 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core:1.10.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
@@ -1731,9 +1727,8 @@ android {{
 }}
 
 repositories {{
-    flatDir {{
-        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
-    }}
+    google()
+    mavenCentral()
 }}
 
 dependencies {{
@@ -1750,7 +1745,7 @@ dependencies {{
     androidTestImplementation "androidx.test.ext:junit:${{rootProject.ext.androidxJunitVersion}}"
     androidTestImplementation "androidx.test.espresso:espresso-core:${{rootProject.ext.androidxEspressoCoreVersion}}"
     
-    implementation project(':capacitor-cordova-android-plugins')
+    implementation 'com.capacitorjs:core:4.8.0'
 }}
 
 apply from: 'capacitor.build.gradle'
@@ -1776,6 +1771,16 @@ apply plugin: 'com.capacitor.gradle-plugin'
 repositories {
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 }
+
+dependencies {
+    implementation 'com.capacitorjs:core:4.8.0'
+}
+'''
+
+    def _generate_simple_capacitor_gradle(self):
+        """Generate simplified capacitor.build.gradle for Capacitor app"""
+        return '''// Simplified Capacitor Build Configuration
+// This file contains minimal build configurations for Capacitor
 
 dependencies {
     implementation 'com.capacitorjs:core:4.8.0'
