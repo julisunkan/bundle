@@ -68,11 +68,11 @@ class PackageBuilder:
         return self.build_msix(metadata, manifest_data, job_id, target_url)
     
     def _create_android_studio_project(self, project_dir, metadata, manifest_data, target_url):
-        """Create an Android Studio project structure"""
+        """Create a Capacitor-based Android project - modern web-to-mobile solution"""
         os.makedirs(project_dir, exist_ok=True)
         
         app_name = self._sanitize_name(metadata.title)
-        package_name = f"com.pwabuilder.{app_name.lower()}"
+        package_name = f"com.digitalskeleton.{app_name.lower()}"
         
         # Generate all required icons for Android
         app_metadata = {
@@ -84,14 +84,13 @@ class PackageBuilder:
         all_icons = self.icon_generator.generate_all_icons(app_metadata, app_name)
         android_icons = all_icons.get('android', {})
         
-        # Create build.gradle (Project)
-        self._create_file(project_dir, 'build.gradle', self._generate_project_gradle())
-        
-        # Create settings.gradle
-        self._create_file(project_dir, 'settings.gradle', f'include ":app"\nrootProject.name = "{app_name}"')
-        
-        # Create gradle.properties
-        self._create_file(project_dir, 'gradle.properties', self._generate_gradle_properties())
+        # Create Capacitor project files first
+        self._create_file(project_dir, 'package.json', self._generate_capacitor_package_json(app_name, metadata))
+        self._create_file(project_dir, 'capacitor.config.ts', self._generate_capacitor_config(app_name, package_name, metadata))
+        self._create_file(project_dir, 'index.html', self._generate_capacitor_index_html(metadata, target_url))
+        self._create_file(project_dir, 'main.js', self._generate_capacitor_main_js(target_url, metadata))
+        self._create_file(project_dir, 'build-android.bat', self._generate_capacitor_android_build_script(app_name))
+        self._create_file(project_dir, 'build-android.sh', self._generate_capacitor_android_build_script_linux(app_name))
         
         # Create app directory structure
         app_dir = os.path.join(project_dir, 'app')
@@ -138,7 +137,7 @@ class PackageBuilder:
         self._create_file(project_dir, 'README.md', self._generate_android_readme(metadata, target_url))
     
     def _create_xcode_project(self, project_dir, metadata, manifest_data, target_url):
-        """Create an Xcode project structure"""
+        """Create a Capacitor-based iOS project - modern web-to-mobile solution"""
         os.makedirs(project_dir, exist_ok=True)
         
         app_name = self._sanitize_name(metadata.title)
@@ -153,12 +152,13 @@ class PackageBuilder:
         all_icons = self.icon_generator.generate_all_icons(app_metadata, app_name)
         ios_icons = all_icons.get('ios', {})
         
-        # Create project structure
-        project_file_dir = os.path.join(project_dir, f'{app_name}.xcodeproj')
-        os.makedirs(project_file_dir, exist_ok=True)
-        
-        # Create pbxproj file
-        self._create_file(project_file_dir, 'project.pbxproj', self._generate_pbxproj(app_name))
+        # Create Capacitor project files first
+        self._create_file(project_dir, 'package.json', self._generate_capacitor_package_json(app_name, metadata))
+        self._create_file(project_dir, 'capacitor.config.ts', self._generate_capacitor_config(app_name, f"com.digitalskeleton.{app_name.lower()}", metadata))
+        self._create_file(project_dir, 'index.html', self._generate_capacitor_index_html(metadata, target_url))
+        self._create_file(project_dir, 'main.js', self._generate_capacitor_main_js(target_url, metadata))
+        self._create_file(project_dir, 'build-ios.bat', self._generate_capacitor_ios_build_script(app_name))
+        self._create_file(project_dir, 'build-ios.sh', self._generate_capacitor_ios_build_script_linux(app_name))
         
         # Create app source directory
         source_dir = os.path.join(project_dir, app_name)
@@ -1608,3 +1608,368 @@ For issues with the generated app, check:
 
 Original website: {target_url}
 '''
+
+    # Capacitor generators for unified cross-platform approach
+    def _generate_capacitor_package_json(self, app_name, metadata):
+        """Generate package.json for Capacitor project"""
+        return f'''{{
+  "name": "{app_name.lower().replace(' ', '-')}",
+  "version": "1.0.0",
+  "description": "{metadata.description or f'Mobile app for {metadata.title}'}",
+  "main": "main.js",
+  "scripts": {{
+    "start": "npm run build && npx cap run",
+    "build": "echo 'Building web assets...' && npm run build:web",
+    "build:web": "echo 'Web assets ready'",
+    "cap:android": "npx cap add android && npx cap sync android && npx cap open android",
+    "cap:ios": "npx cap add ios && npx cap sync ios && npx cap open ios",
+    "cap:electron": "npx cap add @capacitor-community/electron && npx cap sync @capacitor-community/electron && npx cap open @capacitor-community/electron",
+    "build:android": "npm run build:web && npx cap sync android && cd android && ./gradlew assembleDebug",
+    "build:ios": "npm run build:web && npx cap sync ios && cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -destination generic/platform=iOS build",
+    "dev": "npm run build:web && npx cap run android --livereload",
+    "clean": "npx cap clean && rm -rf android ios electron dist node_modules",
+    "install:all": "npm install && npx cap add android && npx cap add ios"
+  }},
+  "keywords": ["capacitor", "mobile", "pwa", "cross-platform"],
+  "author": "DigitalSkeleton Generator",
+  "license": "MIT",
+  "dependencies": {{
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor-community/electron": "^5.0.0"
+  }},
+  "devDependencies": {{
+    "@capacitor/cli": "^6.0.0"
+  }}
+}}'''
+
+    def _generate_capacitor_config(self, app_name, package_name, metadata):
+        """Generate capacitor.config.ts"""
+        return f'''import {{ CapacitorConfig }} from '@capacitor/cli';
+
+const config: CapacitorConfig = {{
+  appId: '{package_name}',
+  appName: '{app_name}',
+  webDir: 'dist',
+  server: {{
+    androidScheme: 'https'
+  }},
+  plugins: {{
+    SplashScreen: {{
+      launchShowDuration: 2000,
+      backgroundColor: '#ffffff',
+      showSpinner: false
+    }},
+    StatusBar: {{
+      style: 'default',
+      backgroundColor: '#ffffff'
+    }}
+  }}
+}};
+
+export default config;'''
+
+    def _generate_capacitor_index_html(self, metadata, target_url):
+        """Generate main HTML file for Capacitor app"""
+        return f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{metadata.title}</title>
+    <meta name="description" content="{metadata.description or f'Mobile app for {metadata.title}'}">
+    
+    <!-- Capacitor PWA optimizations -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- iOS specific -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{metadata.title}">
+    
+    <!-- Android specific -->
+    <meta name="theme-color" content="#4285f4">
+    
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body, html {{
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }}
+        
+        #app-container {{
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        #webview {{
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }}
+        
+        .loading {{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+        }}
+        
+        .loading.hidden {{
+            display: none;
+        }}
+        
+        .spinner {{
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4285f4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }}
+        
+        @keyframes spin {{
+            0% {{ transform: rotate(0deg); }}
+            100% {{ transform: rotate(360deg); }}
+        }}
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading {metadata.title}...</p>
+        </div>
+        <iframe id="webview" src="{target_url}" title="{metadata.title}"></iframe>
+    </div>
+    
+    <script src="main.js"></script>
+</body>
+</html>'''
+
+    def _generate_capacitor_main_js(self, target_url, metadata):
+        """Generate main.js for Capacitor app"""
+        return f'''// Main JavaScript for Capacitor app
+import {{ Capacitor }} from '@capacitor/core';
+import {{ StatusBar, Style }} from '@capacitor/status-bar';
+import {{ SplashScreen }} from '@capacitor/splash-screen';
+
+class CapacitorApp {{
+    constructor() {{
+        this.targetUrl = '{target_url}';
+        this.init();
+    }}
+    
+    async init() {{
+        // Wait for device to be ready
+        document.addEventListener('DOMContentLoaded', () => {{
+            this.setupWebView();
+            this.handleDeviceReady();
+        }});
+    }}
+    
+    async handleDeviceReady() {{
+        console.log('Capacitor app ready');
+        
+        try {{
+            // Configure status bar
+            if (Capacitor.isNativePlatform()) {{
+                await StatusBar.setStyle({{ style: Style.Default }});
+                
+                // Hide splash screen after short delay
+                setTimeout(async () => {{
+                    await SplashScreen.hide();
+                }}, 1500);
+            }}
+        }} catch (error) {{
+            console.log('Platform-specific setup error:', error);
+        }}
+        
+        // Hide loading indicator
+        this.hideLoading();
+    }}
+    
+    setupWebView() {{
+        const webview = document.getElementById('webview');
+        const loading = document.getElementById('loading');
+        
+        if (!webview) return;
+        
+        // Handle iframe load events
+        webview.onload = () => {{
+            console.log('WebView loaded successfully');
+            this.hideLoading();
+        }};
+        
+        webview.onerror = (error) => {{
+            console.error('WebView load error:', error);
+            this.showError();
+        }};
+        
+        // Handle network connectivity
+        window.addEventListener('online', () => {{
+            console.log('Network connection restored');
+            webview.src = this.targetUrl;
+        }});
+        
+        window.addEventListener('offline', () => {{
+            console.log('Network connection lost');
+            this.showError('No internet connection');
+        }});
+    }}
+    
+    hideLoading() {{
+        const loading = document.getElementById('loading');
+        if (loading) {{
+            loading.classList.add('hidden');
+        }}
+    }}
+    
+    showError(message = 'Failed to load content') {{
+        const loading = document.getElementById('loading');
+        if (loading) {{
+            loading.innerHTML = `
+                <div style="color: #ff4444;">
+                    <p>${{message}}</p>
+                    <button onclick="location.reload()" style="margin-top: 10px; padding: 10px 20px;">
+                        Retry
+                    </button>
+                </div>
+            `;
+            loading.classList.remove('hidden');
+        }}
+    }}
+}}
+
+// Initialize app
+new CapacitorApp();'''
+
+    def _generate_capacitor_android_build_script(self, app_name):
+        """Generate Android build script for Capacitor"""
+        return f'''@echo off
+REM Build script for {app_name} Android App
+
+echo Building {app_name} Android App...
+
+REM Install dependencies
+echo Installing dependencies...
+call npm install
+
+REM Add Android platform if not exists
+echo Setting up Android platform...
+call npx cap add android
+
+REM Sync web assets to native project
+echo Syncing assets...
+call npx cap sync android
+
+REM Build APK
+echo Building APK...
+cd android
+call gradlew assembleDebug
+cd ..
+
+echo Build complete! APK location:
+echo android/app/build/outputs/apk/debug/app-debug.apk
+
+echo To install on device: adb install android/app/build/outputs/apk/debug/app-debug.apk
+pause'''
+
+    def _generate_capacitor_android_build_script_linux(self, app_name):
+        """Generate Android build script for Capacitor (Linux/Mac)"""
+        return f'''#!/bin/bash
+# Build script for {app_name} Android App
+
+echo "Building {app_name} Android App..."
+
+# Install dependencies
+echo "Installing dependencies..."
+npm install
+
+# Add Android platform if not exists
+echo "Setting up Android platform..."
+npx cap add android
+
+# Sync web assets to native project
+echo "Syncing assets..."
+npx cap sync android
+
+# Build APK
+echo "Building APK..."
+cd android
+./gradlew assembleDebug
+cd ..
+
+echo "Build complete! APK location:"
+echo "android/app/build/outputs/apk/debug/app-debug.apk"
+echo ""
+echo "To install on device: adb install android/app/build/outputs/apk/debug/app-debug.apk"'''
+
+    def _generate_capacitor_ios_build_script(self, app_name):
+        """Generate iOS build script for Capacitor"""
+        return f'''@echo off
+REM Build script for {app_name} iOS App
+
+echo Building {app_name} iOS App...
+
+REM Install dependencies
+echo Installing dependencies...
+call npm install
+
+REM Add iOS platform if not exists
+echo Setting up iOS platform...
+call npx cap add ios
+
+REM Sync web assets to native project
+echo Syncing assets...
+call npx cap sync ios
+
+echo iOS project ready!
+echo Location: ios/App/App.xcworkspace
+
+echo To build IPA:
+echo 1. Open ios/App/App.xcworkspace in Xcode
+echo 2. Configure signing and provisioning
+echo 3. Build and archive for distribution
+
+pause'''
+
+    def _generate_capacitor_ios_build_script_linux(self, app_name):
+        """Generate iOS build script for Capacitor (Linux/Mac)"""
+        return f'''#!/bin/bash
+# Build script for {app_name} iOS App
+
+echo "Building {app_name} iOS App..."
+
+# Install dependencies
+echo "Installing dependencies..."
+npm install
+
+# Add iOS platform if not exists
+echo "Setting up iOS platform..."
+npx cap add ios
+
+# Sync web assets to native project
+echo "Syncing assets..."
+npx cap sync ios
+
+echo "iOS project ready!"
+echo "Location: ios/App/App.xcworkspace"
+echo ""
+echo "To build IPA:"
+echo "1. Open ios/App/App.xcworkspace in Xcode"
+echo "2. Configure signing and provisioning"
+echo "3. Build and archive for distribution"'''

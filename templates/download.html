@@ -62,9 +62,9 @@
                             <h6 class="text-light">Package Type</h6>
                             <p>
                                 {% if job.package_type == 'apk' %}
-                                    Android Studio Project - <span class="text-success">Ready to Import</span>
+                                    Capacitor Android Project - <span class="text-success">Ready to Build APK</span>
                                 {% elif job.package_type == 'ipa' %}
-                                    Xcode Project - <span class="text-info">Ready to Import</span>
+                                    Capacitor iOS Project - <span class="text-info">Ready to Build IPA</span>
                                 {% elif job.package_type == 'msix' %}
                                     Electron Windows App - <span class="text-warning">Ready to Build</span>
                                 {% elif job.package_type == 'appx' %}
@@ -102,34 +102,34 @@
                             
                             {% if job.package_type == 'apk' %}
                                 <div class="installation-steps">
-                                    <h6 class="text-primary">Android Studio Project Import:</h6>
+                                    <h6 class="text-primary">Capacitor Android Build:</h6>
                                     <ol class="mb-0">
                                         <li>Download and extract the ZIP file to your computer</li>
-                                        <li>Open Android Studio</li>
-                                        <li>Select "Open an existing Android Studio project"</li>
-                                        <li>Navigate to and select the extracted project folder</li>
-                                        <li>Wait for Gradle sync to complete</li>
-                                        <li>Connect your device or start an emulator</li>
-                                        <li>Click "Run" to build and install the app</li>
+                                        <li>Install <a href="https://nodejs.org/" target="_blank" class="text-info">Node.js</a> (version 16 or later)</li>
+                                        <li>Install <a href="https://developer.android.com/studio" target="_blank" class="text-info">Android Studio</a> and Android SDK</li>
+                                        <li>Open Command Prompt/Terminal in the extracted folder</li>
+                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm install</code> to install dependencies</li>
+                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm run cap:android</code> to set up Android project</li>
+                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm run build:android</code> to build APK</li>
                                     </ol>
                                     <div class="alert alert-success mt-3 mb-0">
-                                        <small><strong>Ready to build:</strong> This project contains a complete Android app with WebView that loads your website. Customize the code, add features, and build your APK.</small>
+                                        <small><strong>Modern web-to-mobile:</strong> This Capacitor project generates real native Android APK files using modern web technologies. No Java/Kotlin knowledge required!</small>
                                     </div>
                                 </div>
                             {% elif job.package_type == 'ipa' %}
                                 <div class="installation-steps">
-                                    <h6 class="text-info">Xcode Project Import:</h6>
+                                    <h6 class="text-info">Capacitor iOS Build:</h6>
                                     <ol class="mb-0">
                                         <li>Download and extract the ZIP file to your Mac</li>
-                                        <li>Open Xcode</li>
-                                        <li>Select "Open a project or file"</li>
-                                        <li>Navigate to and select the .xcodeproj file</li>
-                                        <li>Configure your development team and bundle identifier</li>
-                                        <li>Connect your iOS device or select a simulator</li>
-                                        <li>Click "Run" to build and install the app</li>
+                                        <li>Install <a href="https://nodejs.org/" target="_blank" class="text-info">Node.js</a> (version 16 or later)</li>
+                                        <li>Install <a href="https://developer.apple.com/xcode/" target="_blank" class="text-info">Xcode</a> from Mac App Store</li>
+                                        <li>Open Terminal in the extracted folder</li>
+                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm install</code> to install dependencies</li>
+                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm run cap:ios</code> to set up iOS project</li>
+                                        <li>Configure signing in Xcode and build for App Store or device</li>
                                     </ol>
                                     <div class="alert alert-info mt-3 mb-0">
-                                        <small><strong>Ready to build:</strong> This project contains a complete iOS app with WKWebView. Requires Xcode and an Apple Developer account for device deployment.</small>
+                                        <small><strong>Modern web-to-mobile:</strong> This Capacitor project generates real native iOS IPA files using modern web technologies. No Swift/Objective-C knowledge required!</small>
                                     </div>
                                 </div>
                             {% else %}
