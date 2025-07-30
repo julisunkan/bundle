@@ -210,6 +210,8 @@ class PackageBuilder:
         # Create project files
         self._create_file(proj_dir, f'{app_name}.csproj', self._generate_csproj(app_name, metadata))
         self._create_file(proj_dir, 'Package.appxmanifest', self._generate_appx_manifest(metadata))
+        self._create_file(proj_dir, 'MainWindow.xaml', self._generate_main_window_xaml(app_name))
+        self._create_file(proj_dir, 'MainWindow.xaml.cs', self._generate_main_window_xaml_cs(app_name))
         self._create_file(proj_dir, 'MainPage.xaml', self._generate_main_xaml(app_name))
         self._create_file(proj_dir, 'MainPage.xaml.cs', self._generate_main_xaml_cs(app_name, target_url))
         self._create_file(proj_dir, 'App.xaml', self._generate_app_xaml(app_name))
@@ -813,34 +815,30 @@ EndGlobal'''
         return f'''<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>{app_name}</RootNamespace>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x86;x64;ARM64</Platforms>
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
-    <PublishProfile>win10-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Assets\\SplashScreen.scale-200.png" />
-    <Content Include="Assets\\LockScreenLogo.scale-200.png" />
-    <Content Include="Assets\\Square150x150Logo.scale-200.png" />
-    <Content Include="Assets\\Square44x44Logo.scale-200.png" />
-    <Content Include="Assets\\Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Include="Assets\\StoreLogo.png" />
-    <Content Include="Assets\\Wide310x150Logo.scale-200.png" />
+    <Content Include="Assets\\*.png" />
+    <Content Include="web\\**\\*" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.3.230502000" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.231008000" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.2428" />
+    <PackageReference Include="CommunityToolkit.Win32.WebView2" Version="7.0.5" />
   </ItemGroup>
 
   <ItemGroup>
-    <Manifest Include="$(ApplicationManifest)" />
+    <None Remove="Assets\\*.png" />
+    <None Remove="web\\**\\*" />
   </ItemGroup>
 </Project>'''
     
@@ -907,7 +905,7 @@ EndGlobal'''
     mc:Ignorable="d">
 
     <Grid>
-        <WebView2 x:Name="webView" />
+        <WebView2 x:Name="WebView" />
     </Grid>
 </Page>'''
     
@@ -926,8 +924,15 @@ namespace {app_name}
 
         private async void LoadWebsite()
         {{
-            await webView.EnsureCoreWebView2Async();
-            webView.Source = new System.Uri("{target_url}");
+            try
+            {{
+                await WebView.EnsureCoreWebView2Async();
+                WebView.Source = new System.Uri("{target_url}");
+            }}
+            catch (System.Exception ex)
+            {{
+                System.Diagnostics.Debug.WriteLine($"Error loading website: {{ex.Message}}");
+            }}
         }}
     }}
 }}'''
@@ -962,10 +967,40 @@ namespace {app_name}
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {{
             m_window = new MainWindow();
+            m_window.Content = new MainPage();
             m_window.Activate();
         }}
 
         private Window m_window;
+    }}
+}}'''
+    
+    def _generate_main_window_xaml(self, app_name):
+        return f'''<Window
+    x:Class="{app_name}.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:{app_name}"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+    </Grid>
+</Window>'''
+
+    def _generate_main_window_xaml_cs(self, app_name):
+        return f'''using Microsoft.UI.Xaml;
+
+namespace {app_name}
+{{
+    public sealed partial class MainWindow : Window
+    {{
+        public MainWindow()
+        {{
+            this.InitializeComponent();
+            this.Title = "{app_name}";
+        }}
     }}
 }}'''
     
@@ -976,7 +1011,12 @@ This is a Visual Studio project that wraps the website [{target_url}]({target_ur
 
 ## How to Build
 
-1. Open Visual Studio 2022
+1. Install Visual Studio 2022 with:
+   - .NET 8.0 SDK
+   - Windows App SDK
+   - Universal Windows Platform development workload
+
+2. Open Visual Studio 2022
 2. Select "Open a project or solution"
 3. Select the `.sln` file in this folder
 4. Right-click the project and select "Set as StartUp Project"
