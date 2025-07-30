@@ -108,7 +108,7 @@
                             <i class="fas fa-arrow-left me-2"></i>
                             Back to Builder
                         </a>
-                        <button id="downloadBtn" class="btn btn-success" style="display: none;" onclick="window.location.href='{{ url_for('download_package', job_id=job.id) }}'">
+                        <button id="downloadBtn" class="btn btn-success" style="display: none;" onclick="downloadPackage()">
                             <i class="fas fa-download me-2"></i>
                             Download Package
                         </button>
@@ -161,8 +161,15 @@ function completeStep(stepIndex) {
     }
 }
 
+const BUILD_STATUS_URL = '{{ url_for("build_status", job_id=job.id) }}';
+const DOWNLOAD_URL = '{{ url_for("download_package", job_id=job.id) }}';
+
+function downloadPackage() {
+    window.location.href = DOWNLOAD_URL;
+}
+
 function checkBuildStatus() {
-    fetch(`{{ url_for('build_status', job_id=job.id) }}`)
+    fetch(BUILD_STATUS_URL)
         .then(response => response.json())
         .then(data => {
             if (data.status === 'building') {
