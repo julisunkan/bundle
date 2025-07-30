@@ -112,12 +112,12 @@
                                                     title="View Content">
                                                 <i class="fas fa-eye"></i>
                                             </button>
-                                            <button class="btn btn-outline-primary" 
-                                                    onclick="downloadFile('{{ filename }}', {{ content|tojson|safe }})"
-                                                    data-bs-toggle="tooltip" 
-                                                    title="Download File">
+                                            <a class="btn btn-outline-primary" 
+                                               href="{{ url_for('download_pwa_file', job_id=job_id, filename=filename) }}"
+                                               data-bs-toggle="tooltip" 
+                                               title="Download File">
                                                 <i class="fas fa-download"></i>
-                                            </button>
+                                            </a>
                                         </div>
                                     </div>
                                     <div class="small text-muted">

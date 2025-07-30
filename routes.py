@@ -124,13 +124,15 @@ def generate_pwa():
         db.session.add(build_job)
         db.session.commit()
         
-        # Store PWA files in session or redirect to results page
-        from flask import session
-        session['pwa_files'] = pwa_files
-        session['pwa_assessment'] = pwa_assessment
-        session['app_name'] = metadata.get('title', 'Unknown App')
+        # Store PWA files in the build job for retrieval
+        job.manifest_data = json.dumps({
+            'pwa_files': pwa_files,
+            'pwa_assessment': pwa_assessment,
+            'app_name': metadata.get('title', 'Unknown App')
+        })
+        db.session.commit()
         
-        return redirect(url_for('pwa_results'))
+        return redirect(url_for('pwa_results', job_id=job_id))
         
     except Exception as e:
         return jsonify({'error': f'Failed to generate PWA files: {str(e)}'}), 500
@@ -273,16 +275,22 @@ def download_file(job_id):
     filename = f"{job.app_name.replace(' ', '_')}.{job.package_type}"
     return send_file(job.download_path, as_attachment=True, download_name=filename)
 
-@app.route('/pwa-results')
-def pwa_results():
+@app.route('/pwa-results/<job_id>')
+def pwa_results(job_id):
     """Display PWA generation results"""
-    from flask import session
-    pwa_files = session.get('pwa_files', {})
-    pwa_assessment = session.get('pwa_assessment', {})
-    app_name = session.get('app_name', 'Unknown App')
+    job = BuildJob.query.get_or_404(job_id)
     
-    if not pwa_files:
+    if not job.manifest_data:
         flash('No PWA files found. Please generate them first.', 'error')
+        return redirect(url_for('index'))
+    
+    try:
+        job_data = json.loads(job.manifest_data)
+        pwa_files = job_data.get('pwa_files', {})
+        pwa_assessment = job_data.get('pwa_assessment', {})
+        app_name = job_data.get('app_name', 'Unknown App')
+    except json.JSONDecodeError:
+        flash('Invalid PWA data. Please regenerate files.', 'error')
         return redirect(url_for('index'))
     
     # Calculate PWA score
@@ -292,7 +300,38 @@ def pwa_results():
                          pwa_files=pwa_files,
                          pwa_assessment=pwa_assessment,
                          pwa_score=pwa_score,
-                         app_name=app_name)
+                         app_name=app_name,
+                         job_id=job_id)
+
+@app.route('/download-pwa-file/<job_id>/<filename>')
+def download_pwa_file(job_id, filename):
+    """Download individual PWA file"""
+    job = BuildJob.query.get_or_404(job_id)
+    
+    if not job.manifest_data:
+        flash('PWA files not found.', 'error')
+        return redirect(url_for('index'))
+    
+    try:
+        job_data = json.loads(job.manifest_data)
+        pwa_files = job_data.get('pwa_files', {})
+        
+        if filename not in pwa_files:
+            flash('File not found.', 'error')
+            return redirect(url_for('pwa_results', job_id=job_id))
+        
+        file_content = pwa_files[filename]
+        file_size = round(len(file_content) / 1024, 1)
+        
+        return render_template('pwa_download.html',
+                             filename=filename,
+                             file_content=file_content,
+                             file_size=file_size,
+                             job_id=job_id)
+        
+    except json.JSONDecodeError:
+        flash('Invalid PWA data.', 'error')
+        return redirect(url_for('index'))
 
 @app.route('/history')
 def build_history():
