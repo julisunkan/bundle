@@ -914,9 +914,7 @@ EndGlobal'''
 
     <Grid>
         <WebView2 x:Name="WebView" 
-                  Source="about:blank"
-                  NavigationStarting="WebView_NavigationStarting"
-                  NavigationCompleted="WebView_NavigationCompleted" />
+                  Source="about:blank" />
         <ProgressRing x:Name="LoadingRing" 
                       IsActive="True" 
                       HorizontalAlignment="Center" 
@@ -956,6 +954,10 @@ namespace {app_name}
                 
                 await WebView.EnsureCoreWebView2Async();
                 WebView.Source = new System.Uri("{target_url}");
+                
+                // Hide loading ring after a delay (simple approach)
+                await System.Threading.Tasks.Task.Delay(3000);
+                LoadingRing.IsActive = false;
             }}
             catch (System.Exception ex)
             {{
@@ -965,20 +967,7 @@ namespace {app_name}
             }}
         }}
 
-        private void WebView_NavigationStarting(object sender, Microsoft.UI.Xaml.Controls.WebView2NavigationStartingEventArgs args)
-        {{
-            LoadingRing.IsActive = true;
-            ErrorText.Visibility = Visibility.Collapsed;
-        }}
 
-        private void WebView_NavigationCompleted(object sender, Microsoft.UI.Xaml.Controls.WebView2NavigationCompletedEventArgs args)
-        {{
-            LoadingRing.IsActive = false;
-            if (!args.IsSuccess)
-            {{
-                ErrorText.Visibility = Visibility.Visible;
-            }}
-        }}
     }}
 }}'''
     
