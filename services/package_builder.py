@@ -165,8 +165,7 @@ class PackageBuilder:
         os.makedirs(os.path.join(res_dir, 'drawable'), exist_ok=True)
         os.makedirs(assets_dir, exist_ok=True)
         
-        # Create simple capacitor.build.gradle file for app
-        self._create_file(app_dir, 'capacitor.build.gradle', self._generate_simple_capacitor_gradle())
+        # Skip capacitor.build.gradle to simplify project
         
         # Create AndroidManifest.xml for Capacitor
         self._create_file(main_dir, 'AndroidManifest.xml', self._generate_capacitor_manifest(package_name, metadata))
@@ -1188,7 +1187,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "android"
 include ':app'
-project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
 
 apply from: 'capacitor.settings.gradle'
 '''
@@ -1748,16 +1746,7 @@ dependencies {{
     implementation 'com.capacitorjs:core:4.8.0'
 }}
 
-apply from: 'capacitor.build.gradle'
-
-try {{
-    def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {{
-        apply plugin: 'com.google.gms.google-services'
-    }}
-}} catch(Exception e) {{
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
-}}
+// Skip complex Capacitor configurations to simplify build process
 '''
 
     def _generate_capacitor_build_gradle(self):
