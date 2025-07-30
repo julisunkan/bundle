@@ -22,8 +22,8 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# configure the database - using SQLite by default
-database_url = os.environ.get("DATABASE_URL", "sqlite:///digitalskeleton.db")
+# configure the database - using SQLite by default (ignore PostgreSQL env var)
+database_url = "sqlite:///digitalskeleton.db"
 
 # Only use PostgreSQL-specific settings if explicitly using PostgreSQL
 if database_url.startswith("postgresql://") or database_url.startswith("postgres://"):
