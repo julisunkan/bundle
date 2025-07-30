@@ -24,9 +24,9 @@ Preferred communication style: Simple, everyday language.
 
 ### Service Layer
 The application uses a service-oriented architecture with specialized services:
-- `web_scraper.py`: Website metadata extraction
-- `manifest_generator.py`: PWA manifest generation
-- `package_builder.py`: Native app package creation
+- `web_scraper.py`: Website metadata extraction with comprehensive content analysis
+- `manifest_generator.py`: PWA manifest generation with platform-specific configurations
+- `package_builder.py`: Real native app package creation for all supported platforms
 
 ## Key Components
 
@@ -42,7 +42,7 @@ The application uses a service-oriented architecture with specialized services:
 ### Services
 - **Web Scraper**: Uses BeautifulSoup and requests to extract website metadata (title, description, icons, theme colors)
 - **Manifest Generator**: Creates PWA-compliant web app manifests from scraped data
-- **Package Builder**: Generates platform-specific app packages (currently supports APK creation)
+- **Package Builder**: Generates real platform-specific app packages (APK, IPA, MSIX, APPX) with complete mobile app structures
 
 ### Configuration
 - Environment-based configuration for database, secrets, and file storage

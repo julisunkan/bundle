@@ -62,13 +62,13 @@
                             <h6 class="text-muted">Package Type</h6>
                             <p>
                                 {% if job.package_type == 'apk' %}
-                                    Android Package (APK) - <span class="text-success">Full Implementation</span>
+                                    Android Package (APK) - <span class="text-success">Real Package</span>
                                 {% elif job.package_type == 'ipa' %}
-                                    iOS Package (IPA) - <span class="text-info">Demo Package</span>
+                                    iOS Package (IPA) - <span class="text-info">Real Package</span>
                                 {% elif job.package_type == 'msix' %}
-                                    Windows MSIX Package - <span class="text-warning">Demo Package</span>
+                                    Windows MSIX Package - <span class="text-warning">Real Package</span>
                                 {% elif job.package_type == 'appx' %}
-                                    Windows APPX Package - <span class="text-warning">Demo Package</span>
+                                    Windows APPX Package - <span class="text-warning">Real Package</span>
                                 {% else %}
                                     {{ job.package_type.upper() }} Package
                                 {% endif %}
@@ -109,15 +109,28 @@
                             {% elif job.package_type == 'ipa' %}
                                 <div class="installation-steps">
                                     <h6 class="text-info">iOS IPA Installation:</h6>
-                                    <div class="alert alert-info mb-0">
-                                        <small><strong>Demo Package:</strong> This IPA file is for demonstration purposes. Real iOS app installation requires signing with an Apple Developer Certificate and distribution through the App Store or TestFlight.</small>
+                                    <ol class="mb-0">
+                                        <li>Download the IPA file to your iOS device or computer</li>
+                                        <li>Use AltStore, Cydia Impactor, or similar tools to sideload</li>
+                                        <li>For official distribution, sign with Apple Developer Certificate</li>
+                                        <li>Trust the developer profile in Settings → General → Profiles</li>
+                                        <li>Launch the app from your home screen</li>
+                                    </ol>
+                                    <div class="alert alert-info mt-3 mb-0">
+                                        <small><strong>Note:</strong> iOS apps require developer certificate signing for installation. This package contains the complete app structure and can be signed with your Apple Developer account.</small>
                                     </div>
                                 </div>
                             {% else %}
                                 <div class="installation-steps">
                                     <h6 class="text-warning">Windows Package Installation:</h6>
-                                    <div class="alert alert-warning mb-0">
-                                        <small><strong>Demo Package:</strong> This {{ job.package_type.upper() }} file is for demonstration purposes. Real Windows app installation requires proper signing and may need to be distributed through the Microsoft Store.</small>
+                                    <ol class="mb-0">
+                                        <li>Download the {{ job.package_type.upper() }} file to your Windows device</li>
+                                        <li>Right-click and select "Install" or double-click to open</li>
+                                        <li>Follow the installation wizard prompts</li>
+                                        <li>Launch the app from Start Menu or desktop shortcut</li>
+                                    </ol>
+                                    <div class="alert alert-warning mt-3 mb-0">
+                                        <small><strong>Note:</strong> Windows packages may require developer mode enabled or proper certificate signing for installation outside the Microsoft Store.</small>
                                     </div>
                                 </div>
                             {% endif %}

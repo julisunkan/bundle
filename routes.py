@@ -13,7 +13,15 @@ from services.manifest_generator import generate_manifest
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Load SVG icons for display
+    android_icon = '<i class="fab fa-android fa-2x"></i>'
+    apple_icon = '<i class="fab fa-apple fa-2x"></i>'
+    windows_icon = '<i class="fab fa-windows fa-2x"></i>'
+    
+    return render_template('index.html',
+                         android_icon=android_icon,
+                         apple_icon=apple_icon,
+                         windows_icon=windows_icon)
 
 @app.route('/build', methods=['POST'])
 def build_package():
@@ -42,14 +50,13 @@ def build_package():
             # Scrape website metadata
             scraped_data = scrape_website_metadata(url)
             
-            metadata = AppMetadata(
-                url=url,
-                title=scraped_data.get('title', 'Web App'),
-                description=scraped_data.get('description', 'Converted web application'),
-                icon_url=scraped_data.get('icon_url'),
-                theme_color=scraped_data.get('theme_color', '#000000'),
-                background_color=scraped_data.get('background_color', '#ffffff')
-            )
+            metadata = AppMetadata()
+            metadata.url = url
+            metadata.title = scraped_data.get('title', 'Web App')
+            metadata.description = scraped_data.get('description', 'Converted web application')
+            metadata.icon_url = scraped_data.get('icon_url')
+            metadata.theme_color = scraped_data.get('theme_color', '#000000')
+            metadata.background_color = scraped_data.get('background_color', '#ffffff')
             db.session.add(metadata)
             db.session.commit()
         except Exception as e:
@@ -58,12 +65,11 @@ def build_package():
             return redirect(url_for('index'))
     
     # Create build job
-    build_job = BuildJob(
-        url=url,
-        app_name=metadata.title,
-        package_type=package_type,
-        status='pending'
-    )
+    build_job = BuildJob()
+    build_job.url = url
+    build_job.app_name = metadata.title
+    build_job.package_type = package_type
+    build_job.status = 'pending'
     db.session.add(build_job)
     db.session.commit()
     
@@ -95,9 +101,14 @@ def build_status(job_id):
             builder = PackageBuilder()
             if job.package_type == 'apk':
                 package_path = builder.build_apk(metadata, manifest_data, job.id)
+            elif job.package_type == 'ipa':
+                package_path = builder.build_ipa(metadata, manifest_data, job.id)
+            elif job.package_type == 'msix':
+                package_path = builder.build_msix(metadata, manifest_data, job.id)
+            elif job.package_type == 'appx':
+                package_path = builder.build_appx(metadata, manifest_data, job.id)
             else:
-                # Mock other package types for now
-                package_path = builder.build_mock_package(metadata, manifest_data, job.id, job.package_type)
+                raise Exception(f"Unsupported package type: {job.package_type}")
             
             job.download_path = package_path
             job.status = 'completed'

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Build History - PWA Builder{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-6">
+                    <i class="fas fa-history text-primary me-3"></i>
+                    Build History
+                </h1>
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    New Build
+                </a>
+            </div>
+
+            {% if jobs %}
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-primary text-white">
+                                    <tr>
+                                        <th>App Name</th>
+                                        <th>URL</th>
+                                        <th>Package Type</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for job in jobs %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ job.app_name }}</strong>
+                                        </td>
+                                        <td>
+                                            <a href="{{ job.url }}" target="_blank" class="text-decoration-none">
+                                                {{ job.url[:50] }}{% if job.url|length > 50 %}...{% endif %}
+                                                <i class="fas fa-external-link-alt ms-1"></i>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ job.package_type.upper() }}</span>
+                                        </td>
+                                        <td>
+                                            {% if job.status == 'completed' %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Completed
+                                                </span>
+                                            {% elif job.status == 'building' %}
+                                                <span class="badge bg-primary">
+                                                    <i class="fas fa-spinner fa-spin me-1"></i>Building
+                                                </span>
+                                            {% elif job.status == 'failed' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times me-1"></i>Failed
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-clock me-1"></i>Pending
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ job.created_at.strftime('%b %d, %Y') }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                {% if job.status == 'completed' %}
+                                                    <a href="{{ url_for('download_package', job_id=job.id) }}" 
+                                                       class="btn btn-outline-success">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                {% elif job.status in ['pending', 'building'] %}
+                                                    <a href="{{ url_for('build_progress', job_id=job.id) }}" 
+                                                       class="btn btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-history fa-4x text-muted mb-4"></i>
+                    <h3 class="text-muted mb-3">No Build History</h3>
+                    <p class="text-muted mb-4">You haven't built any app packages yet.</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>
+                        Create Your First App
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

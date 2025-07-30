@@ -26,8 +26,8 @@ def scrape_website_metadata(url):
         # Try Open Graph title
         if not title:
             og_title = soup.find('meta', property='og:title')
-            if og_title:
-                title = og_title.get('content', '').strip()
+            if og_title and og_title.get('content'):
+                title = str(og_title.get('content', '')).strip()
         
         # Fallback to domain name
         if not title:
@@ -39,14 +39,14 @@ def scrape_website_metadata(url):
         
         # Try meta description
         meta_desc = soup.find('meta', attrs={'name': 'description'})
-        if meta_desc:
-            description = meta_desc.get('content', '').strip()
+        if meta_desc and meta_desc.get('content'):
+            description = str(meta_desc.get('content', '')).strip()
         
         # Try Open Graph description
         if not description:
             og_desc = soup.find('meta', property='og:description')
-            if og_desc:
-                description = og_desc.get('content', '').strip()
+            if og_desc and og_desc.get('content'):
+                description = str(og_desc.get('content', '')).strip()
         
         # Extract using trafilatura as fallback
         if not description:
@@ -73,7 +73,7 @@ def scrape_website_metadata(url):
         for selector in icon_selectors:
             icon_link = soup.select_one(selector)
             if icon_link and icon_link.get('href'):
-                icon_url = urljoin(url, icon_link['href'])
+                icon_url = urljoin(url, str(icon_link['href']))
                 break
         
         # Fallback to /favicon.ico
@@ -87,8 +87,8 @@ def scrape_website_metadata(url):
         
         # Try to get theme color from meta tags
         theme_meta = soup.find('meta', attrs={'name': 'theme-color'})
-        if theme_meta:
-            theme_color = theme_meta.get('content', '#000000')
+        if theme_meta and theme_meta.get('content'):
+            theme_color = str(theme_meta.get('content', '#000000'))
         
         # Try to get background color from CSS or other sources
         # This is a simplified approach - in a real implementation, 
@@ -116,6 +116,6 @@ def get_website_text_content(url: str) -> str:
     try:
         downloaded = trafilatura.fetch_url(url)
         text = trafilatura.extract(downloaded)
-        return text
+        return text if text else ""
     except Exception as e:
         raise Exception(f"Failed to extract text content: {str(e)}")
