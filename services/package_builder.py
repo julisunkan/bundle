@@ -1025,54 +1025,21 @@ namespace {app_name}
 }}'''
     
     def _generate_windows_readme(self, metadata, target_url):
-        return f'''# {metadata.title} - Windows App
+        return f'''# {metadata.title} - Electron Desktop App (DEPRECATED - Use _generate_electron_readme instead)
 
-This is a Visual Studio project that wraps the website [{target_url}]({target_url}) as a native Windows app.
+⚠️ **DEPRECATED**: This method generates old UWP/Visual Studio projects. 
+Use the new Electron-based approach with _generate_electron_readme for better compatibility.
 
-## How to Build
+This was a Visual Studio project that wrapped websites as Windows apps, but has been 
+replaced with a more reliable Electron-based solution that works across all platforms.
 
-1. Install Visual Studio 2022 with:
-   - .NET 8.0 SDK
-   - Windows App SDK
-   - Universal Windows Platform development workload
+## Migration Notice
 
-2. Open Visual Studio 2022
-2. Select "Open a project or solution"
-3. Select the `.sln` file in this folder
-4. Right-click the project and select "Set as StartUp Project"
-5. Select your target platform (x64, x86, ARM64)
-6. Click "Build" > "Build Solution" or press Ctrl+Shift+B
-7. Click "Debug" > "Start Without Debugging" or press Ctrl+F5
-
-## Features
-
-- WebView2-based app that loads the website
-- Full Windows integration
-- Native Windows look and feel
-- Internet connectivity support
-- Multi-platform support (x64, x86, ARM64)
-
-## Customization
-
-- Modify `MainPage.xaml.cs` to add custom functionality
-- Update `Package.appxmanifest` to change app metadata
-- Replace app icons in the Assets folder
-- Modify XAML files for UI customization
-
-## Requirements
-
-- Visual Studio 2022 with UWP development workload
-- Windows 10 version 1903 (build 18362) or higher
-- Windows App SDK
-- Internet connection for loading web content
-
-## Deployment
-
-- For development: Run directly from Visual Studio
-- For distribution: Create an MSIX package through Visual Studio
-- For Microsoft Store: Use the generated MSIX package
-
-## Website
+The Windows package generation has been updated to use Electron instead of UWP/Visual Studio:
+- Better cross-platform compatibility (Windows, Mac, Linux)
+- No compilation errors or Visual Studio requirements  
+- Easier build process with npm
+- More reliable and modern approach
 
 Original website: {target_url}
 Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
