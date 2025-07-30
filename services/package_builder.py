@@ -119,6 +119,9 @@ class PackageBuilder:
         self._create_file(android_dir, 'settings.gradle', self._generate_android_settings_gradle())
         self._create_file(android_dir, 'gradle.properties', self._generate_gradle_properties())
         
+        # Create variables.gradle file (required by build.gradle)
+        self._create_file(android_dir, 'variables.gradle', self._generate_variables_gradle())
+        
         # Create Gradle wrapper files (essential for Windows builds)
         self._create_file(android_dir, 'gradlew.bat', self._generate_gradle_wrapper_bat())
         self._create_file(android_dir, 'gradlew', self._generate_gradle_wrapper_sh())
@@ -1580,6 +1583,27 @@ else
 fi
 
 cd ..
+'''
+
+    def _generate_variables_gradle(self):
+        """Generate variables.gradle file for Android build configuration"""
+        return '''ext {
+    minSdkVersion = 22
+    compileSdkVersion = 34
+    targetSdkVersion = 34
+    androidxActivityVersion = '1.8.0'
+    androidxAppCompatVersion = '1.6.1'
+    androidxCoordinatorLayoutVersion = '1.2.0'
+    androidxCoreVersion = '1.12.0'
+    androidxFragmentVersion = '1.6.2'
+    coreSplashScreenVersion = '1.0.1'
+    androidxWebkitVersion = '1.8.0'
+    junitVersion = '4.13.2'
+    androidxJunitVersion = '1.1.5'
+    androidxEspressoCoreVersion = '3.5.1'
+    cordovaAndroidVersion = '12.0.1'
+    kotlin_version = '1.9.10'
+}
 '''
     
     # Electron generators for Windows
