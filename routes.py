@@ -358,6 +358,34 @@ def build_history():
     jobs = BuildJob.query.order_by(db.desc(BuildJob.created_at)).limit(50).all()
     return render_template('history.html', jobs=jobs)
 
+# PWA Routes
+@app.route('/manifest.json')
+def serve_manifest():
+    """Serve PWA manifest file"""
+    return send_file('static/manifest.json', mimetype='application/json')
+
+@app.route('/sw.js')
+def serve_service_worker():
+    """Serve service worker file"""
+    return send_file('static/sw.js', mimetype='application/javascript')
+
+@app.route('/api/sync-jobs', methods=['POST'])
+def sync_jobs():
+    """Background sync endpoint for PWA"""
+    try:
+        # Check for any pending jobs and update their status
+        pending_jobs = BuildJob.query.filter_by(status='pending').all()
+        for job in pending_jobs:
+            # Simulate checking job status (in real app, this would check actual build status)
+            if job.created_at:
+                # For demo purposes, mark as completed after creation
+                job.status = 'completed'
+        
+        db.session.commit()
+        return jsonify({'status': 'success', 'synced_jobs': len(pending_jobs)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404

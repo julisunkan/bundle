@@ -1,0 +1,37 @@
+{
+  "name": "PWA Builder - Website to Mobile App Converter",
+  "short_name": "PWA Builder",
+  "description": "Convert any website into a mobile app package (APK, IPA, MSIX)",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#0d6efd",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "developer", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/static/icons/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Build Android App",
+      "short_name": "Android",
+      "description": "Convert website to Android app",
+      "url": "/?platform=android",
+      "icons": [{ "src": "/static/icons/pwa-icon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Build iOS App", 
+      "short_name": "iOS",
+      "description": "Convert website to iOS app",
+      "url": "/?platform=ios",
+      "icons": [{ "src": "/static/icons/pwa-icon.svg", "sizes": "any" }]
+    }
+  ]
+}
