@@ -53,21 +53,24 @@ def analyze_pwa():
         if not existing_metadata:
             app_metadata = AppMetadata(
                 url=url,
-                title=metadata.title,
-                description=metadata.description,
-                icon_url=metadata.icon_url,
-                theme_color=metadata.theme_color,
-                metadata_json=json.dumps(metadata.__dict__)
+                title=metadata.get('title'),
+                description=metadata.get('description'),
+                icon_url=metadata.get('icon_url'),
+                theme_color=metadata.get('theme_color'),
+                metadata_json=json.dumps(metadata)
             )
             db.session.add(app_metadata)
             db.session.commit()
         
         return jsonify({
-            'metadata': metadata.__dict__,
+            'metadata': metadata,
             'pwa_assessment': pwa_assessment
         })
         
     except Exception as e:
+        app.logger.error(f"PWA analysis failed for {url}: {str(e)}")
+        import traceback
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'error': f'Failed to analyze website: {str(e)}'}), 500
 
 @app.route('/generate-pwa', methods=['POST'])
@@ -86,24 +89,25 @@ def generate_pwa():
             metadata = scrape_website_metadata(url)
             app_metadata = AppMetadata(
                 url=url,
-                title=metadata.title,
-                description=metadata.description,
-                icon_url=metadata.icon_url,
-                theme_color=metadata.theme_color,
-                metadata_json=json.dumps(metadata.__dict__)
+                title=metadata.get('title'),
+                description=metadata.get('description'),
+                icon_url=metadata.get('icon_url'),
+                theme_color=metadata.get('theme_color'),
+                metadata_json=json.dumps(metadata)
             )
             db.session.add(app_metadata)
             db.session.commit()
         else:
             # Reconstruct metadata from stored data
-            metadata_dict = json.loads(existing_metadata.metadata_json)
-            metadata = type('Metadata', (), metadata_dict)()
+            metadata = json.loads(existing_metadata.metadata_json)
         
         # Analyze PWA status
         pwa_assessment = analyze_website_pwa_status(url)
         
         # Generate PWA files
-        pwa_generator = PWAGenerator(metadata, pwa_assessment)
+        # Create a metadata object that PWAGenerator expects
+        metadata_obj = type('Metadata', (), metadata)()
+        pwa_generator = PWAGenerator(metadata_obj, pwa_assessment)
         pwa_files = pwa_generator.generate_pwa_files()
         
         # Create a build job for PWA files
@@ -112,8 +116,8 @@ def generate_pwa():
             id=job_id,
             url=url,
             package_type='pwa',
+            app_name=metadata.get('title', 'Unknown App'),
             status='completed',
-            app_name=metadata.title,
             created_at=datetime.utcnow(),
             completed_at=datetime.utcnow()
         )
@@ -158,13 +162,15 @@ def build_package():
             # Scrape website metadata
             scraped_data = scrape_website_metadata(url)
             
-            metadata = AppMetadata()
-            metadata.url = url
-            metadata.title = scraped_data.get('title', 'Web App')
-            metadata.description = scraped_data.get('description', 'Converted web application')
-            metadata.icon_url = scraped_data.get('icon_url')
-            metadata.theme_color = scraped_data.get('theme_color', '#000000')
-            metadata.background_color = scraped_data.get('background_color', '#ffffff')
+            metadata = AppMetadata(
+                url=url,
+                title=scraped_data.get('title', 'Web App'),
+                description=scraped_data.get('description', 'Converted web application'),
+                icon_url=scraped_data.get('icon_url'),
+                theme_color=scraped_data.get('theme_color', '#000000'),
+                background_color=scraped_data.get('background_color', '#ffffff'),
+                metadata_json=json.dumps(scraped_data)
+            )
             db.session.add(metadata)
             db.session.commit()
         except Exception as e:
@@ -173,11 +179,14 @@ def build_package():
             return redirect(url_for('index'))
     
     # Create build job
-    build_job = BuildJob()
-    build_job.url = url
-    build_job.app_name = metadata.title
-    build_job.package_type = package_type
-    build_job.status = 'pending'
+    job_id = str(uuid.uuid4())
+    build_job = BuildJob(
+        id=job_id,
+        url=url,
+        app_name=metadata.title,
+        package_type=package_type,
+        status='pending'
+    )
     db.session.add(build_job)
     db.session.commit()
     
