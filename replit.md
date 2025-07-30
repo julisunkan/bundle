@@ -27,6 +27,7 @@ Preferred communication style: Simple, everyday language.
 - ✓ Switched from PostgreSQL to SQLite for static database storage (July 30, 2025)
 - ✓ Updated database configuration to use SQLite by default with PostgreSQL fallback
 - ✓ Fixed Windows Visual Studio project RuntimeIdentifier compatibility issues (win10-* → win-*)
+- ✓ Updated Windows project NuGet package references (CommunityToolkit.Win32.WebView2 → Microsoft.Web.WebView2)
 
 ### Automatic Icon Generation System (July 30, 2025)
 - ✓ Created comprehensive IconGenerator service for all platforms

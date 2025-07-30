@@ -833,7 +833,7 @@ EndGlobal'''
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.231008000" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.2428" />
-    <PackageReference Include="CommunityToolkit.Win32.WebView2" Version="7.0.5" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2420.47" />
   </ItemGroup>
 
   <ItemGroup>
