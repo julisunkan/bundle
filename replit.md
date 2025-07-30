@@ -29,6 +29,15 @@ Preferred communication style: Simple, everyday language.
 - ✓ Enhanced download functionality with clear labeling and tooltips
 - ✓ Streamlined user experience with working features only
 
+### Package Builder Architecture Change (July 30, 2025)
+- ✓ Changed from binary package generation to development project files
+- ✓ Android APK → Android Studio project ZIP files
+- ✓ iOS IPA → Xcode project ZIP files  
+- ✓ Windows MSIX/APPX → Visual Studio project ZIP files
+- ✓ Updated download filenames to use .zip extensions with descriptive names
+- ✓ Replaced installation instructions with IDE import instructions
+- ✓ Enhanced user experience for developers who want to customize and build apps
+
 ## System Architecture
 
 ### Backend Architecture

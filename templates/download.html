@@ -80,7 +80,15 @@
                     <div class="d-grid gap-2 mb-4">
                         <a href="{{ url_for('download_file', job_id=job.id) }}" class="btn btn-success btn-lg">
                             <i class="fas fa-download me-2"></i>
-                            Download {{ job.app_name.replace(' ', '_') }}.{{ job.package_type }}
+                            {% if job.package_type == 'apk' %}
+                                Download {{ job.app_name.replace(' ', '_') }}_android_project.zip
+                            {% elif job.package_type == 'ipa' %}
+                                Download {{ job.app_name.replace(' ', '_') }}_ios_project.zip
+                            {% elif job.package_type in ['msix', 'appx'] %}
+                                Download {{ job.app_name.replace(' ', '_') }}_windows_project.zip
+                            {% else %}
+                                Download {{ job.app_name.replace(' ', '_') }}_project.zip
+                            {% endif %}
                         </a>
                     </div>
 
@@ -89,48 +97,56 @@
                         <div class="card-body">
                             <h6 class="card-title">
                                 <i class="fas fa-info-circle text-info me-2"></i>
-                                Installation Instructions
+                                Import Instructions
                             </h6>
                             
                             {% if job.package_type == 'apk' %}
                                 <div class="installation-steps">
-                                    <h6 class="text-primary">Android APK Installation:</h6>
+                                    <h6 class="text-primary">Android Studio Project Import:</h6>
                                     <ol class="mb-0">
-                                        <li>Download the APK file to your Android device</li>
-                                        <li>Go to Settings → Security → Unknown Sources and enable it</li>
-                                        <li>Open the downloaded APK file using a file manager</li>
-                                        <li>Follow the on-screen prompts to install the app</li>
-                                        <li>Launch the app from your app drawer</li>
+                                        <li>Download and extract the ZIP file to your computer</li>
+                                        <li>Open Android Studio</li>
+                                        <li>Select "Open an existing Android Studio project"</li>
+                                        <li>Navigate to and select the extracted project folder</li>
+                                        <li>Wait for Gradle sync to complete</li>
+                                        <li>Connect your device or start an emulator</li>
+                                        <li>Click "Run" to build and install the app</li>
                                     </ol>
-                                    <div class="alert alert-warning mt-3 mb-0">
-                                        <small><strong>Note:</strong> This APK contains a WebView that loads the original website. Ensure you have an internet connection for the app to function properly.</small>
+                                    <div class="alert alert-success mt-3 mb-0">
+                                        <small><strong>Ready to build:</strong> This project contains a complete Android app with WebView that loads your website. Customize the code, add features, and build your APK.</small>
                                     </div>
                                 </div>
                             {% elif job.package_type == 'ipa' %}
                                 <div class="installation-steps">
-                                    <h6 class="text-info">iOS IPA Installation:</h6>
+                                    <h6 class="text-info">Xcode Project Import:</h6>
                                     <ol class="mb-0">
-                                        <li>Download the IPA file to your iOS device or computer</li>
-                                        <li>Use AltStore, Cydia Impactor, or similar tools to sideload</li>
-                                        <li>For official distribution, sign with Apple Developer Certificate</li>
-                                        <li>Trust the developer profile in Settings → General → Profiles</li>
-                                        <li>Launch the app from your home screen</li>
+                                        <li>Download and extract the ZIP file to your Mac</li>
+                                        <li>Open Xcode</li>
+                                        <li>Select "Open a project or file"</li>
+                                        <li>Navigate to and select the .xcodeproj file</li>
+                                        <li>Configure your development team and bundle identifier</li>
+                                        <li>Connect your iOS device or select a simulator</li>
+                                        <li>Click "Run" to build and install the app</li>
                                     </ol>
                                     <div class="alert alert-info mt-3 mb-0">
-                                        <small><strong>Note:</strong> iOS apps require developer certificate signing for installation. This package contains the complete app structure and can be signed with your Apple Developer account.</small>
+                                        <small><strong>Ready to build:</strong> This project contains a complete iOS app with WKWebView. Requires Xcode and an Apple Developer account for device deployment.</small>
                                     </div>
                                 </div>
                             {% else %}
                                 <div class="installation-steps">
-                                    <h6 class="text-warning">Windows Package Installation:</h6>
+                                    <h6 class="text-warning">Visual Studio Project Import:</h6>
                                     <ol class="mb-0">
-                                        <li>Download the {{ job.package_type.upper() }} file to your Windows device</li>
-                                        <li>Right-click and select "Install" or double-click to open</li>
-                                        <li>Follow the installation wizard prompts</li>
-                                        <li>Launch the app from Start Menu or desktop shortcut</li>
+                                        <li>Download and extract the ZIP file to your Windows computer</li>
+                                        <li>Open Visual Studio 2022</li>
+                                        <li>Select "Open a project or solution"</li>
+                                        <li>Navigate to and select the .sln file</li>
+                                        <li>Right-click the project and select "Set as StartUp Project"</li>
+                                        <li>Select your target platform (x64, x86, ARM64)</li>
+                                        <li>Click "Build" → "Build Solution" to compile</li>
+                                        <li>Click "Debug" → "Start Without Debugging" to run</li>
                                     </ol>
                                     <div class="alert alert-warning mt-3 mb-0">
-                                        <small><strong>Note:</strong> Windows packages may require developer mode enabled or proper certificate signing for installation outside the Microsoft Store.</small>
+                                        <small><strong>Ready to build:</strong> This UWP project contains a WebView2-based app. Requires Visual Studio with UWP development workload installed.</small>
                                     </div>
                                 </div>
                             {% endif %}

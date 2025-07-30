@@ -283,7 +283,16 @@ def download_file(job_id):
         flash('Package file not found', 'error')
         return redirect(url_for('index'))
     
-    filename = f"{job.app_name.replace(' ', '_')}.{job.package_type}"
+    # Generate appropriate filename based on project type
+    if job.package_type == 'apk':
+        filename = f"{job.app_name.replace(' ', '_')}_android_project.zip"
+    elif job.package_type == 'ipa':
+        filename = f"{job.app_name.replace(' ', '_')}_ios_project.zip"
+    elif job.package_type in ['msix', 'appx']:
+        filename = f"{job.app_name.replace(' ', '_')}_windows_project.zip"
+    else:
+        filename = f"{job.app_name.replace(' ', '_')}_project.zip"
+    
     return send_file(job.download_path, as_attachment=True, download_name=filename)
 
 @app.route('/pwa-results/<job_id>')
