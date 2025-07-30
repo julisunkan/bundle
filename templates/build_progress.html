@@ -172,6 +172,7 @@ function checkBuildStatus() {
     fetch(BUILD_STATUS_URL)
         .then(response => response.json())
         .then(data => {
+            console.log('Build status response:', data);
             if (data.status === 'building') {
                 updateProgress(Math.min(currentStep * 20 + 20, 80), 'building', 'Building your app package...');
                 if (currentStep < steps.length - 1) {
@@ -192,11 +193,17 @@ function checkBuildStatus() {
                 document.getElementById('errorMessage').style.display = 'block';
                 document.getElementById('errorText').textContent = data.error_message || 'An unknown error occurred during the build process.';
                 clearInterval(pollInterval);
+            } else {
+                // Handle other statuses or default case
+                console.log('Unknown status:', data.status);
             }
         })
         .catch(error => {
             console.error('Error checking build status:', error);
             updateProgress(0, 'failed', 'Connection error while checking build status.');
+            document.getElementById('statusMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('errorText').textContent = 'Failed to connect to build server. Please refresh the page.';
             clearInterval(pollInterval);
         });
 }
