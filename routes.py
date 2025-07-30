@@ -105,8 +105,17 @@ def generate_pwa():
         pwa_assessment = analyze_website_pwa_status(url)
         
         # Generate PWA files
-        # Create a metadata object that PWAGenerator expects
-        metadata_obj = type('Metadata', (), metadata)()
+        # Create a simple metadata object that PWAGenerator expects
+        class MetadataObj:
+            def __init__(self, url, metadata_dict):
+                self.url = url
+                self.title = metadata_dict.get('title', 'Unknown App')
+                self.description = metadata_dict.get('description', '')
+                self.theme_color = metadata_dict.get('theme_color', '#000000')
+                self.background_color = metadata_dict.get('background_color', '#ffffff')
+                self.icon_url = metadata_dict.get('icon_url', '')
+        
+        metadata_obj = MetadataObj(url, metadata)
         pwa_generator = PWAGenerator(metadata_obj, pwa_assessment)
         pwa_files = pwa_generator.generate_pwa_files()
         
@@ -125,7 +134,7 @@ def generate_pwa():
         db.session.commit()
         
         # Store PWA files in the build job for retrieval
-        job.manifest_data = json.dumps({
+        build_job.manifest_data = json.dumps({
             'pwa_files': pwa_files,
             'pwa_assessment': pwa_assessment,
             'app_name': metadata.get('title', 'Unknown App')
