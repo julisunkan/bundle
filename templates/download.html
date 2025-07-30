@@ -11,8 +11,8 @@
                 <div class="d-flex align-items-center">
                     <i class="fas fa-check-circle fa-2x text-success me-3"></i>
                     <div>
-                        <h5 class="alert-heading mb-1">Package Ready!</h5>
-                        <p class="mb-0">Your mobile app package has been successfully generated and is ready for download.</p>
+                        <h5 class="alert-heading mb-1">Project Files Ready!</h5>
+                        <p class="mb-0">Your development project files have been successfully generated and are ready for download.</p>
                     </div>
                 </div>
             </div>
@@ -22,7 +22,7 @@
                 <div class="card-header bg-success text-white">
                     <h4 class="card-title mb-0">
                         <i class="fas fa-download me-2"></i>
-                        Download Your App Package
+                        Download Your Project Files
                     </h4>
                 </div>
                 <div class="card-body p-4">
@@ -62,15 +62,15 @@
                             <h6 class="text-muted">Package Type</h6>
                             <p>
                                 {% if job.package_type == 'apk' %}
-                                    Android Package (APK) - <span class="text-success">Real Package</span>
+                                    Android Studio Project - <span class="text-success">Ready to Import</span>
                                 {% elif job.package_type == 'ipa' %}
-                                    iOS Package (IPA) - <span class="text-info">Real Package</span>
+                                    Xcode Project - <span class="text-info">Ready to Import</span>
                                 {% elif job.package_type == 'msix' %}
-                                    Windows MSIX Package - <span class="text-warning">Real Package</span>
+                                    Visual Studio Project - <span class="text-warning">Ready to Import</span>
                                 {% elif job.package_type == 'appx' %}
-                                    Windows APPX Package - <span class="text-warning">Real Package</span>
+                                    UWP Project - <span class="text-warning">Ready to Import</span>
                                 {% else %}
-                                    {{ job.package_type.upper() }} Package
+                                    {{ job.package_type.upper() }} Project
                                 {% endif %}
                             </p>
                         </div>
