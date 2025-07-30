@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}PWA Builder - Convert Websites to Mobile Apps{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 fw-bold mb-4">
+                <i class="fas fa-magic text-primary me-3"></i>
+                Convert Websites to Mobile Apps
+            </h1>
+            <p class="lead text-muted mb-4">
+                Transform any website into a native mobile app package. 
+                Generate APK, IPA, MSIX, and other formats with just a URL.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('build_package') }}" id="buildForm">
+                        <!-- URL Input -->
+                        <div class="mb-4">
+                            <label for="url" class="form-label fs-5 fw-semibold">
+                                <i class="fas fa-link text-primary me-2"></i>
+                                Website URL
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">
+                                    <i class="fas fa-globe"></i>
+                                </span>
+                                <input type="url" 
+                                       class="form-control" 
+                                       id="url" 
+                                       name="url" 
+                                       placeholder="https://example.com" 
+                                       required
+                                       autocomplete="url">
+                            </div>
+                            <div class="form-text">
+                                Enter the complete URL of the website you want to convert
+                            </div>
+                        </div>
+
+                        <!-- Package Type Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fs-5 fw-semibold">
+                                <i class="fas fa-download text-success me-2"></i>
+                                Package Type
+                            </label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body text-center">
+                                            <input type="radio" class="btn-check" name="package_type" id="apk" value="apk" checked>
+                                            <label class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center" for="apk">
+                                                <div class="mb-2">
+                                                    {{ android_icon|safe }}
+                                                </div>
+                                                <strong>Android APK</strong>
+                                                <small class="text-muted">Full Implementation</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-info h-100">
+                                        <div class="card-body text-center">
+                                            <input type="radio" class="btn-check" name="package_type" id="ipa" value="ipa">
+                                            <label class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center" for="ipa">
+                                                <div class="mb-2">
+                                                    {{ apple_icon|safe }}
+                                                </div>
+                                                <strong>iOS IPA</strong>
+                                                <small class="text-muted">Demo Package</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-warning h-100">
+                                        <div class="card-body text-center">
+                                            <input type="radio" class="btn-check" name="package_type" id="msix" value="msix">
+                                            <label class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center" for="msix">
+                                                <div class="mb-2">
+                                                    {{ windows_icon|safe }}
+                                                </div>
+                                                <strong>Windows MSIX</strong>
+                                                <small class="text-muted">Demo Package</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-secondary h-100">
+                                        <div class="card-body text-center">
+                                            <input type="radio" class="btn-check" name="package_type" id="appx" value="appx">
+                                            <label class="btn btn-outline-secondary w-100 h-100 d-flex flex-column justify-content-center" for="appx">
+                                                <div class="mb-2">
+                                                    {{ windows_icon|safe }}
+                                                </div>
+                                                <strong>Windows APPX</strong>
+                                                <small class="text-muted">Demo Package</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Build Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-cogs me-2"></i>
+                                Build Mobile App Package
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Features</h2>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 bg-dark">
+                <div class="card-body text-center">
+                    <i class="fas fa-bolt text-warning fa-3x mb-3"></i>
+                    <h5 class="card-title">Fast Generation</h5>
+                    <p class="card-text text-muted">
+                        Quick and efficient package generation with real-time progress tracking
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 bg-dark">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt text-success fa-3x mb-3"></i>
+                    <h5 class="card-title">Secure Processing</h5>
+                    <p class="card-text text-muted">
+                        Safe and secure conversion process with proper validation
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 bg-dark">
+                <div class="card-body text-center">
+                    <i class="fas fa-mobile-alt text-info fa-3x mb-3"></i>
+                    <h5 class="card-title">Multi-Platform</h5>
+                    <p class="card-text text-muted">
+                        Support for Android, iOS, and Windows app packages
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('buildForm').addEventListener('submit', function(e) {
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    submitBtn.disabled = true;
+    
+    // Re-enable if form validation fails
+    setTimeout(() => {
+        if (!e.target.checkValidity()) {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }, 100);
+});
+</script>
+{% endblock %}

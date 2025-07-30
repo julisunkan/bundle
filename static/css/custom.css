@@ -1,0 +1,209 @@
+:root {
+    --bs-primary-rgb: 13, 110, 253;
+    --bs-success-rgb: 25, 135, 84;
+    --bs-info-rgb: 13, 202, 240;
+    --bs-warning-rgb: 255, 193, 7;
+    --bs-danger-rgb: 220, 53, 69;
+}
+
+/* Custom styling for the app */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+/* Hero section enhancements */
+.display-4 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+/* Card enhancements */
+.card {
+    border-radius: 12px;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+    border-bottom: none;
+}
+
+/* Button enhancements */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-lg {
+    padding: 12px 24px;
+    font-size: 1.1rem;
+}
+
+/* Progress bar styling */
+.progress {
+    border-radius: 10px;
+    background-color: var(--bs-gray-200);
+}
+
+.progress-bar {
+    border-radius: 10px;
+    background: linear-gradient(45deg, var(--bs-primary), var(--bs-info));
+}
+
+/* Package type selection styling */
+.btn-check:checked + .btn-outline-success {
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+    color: white;
+}
+
+.btn-check:checked + .btn-outline-info {
+    background-color: var(--bs-info);
+    border-color: var(--bs-info);
+    color: white;
+}
+
+.btn-check:checked + .btn-outline-warning {
+    background-color: var(--bs-warning);
+    border-color: var(--bs-warning);
+    color: var(--bs-dark);
+}
+
+.btn-check:checked + .btn-outline-secondary {
+    background-color: var(--bs-secondary);
+    border-color: var(--bs-secondary);
+    color: white;
+}
+
+/* Icon styling */
+.package-icon {
+    opacity: 0.8;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.package-icon:hover {
+    opacity: 1;
+}
+
+/* List group styling */
+.list-group-item {
+    border-radius: 8px !important;
+    border: 1px solid var(--bs-border-color);
+    margin-bottom: 8px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.list-group-item:hover {
+    background-color: var(--bs-gray-100);
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+/* Input group styling */
+.input-group-text {
+    border-radius: 8px 0 0 8px;
+}
+
+/* Custom animations */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .btn-lg {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+}
+
+/* Dark theme adjustments */
+[data-bs-theme="dark"] .card {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-gray-700);
+}
+
+[data-bs-theme="dark"] .list-group-item {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-gray-700);
+    color: var(--bs-light);
+}
+
+[data-bs-theme="dark"] .list-group-item:hover {
+    background-color: var(--bs-gray-800);
+}
+
+/* Loading spinner customization */
+.fa-spinner {
+    animation-duration: 1s;
+}
+
+/* Badge styling */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+/* Footer styling */
+footer {
+    margin-top: auto;
+}
+
+/* Custom utility classes */
+.text-gradient {
+    background: linear-gradient(45deg, var(--bs-primary), var(--bs-info));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shadow-custom {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Form enhancements */
+.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Navigation enhancements */
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: color 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+    color: var(--bs-light) !important;
+}
