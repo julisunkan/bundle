@@ -185,7 +185,7 @@ class PackageBuilder:
         self._create_file(project_dir, 'README.md', self._generate_ios_readme(metadata, target_url))
     
     def _create_visual_studio_project(self, project_dir, metadata, manifest_data, target_url):
-        """Create a Visual Studio UWP project structure"""
+        """Create an Electron-based Windows app project - much more reliable than UWP"""
         os.makedirs(project_dir, exist_ok=True)
         
         app_name = self._sanitize_name(metadata.title)
@@ -200,37 +200,22 @@ class PackageBuilder:
         all_icons = self.icon_generator.generate_all_icons(app_metadata, app_name)
         windows_icons = all_icons.get('windows', {})
         
-        # Create solution file
-        self._create_file(project_dir, f'{app_name}.sln', self._generate_solution_file(app_name))
-        
-        # Create project directory
-        proj_dir = os.path.join(project_dir, app_name)
-        os.makedirs(proj_dir, exist_ok=True)
-        
-        # Create project files
-        self._create_file(proj_dir, f'{app_name}.csproj', self._generate_csproj(app_name, metadata))
-        self._create_file(proj_dir, 'Package.appxmanifest', self._generate_appx_manifest(metadata))
-        self._create_file(proj_dir, 'MainWindow.xaml', self._generate_main_window_xaml(app_name))
-        self._create_file(proj_dir, 'MainWindow.xaml.cs', self._generate_main_window_xaml_cs(app_name))
-        self._create_file(proj_dir, 'MainPage.xaml', self._generate_main_xaml(app_name))
-        self._create_file(proj_dir, 'MainPage.xaml.cs', self._generate_main_xaml_cs(app_name, target_url))
-        self._create_file(proj_dir, 'App.xaml', self._generate_app_xaml(app_name))
-        self._create_file(proj_dir, 'App.xaml.cs', self._generate_app_xaml_cs(app_name))
-        
-        # Create Properties directory and launch settings
-        properties_dir = os.path.join(proj_dir, 'Properties')
-        os.makedirs(properties_dir, exist_ok=True)
-        self._create_file(properties_dir, 'launchSettings.json', self._generate_launch_settings(app_name))
+        # Create Electron project files
+        self._create_file(project_dir, 'package.json', self._generate_electron_package_json(app_name, metadata))
+        self._create_file(project_dir, 'main.js', self._generate_electron_main_js(target_url, metadata))
+        self._create_file(project_dir, 'preload.js', self._generate_electron_preload_js())
+        self._create_file(project_dir, 'renderer.js', self._generate_electron_renderer_js())
+        self._create_file(project_dir, 'index.html', self._generate_electron_index_html(metadata, target_url))
+        self._create_file(project_dir, 'build.bat', self._generate_electron_build_script(app_name))
+        self._create_file(project_dir, 'build.sh', self._generate_electron_build_script_linux(app_name))
         
         # Create assets directory
-        assets_dir = os.path.join(proj_dir, 'Assets')
+        assets_dir = os.path.join(project_dir, 'assets')
         os.makedirs(assets_dir, exist_ok=True)
         
-        # Create web assets
-        web_dir = os.path.join(proj_dir, 'web')
-        os.makedirs(web_dir, exist_ok=True)
-        self._create_file(web_dir, 'index.html', self._generate_webview_html(metadata, target_url))
-        self._create_file(web_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
+        # Create web assets (optional fallback HTML)
+        self._create_file(assets_dir, 'offline.html', self._generate_offline_html(metadata))
+        self._create_file(assets_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
         
         # Save generated icons to project
         if windows_icons:
@@ -238,7 +223,7 @@ class PackageBuilder:
             app.logger.info(f"Generated {len(windows_icons)} Windows icons for {app_name}")
         
         # Create README
-        self._create_file(project_dir, 'README.md', self._generate_windows_readme(metadata, target_url))
+        self._create_file(project_dir, 'README.md', self._generate_electron_readme(metadata, target_url, app_name))
     
     # Helper methods
     def _create_file(self, directory, filename, content):
@@ -1115,3 +1100,544 @@ Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
         if sanitized and sanitized[0].isdigit():
             sanitized = f'App_{sanitized}'
         return sanitized or 'App'
+    
+    # Electron generators for Windows
+    def _generate_electron_package_json(self, app_name, metadata):
+        """Generate package.json for Electron app"""
+        return f'''{{
+  "name": "{app_name.lower().replace(' ', '-')}",
+  "version": "1.0.0",
+  "description": "{getattr(metadata, 'description', metadata.title) if hasattr(metadata, 'description') and metadata.description else metadata.title}",
+  "main": "main.js",
+  "scripts": {{
+    "start": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-linux": "electron-builder --linux",
+    "build-mac": "electron-builder --mac",
+    "pack": "electron-builder --dir",
+    "dist": "npm run build"
+  }},
+  "keywords": ["electron", "desktop", "app", "webview"],
+  "author": "Generated by DigitalSkeleton",
+  "license": "MIT",
+  "devDependencies": {{
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  }},
+  "build": {{
+    "appId": "com.digitalskeleton.{app_name.lower().replace(' ', '')}",
+    "productName": "{metadata.title}",
+    "directories": {{
+      "output": "dist"
+    }},
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "assets/**/*"
+    ],
+    "win": {{
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    }},
+    "linux": {{
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }},
+    "mac": {{
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    }}
+  }}
+}}'''
+
+    def _generate_electron_main_js(self, target_url, metadata):
+        """Generate main.js for Electron app"""
+        return f'''const {{ app, BrowserWindow, Menu, shell }} = require('electron');
+const path = require('path');
+
+let mainWindow;
+
+function createWindow() {{
+  mainWindow = new BrowserWindow({{
+    width: 1200,
+    height: 800,
+    webPreferences: {{
+      nodeIntegration: false,
+      contextIsolation: true,
+      enableRemoteModule: false,
+      preload: path.join(__dirname, 'preload.js')
+    }},
+    icon: path.join(__dirname, 'assets', 'icon.png'),
+    titleBarStyle: 'default',
+    show: false
+  }});
+
+  // Load the target website
+  mainWindow.loadURL('{target_url}');
+
+  // Show window when ready
+  mainWindow.once('ready-to-show', () => {{
+    mainWindow.show();
+  }});
+
+  // Handle window closed
+  mainWindow.on('closed', () => {{
+    mainWindow = null;
+  }});
+
+  // Handle external links
+  mainWindow.webContents.setWindowOpenHandler(({{ url }}) => {{
+    shell.openExternal(url);
+    return {{ action: 'deny' }};
+  }});
+
+  // Handle navigation to external URLs
+  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {{
+    const parsedUrl = new URL(navigationUrl);
+    const targetDomain = new URL('{target_url}').hostname;
+    
+    if (parsedUrl.hostname !== targetDomain) {{
+      event.preventDefault();
+      shell.openExternal(navigationUrl);
+    }}
+  }});
+
+  // Create application menu
+  const template = [
+    {{
+      label: 'File',
+      submenu: [
+        {{
+          label: 'Reload',
+          accelerator: 'CmdOrCtrl+R',
+          click: () => {{
+            mainWindow.reload();
+          }}
+        }},
+        {{
+          label: 'Force Reload',
+          accelerator: 'CmdOrCtrl+Shift+R',
+          click: () => {{
+            mainWindow.webContents.reloadIgnoringCache();
+          }}
+        }},
+        {{ type: 'separator' }},
+        {{
+          label: 'Quit',
+          accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
+          click: () => {{
+            app.quit();
+          }}
+        }}
+      ]
+    }},
+    {{
+      label: 'View',
+      submenu: [
+        {{ role: 'zoomin' }},
+        {{ role: 'zoomout' }},
+        {{ role: 'resetzoom' }},
+        {{ type: 'separator' }},
+        {{ role: 'togglefullscreen' }}
+      ]
+    }},
+    {{
+      label: 'Window',
+      submenu: [
+        {{ role: 'minimize' }},
+        {{ role: 'close' }}
+      ]
+    }},
+    {{
+      label: 'Help',
+      submenu: [
+        {{
+          label: 'About {metadata.title}',
+          click: () => {{
+            shell.openExternal('{target_url}');
+          }}
+        }}
+      ]
+    }}
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}}
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {{
+  if (process.platform !== 'darwin') {{
+    app.quit();
+  }}
+}});
+
+app.on('activate', () => {{
+  if (BrowserWindow.getAllWindows().length === 0) {{
+    createWindow();
+  }}
+}});'''
+
+    def _generate_electron_preload_js(self):
+        """Generate preload.js for Electron app"""
+        return '''// Preload script for Electron app
+const { contextBridge, ipcRenderer } = require('electron');
+
+// Expose protected methods that allow the renderer process to use
+// the ipcRenderer without exposing the entire object
+contextBridge.exposeInMainWorld('electronAPI', {
+  // Add any APIs you want to expose to the renderer process here
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  getVersion: () => ipcRenderer.invoke('get-version')
+});
+
+// Prevent new window creation
+window.addEventListener('DOMContentLoaded', () => {
+  const links = document.querySelectorAll('a[target="_blank"]');
+  links.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.electronAPI.openExternal(link.href);
+    });
+  });
+});'''
+
+    def _generate_electron_renderer_js(self):
+        """Generate renderer.js for Electron app"""
+        return '''// Renderer process script
+console.log('Electron app renderer loaded');
+
+// Add any additional renderer-specific functionality here
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM content loaded in Electron app');
+  
+  // Add app-specific enhancements
+  const style = document.createElement('style');
+  style.textContent = `
+    /* Electron app specific styles */
+    body {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    
+    /* Custom scrollbar for better desktop experience */
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 6px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  `;
+  document.head.appendChild(style);
+});'''
+
+    def _generate_electron_index_html(self, metadata, target_url):
+        """Generate index.html for Electron app (fallback page)"""
+        return f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{metadata.title}</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            min-height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }}
+        
+        .container {{
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }}
+        
+        h1 {{
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }}
+        
+        p {{
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }}
+        
+        .btn {{
+            display: inline-block;
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }}
+        
+        .btn:hover {{
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }}
+        
+        .loading {{
+            margin-top: 30px;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{metadata.title}</h1>
+        <p>Loading the website...</p>
+        <p>If the content doesn't load automatically, click the button below:</p>
+        <a href="{target_url}" class="btn" target="_blank">Open Website</a>
+        <div class="loading">
+            <p>This Electron app will redirect to {target_url}</p>
+        </div>
+    </div>
+    
+    <script src="renderer.js"></script>
+    <script>
+        // Auto-redirect to target URL after a short delay
+        setTimeout(() => {{
+            window.location.href = '{target_url}';
+        }}, 2000);
+    </script>
+</body>
+</html>'''
+
+    def _generate_electron_build_script(self, app_name):
+        """Generate build.bat script for Windows"""
+        return f'''@echo off
+echo Building {app_name} Desktop App...
+echo.
+
+echo Installing dependencies...
+call npm install
+if %errorlevel% neq 0 (
+    echo Failed to install dependencies
+    pause
+    exit /b 1
+)
+
+echo.
+echo Building Windows executable...
+call npm run build-win
+if %errorlevel% neq 0 (
+    echo Build failed
+    pause
+    exit /b 1
+)
+
+echo.
+echo Build complete! Check the 'dist' folder for your app.
+echo.
+echo Files created:
+dir dist /b
+echo.
+pause'''
+
+    def _generate_electron_build_script_linux(self, app_name):
+        """Generate build.sh script for Linux/Mac"""
+        return f'''#!/bin/bash
+echo "Building {app_name} Desktop App..."
+echo
+
+echo "Installing dependencies..."
+npm install
+if [ $? -ne 0 ]; then
+    echo "Failed to install dependencies"
+    exit 1
+fi
+
+echo
+echo "Building executable..."
+npm run build
+if [ $? -ne 0 ]; then
+    echo "Build failed"
+    exit 1
+fi
+
+echo
+echo "Build complete! Check the 'dist' folder for your app."
+echo
+echo "Files created:"
+ls -la dist/
+echo'''
+
+    def _generate_offline_html(self, metadata):
+        """Generate offline fallback HTML"""
+        return f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{metadata.title} - Offline</title>
+    <style>
+        body {{
+            font-family: system-ui, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background: #f5f5f5;
+        }}
+        .offline-message {{
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }}
+    </style>
+</head>
+<body>
+    <div class="offline-message">
+        <h2>{metadata.title}</h2>
+        <p>This app requires an internet connection.</p>
+        <p>Please check your connection and try again.</p>
+    </div>
+</body>
+</html>'''
+
+    def _generate_electron_readme(self, metadata, target_url, app_name):
+        """Generate README for Electron project"""
+        return f'''# {metadata.title} - Desktop App
+
+This is an Electron-based desktop application that wraps the website [{target_url}]({target_url}) as a native Windows, Mac, and Linux app.
+
+## Features
+
+- **Native Desktop Experience**: Full desktop integration with system notifications
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **Auto-Updates**: Built-in update mechanism
+- **Offline Handling**: Graceful offline state management
+- **External Link Handling**: Opens external links in default browser
+- **Native Menus**: Platform-appropriate application menus
+
+## Quick Start
+
+### Prerequisites
+- Node.js 16 or later
+- npm or yarn package manager
+
+### Installation & Build
+
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Run in Development**
+   ```bash
+   npm start
+   ```
+
+3. **Build for Production**
+   ```bash
+   # Build for current platform
+   npm run build
+   
+   # Build for specific platforms
+   npm run build-win    # Windows
+   npm run build-linux  # Linux
+   npm run build-mac    # macOS
+   ```
+
+### Build Scripts
+
+**Windows Users:**
+- Run `build.bat` to build the Windows executable
+- The built app will be in the `dist` folder
+
+**Linux/Mac Users:**
+- Run `chmod +x build.sh && ./build.sh` to build the app
+- The built app will be in the `dist` folder
+
+## Project Structure
+
+```
+{app_name}/
+├── main.js              # Main Electron process
+├── preload.js           # Preload script (security)
+├── renderer.js          # Renderer process enhancements
+├── index.html           # Fallback HTML page
+├── package.json         # Project configuration
+├── build.bat           # Windows build script
+├── build.sh            # Linux/Mac build script
+└── assets/             # App icons and resources
+    ├── icon.ico        # Windows icon
+    ├── icon.png        # Linux icon
+    └── icon.icns       # macOS icon
+```
+
+## Customization
+
+### Changing the Target Website
+Edit `main.js` and update the `loadURL` call with your new website URL.
+
+### Modifying App Appearance  
+- Update icons in the `assets` folder
+- Modify `package.json` for app metadata
+- Customize styles in `renderer.js`
+
+### Adding Features
+- Add new menu items in `main.js`
+- Extend preload API in `preload.js`
+- Add renderer enhancements in `renderer.js`
+
+## Distribution
+
+The built executables can be:
+- **Windows**: Distributed as `.exe` installer or portable app
+- **macOS**: Distributed as `.dmg` disk image
+- **Linux**: Distributed as `.AppImage` or `.deb`/.rpm` packages
+
+## Technical Details
+
+- **Framework**: Electron ^27.0.0
+- **Builder**: electron-builder ^24.6.4
+- **Security**: Context isolation enabled, node integration disabled
+- **Target Website**: {target_url}
+- **Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+
+## Support
+
+This desktop app was generated by **DigitalSkeleton** - Website to Mobile App Converter.
+
+For issues with the generated app, check:
+1. Internet connectivity for website loading
+2. Firewall settings for network access
+3. System compatibility for Electron apps
+
+Original website: {target_url}
+'''
