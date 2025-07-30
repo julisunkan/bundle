@@ -147,6 +147,29 @@ body {
 [data-bs-theme="dark"] .card {
     background-color: var(--bs-dark);
     border-color: var(--bs-gray-700);
+    color: var(--bs-light);
+}
+
+[data-bs-theme="dark"] .card-body {
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+}
+
+[data-bs-theme="dark"] .card-body p {
+    color: var(--bs-light);
+}
+
+[data-bs-theme="dark"] .card-body h5 {
+    color: var(--bs-light);
+}
+
+[data-bs-theme="dark"] .card-body h6 {
+    color: var(--bs-gray-300);
+}
+
+[data-bs-theme="dark"] .bg-light {
+    background-color: var(--bs-gray-800) !important;
+    color: var(--bs-light);
 }
 
 [data-bs-theme="dark"] .list-group-item {
@@ -157,6 +180,16 @@ body {
 
 [data-bs-theme="dark"] .list-group-item:hover {
     background-color: var(--bs-gray-800);
+}
+
+[data-bs-theme="dark"] .alert-success {
+    background-color: rgba(25, 135, 84, 0.1);
+    border-color: rgba(25, 135, 84, 0.2);
+    color: var(--bs-light);
+}
+
+[data-bs-theme="dark"] .text-muted {
+    color: var(--bs-gray-400) !important;
 }
 
 /* Loading spinner customization */

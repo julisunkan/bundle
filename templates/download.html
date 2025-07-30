@@ -18,21 +18,21 @@
             </div>
 
             <!-- Download Card -->
-            <div class="card shadow-lg border-0">
+            <div class="card shadow-lg border-0 bg-dark text-light">
                 <div class="card-header bg-success text-white">
                     <h4 class="card-title mb-0">
                         <i class="fas fa-download me-2"></i>
                         Download Your Project Files
                     </h4>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body p-4 bg-dark text-light">
                     <!-- App Information -->
                     <div class="row mb-4">
                         <div class="col-md-8">
-                            <h5 class="fw-bold">{{ job.app_name }}</h5>
-                            <p class="text-muted mb-2">
+                            <h5 class="fw-bold text-light">{{ job.app_name }}</h5>
+                            <p class="text-light mb-2">
                                 <i class="fas fa-link me-1"></i>
-                                <a href="{{ job.url }}" target="_blank" class="text-decoration-none">{{ job.url }}</a>
+                                <a href="{{ job.url }}" target="_blank" class="text-decoration-none text-info">{{ job.url }}</a>
                             </p>
                             <div class="d-flex gap-2 mb-3">
                                 <span class="badge bg-primary">{{ job.package_type.upper() }}</span>
@@ -55,11 +55,11 @@
                     <!-- Package Details -->
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <h6 class="text-muted">Build Date</h6>
-                            <p>{{ job.completed_at.strftime('%B %d, %Y at %I:%M %p') if job.completed_at else 'N/A' }}</p>
+                            <h6 class="text-light">Build Date</h6>
+                            <p class="text-light">{{ job.completed_at.strftime('%B %d, %Y at %I:%M %p') if job.completed_at else 'N/A' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="text-muted">Package Type</h6>
+                            <h6 class="text-light">Package Type</h6>
                             <p>
                                 {% if job.package_type == 'apk' %}
                                     Android Studio Project - <span class="text-success">Ready to Import</span>
@@ -93,8 +93,8 @@
                     </div>
 
                     <!-- Installation Instructions -->
-                    <div class="card bg-light border-0">
-                        <div class="card-body">
+                    <div class="card border-0 bg-secondary text-light">
+                        <div class="card-body bg-secondary text-light">
                             <h6 class="card-title">
                                 <i class="fas fa-info-circle text-info me-2"></i>
                                 Import Instructions
