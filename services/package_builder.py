@@ -92,11 +92,32 @@ class PackageBuilder:
         self._create_file(project_dir, 'build-android.bat', self._generate_capacitor_android_build_script(app_name))
         self._create_file(project_dir, 'build-android.sh', self._generate_capacitor_android_build_script_linux(app_name))
         
+        # Create the critical 'dist' directory that Capacitor expects
+        dist_dir = os.path.join(project_dir, 'dist')
+        os.makedirs(dist_dir, exist_ok=True)
+        
+        # Copy the main web files to dist directory (this is what Capacitor syncs)
+        self._create_file(dist_dir, 'index.html', self._generate_capacitor_index_html(metadata, target_url))
+        self._create_file(dist_dir, 'main.js', self._generate_capacitor_main_js(target_url, metadata))
+        self._create_file(dist_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
+        
         # Add enhanced build options
         self._create_file(project_dir, 'build-release.bat', self._generate_android_release_build_script(app_name))
         self._create_file(project_dir, 'build-release.sh', self._generate_android_release_build_script_linux(app_name))
         self._create_file(project_dir, 'quick-build.bat', self._generate_android_quick_build_script(app_name))
         self._create_file(project_dir, 'quick-build.sh', self._generate_android_quick_build_script_linux(app_name))
+        
+        # Create Android platform directory and required Capacitor files
+        android_dir = os.path.join(project_dir, 'android')
+        os.makedirs(android_dir, exist_ok=True)
+        
+        # Create the missing capacitor.settings.gradle file
+        self._create_file(android_dir, 'capacitor.settings.gradle', self._generate_capacitor_settings_gradle())
+        
+        # Create root build.gradle and settings.gradle for the android project
+        self._create_file(android_dir, 'build.gradle', self._generate_android_root_gradle())
+        self._create_file(android_dir, 'settings.gradle', self._generate_android_settings_gradle())
+        self._create_file(android_dir, 'gradle.properties', self._generate_gradle_properties())
         
         # Create app directory structure
         app_dir = os.path.join(project_dir, 'app')
@@ -1073,6 +1094,72 @@ Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
         if sanitized and sanitized[0].isdigit():
             sanitized = f'App_{sanitized}'
         return sanitized or 'App'
+    
+    def _generate_capacitor_settings_gradle(self):
+        """Generate capacitor.settings.gradle file for Android Capacitor projects"""
+        return '''// Capacitor Settings
+// This file contains Capacitor-specific settings for the Android project
+// Include Capacitor plugin projects
+apply from: 'capacitor.gradle'
+'''
+    
+    def _generate_android_root_gradle(self):
+        """Generate root build.gradle for Android project"""
+        return '''// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    ext {
+        compileSdkVersion = 34
+        targetSdkVersion = 34
+        minSdkVersion = 22
+        cordovaAndroidVersion = '12.0.1'
+        kotlin_version = '1.9.10'
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.4.0'
+    }
+}
+
+apply from: "variables.gradle"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+'''
+
+    def _generate_android_settings_gradle(self):
+        """Generate settings.gradle for Android project"""
+        return '''pluginManagement {
+    repositories {
+        google()
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "android"
+include ':app'
+include ':capacitor-cordova-android-plugins'
+project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
+
+apply from: 'capacitor.settings.gradle'
+'''
     
     # Electron generators for Windows
     def _generate_electron_package_json(self, app_name, metadata):
