@@ -36,33 +36,35 @@
     {% block head %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <!-- Professional Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4" style="background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-mobile-alt me-2"></i>
-                PWA Builder
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}" style="font-weight: 700; font-size: 1.5rem;">
+                <div class="brand-icon me-3" style="width: 40px; height: 40px; background: var(--primary-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-mobile-alt text-white"></i>
+                </div>
+                <span class="brand-text">PWA Builder</span>
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="box-shadow: none;">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">
-                            <i class="fas fa-home me-1"></i> Home
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-3">
+                        <a class="nav-link px-3 py-2 rounded" href="{{ url_for('index') }}" style="transition: all 0.3s ease;">
+                            <i class="fas fa-home me-2"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item me-3">
+                        <a class="nav-link px-3 py-2 rounded" href="{{ url_for('build_history') }}" style="transition: all 0.3s ease;">
+                            <i class="fas fa-history me-2"></i>History
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('build_history') }}">
-                            <i class="fas fa-history me-1"></i> History
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <button id="install-pwa-btn" class="btn btn-outline-light btn-sm" style="display: none;">
-                            <i class="fas fa-download me-1"></i> Install App
+                        <button id="install-pwa-btn" class="btn btn-outline-light btn-sm px-3 py-2" style="display: none; border-radius: 25px; font-weight: 500;">
+                            <i class="fas fa-download me-2"></i>Install App
                         </button>
                     </li>
                 </ul>
@@ -95,26 +97,115 @@
         You're offline. Some features may not work.
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
-        <div class="container text-center">
+    <!-- Professional Footer -->
+    <footer class="professional-footer text-light py-5 mt-auto">
+        <div class="container">
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <h5>PWA Builder</h5>
-                    <p class="text-muted">Convert any website into a mobile app package</p>
+                <div class="col-lg-4 mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="brand-icon me-3" style="width: 40px; height: 40px; background: var(--primary-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-mobile-alt text-white"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0 text-white">PWA Builder</h5>
+                    </div>
+                    <p style="color: rgba(255, 255, 255, 0.8); line-height: 1.6;">
+                        Transform websites into professional mobile applications with advanced PWA analysis and cross-platform development packages.
+                    </p>
+                    <div class="social-links mt-3">
+                        <a href="#" class="text-white me-3" style="opacity: 0.8; transition: opacity 0.3s ease;">
+                            <i class="fab fa-github fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-white me-3" style="opacity: 0.8; transition: opacity 0.3s ease;">
+                            <i class="fab fa-twitter fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-white" style="opacity: 0.8; transition: opacity 0.3s ease;">
+                            <i class="fab fa-linkedin fa-lg"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <h6>Supported Formats</h6>
-                    <div class="d-flex justify-content-center gap-3">
-                        <span class="badge bg-success">APK</span>
-                        <span class="badge bg-info">IPA</span>
-                        <span class="badge bg-warning">MSIX</span>
-                        <span class="badge bg-secondary">APPX</span>
+                <div class="col-lg-2 col-md-3 mb-4">
+                    <h6 class="fw-bold text-white mb-3">Platforms</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="#" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
+                                <i class="fab fa-android me-2"></i>Android
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
+                                <i class="fab fa-apple me-2"></i>iOS
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
+                                <i class="fab fa-windows me-2"></i>Windows
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-3 mb-4">
+                    <h6 class="fw-bold text-white mb-3">Features</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="#" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
+                                PWA Analysis
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
+                                Fast Generation
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
+                                Secure Processing
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-3 mb-4">
+                    <h6 class="fw-bold text-white mb-3">Resources</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="#" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
+                                Documentation
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
+                                API Reference
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ url_for('build_history') }}" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
+                                Build History
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-3 mb-4">
+                    <h6 class="fw-bold text-white mb-3">Support</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;">Android Studio</span>
+                        <span class="badge" style="background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); color: white;">Xcode</span>
+                        <span class="badge" style="background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); color: #333;">Visual Studio</span>
+                        <span class="badge" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white;">UWP</span>
                     </div>
                 </div>
             </div>
-            <hr>
-            <p class="text-muted mb-0">&copy; 2025 PWA Builder. Built with Flask and Bootstrap.</p>
+            <hr style="border-color: rgba(255, 255, 255, 0.2); margin: 2rem 0;">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <p class="mb-0" style="color: rgba(255, 255, 255, 0.6);">
+                        &copy; 2025 PWA Builder. Built with Flask, Bootstrap, and modern web technologies.
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <small style="color: rgba(255, 255, 255, 0.6);">
+                        Made with <i class="fas fa-heart text-danger"></i> for developers
+                    </small>
+                </div>
+            </div>
         </div>
     </footer>
 
