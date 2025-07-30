@@ -13,6 +13,23 @@ from services.manifest_generator import generate_manifest
 from services.pwa_detector import analyze_website_pwa_status
 from services.pwa_generator import PWAGenerator
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for deployment monitoring"""
+    try:
+        # Check database connection
+        db.session.execute(db.text('SELECT 1'))
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'version': '1.0.0'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e)
+        }), 503
+
 @app.route('/')
 def index():
     # Load SVG icons for display

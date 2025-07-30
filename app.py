@@ -6,7 +6,11 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-logging.basicConfig(level=logging.DEBUG)
+# Set logging level based on environment
+if os.environ.get('RENDER'):
+    logging.basicConfig(level=logging.INFO)
+else:
+    logging.basicConfig(level=logging.DEBUG)
 
 class Base(DeclarativeBase):
     pass
@@ -18,16 +22,35 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# configure the database, relative to the app instance folder
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///pwa_builder.db")
+# configure the database
+database_url = os.environ.get("DATABASE_URL", "sqlite:///pwa_builder.db")
+
+# Handle PostgreSQL URL format for newer versions
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
 
+# Production settings
+if os.environ.get('RENDER'):
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"].update({
+        "pool_size": 5,
+        "max_overflow": 10,
+    })
+
 # Configure upload folder
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'generated_packages')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Security settings for production
+if os.environ.get('RENDER'):
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
