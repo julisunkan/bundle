@@ -637,61 +637,72 @@ self.addEventListener('notificationclick', event => {{
     
     def _generate_setup_instructions(self):
         """Generate comprehensive setup instructions"""
-        return f'''# PWA Setup Instructions for {self.metadata.title}
+        return f'''# 📱 PWA Setup Instructions for {self.metadata.title}
 
-## Overview
-This package contains all the files needed to make {self.metadata.title} a Progressive Web App (PWA). 
+## 🎯 Overview
+This package contains all the files needed to make **{self.metadata.title}** a Progressive Web App (PWA). 
 
-## Files Included
-- `manifest.json` - Web app manifest with app metadata
-- `sw.js` - Service worker for offline functionality
-- `index.html` - Enhanced HTML with PWA features
-- `offline.html` - Offline fallback page
+## 📦 Files Included
+- **`manifest.json`** - Web app manifest with app metadata
+- **`sw.js`** - Service worker for offline functionality  
+- **`index.html`** - Enhanced HTML with PWA features
+- **`offline.html`** - Offline fallback page
 
-## Installation Steps
+## 🚀 Installation Steps
 
-### 1. Upload Files
-Upload all the generated files to your website's root directory:
-- Place `manifest.json` in the root directory
-- Place `sw.js` in the root directory  
-- Replace or update your `index.html` with the provided version
-- Place `offline.html` in the root directory
+### Step 1: Upload Files
+Upload all the generated files to your website's **root directory**:
 
-### 2. Create App Icons
-Create the following icon files and place them in an `/icons/` directory:
-- `icon-72x72.png`
-- `icon-96x96.png`
-- `icon-128x128.png`
-- `icon-144x144.png`
-- `icon-152x152.png`
-- `icon-192x192.png`
-- `icon-384x384.png`
-- `icon-512x512.png`
+```
+your-website.com/
+├── manifest.json          ← Place here
+├── sw.js                  ← Place here  
+├── index.html             ← Replace existing or use provided
+└── offline.html           ← Place here
+```
 
-### 3. Create Screenshots (Optional)
-Create screenshot files in a `/screenshots/` directory:
-- `screenshot-wide.png` (1280x720)
-- `screenshot-mobile.png` (750x1334)
+### Step 2: Create App Icons  
+Create the following icon files and place them in an **`/icons/`** directory:
 
-### 4. Update Existing HTML (If Not Using Provided index.html)
-If you prefer to keep your existing HTML, add these elements to your `<head>` section:
+**Required Sizes:**
+- `icon-72x72.png` (Android, Chrome)
+- `icon-96x96.png` (Android, Chrome) 
+- `icon-128x128.png` (Chrome, Windows)
+- `icon-144x144.png` (Windows)
+- `icon-152x152.png` (iOS)
+- `icon-192x192.png` (Android, Chrome) ⭐ **Essential**
+- `icon-384x384.png` (Android, Chrome)
+- `icon-512x512.png` (Android, Chrome) ⭐ **Essential**
+
+**Icon Requirements:**
+- Format: PNG with transparent background
+- Square aspect ratio (1:1)
+- High quality, no compression artifacts
+
+### Step 3: Create Screenshots (Optional but Recommended)
+Create screenshot files in a **`/screenshots/`** directory:
+- **`screenshot-wide.png`** (1280x720) - Desktop view
+- **`screenshot-mobile.png`** (750x1334) - Mobile view
+
+### Step 4: Update Existing HTML (If Not Using Provided index.html)
+If you prefer to keep your existing HTML, add these elements to your **`<head>`** section:
 
 ```html
-<!-- PWA Manifest -->
+<!-- 📱 PWA Manifest -->
 <link rel="manifest" href="/manifest.json">
 
-<!-- Meta tags for PWA -->
+<!-- 🎨 Meta tags for PWA -->
 <meta name="theme-color" content="{self.metadata.theme_color}">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="{self.metadata.title}">
 
-<!-- Icons -->
+<!-- 🎯 Icons -->
 <link rel="icon" href="/icons/icon-192x192.png" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 ```
 
-And add this JavaScript before the closing `</body>` tag:
+And add this JavaScript before the closing **`</body>`** tag:
 
 ```html
 <script>

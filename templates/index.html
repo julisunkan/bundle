@@ -360,10 +360,16 @@ async function generatePWAFiles() {
             body: formData
         });
         
+        if (response.redirected) {
+            window.location.href = response.url;
+            return;
+        }
+        
         if (!response.ok) {
             throw new Error('PWA generation failed');
         }
         
+        // Handle JSON response (fallback)
         const data = await response.json();
         displayPWAFiles(data);
         

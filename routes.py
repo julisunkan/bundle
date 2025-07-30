@@ -124,13 +124,13 @@ def generate_pwa():
         db.session.add(build_job)
         db.session.commit()
         
-        # Store PWA files (in practice, you'd save them to disk)
-        # For now, we'll return them in the response
-        return jsonify({
-            'job_id': job_id,
-            'pwa_files': pwa_files,
-            'pwa_assessment': pwa_assessment
-        })
+        # Store PWA files in session or redirect to results page
+        from flask import session
+        session['pwa_files'] = pwa_files
+        session['pwa_assessment'] = pwa_assessment
+        session['app_name'] = metadata.get('title', 'Unknown App')
+        
+        return redirect(url_for('pwa_results'))
         
     except Exception as e:
         return jsonify({'error': f'Failed to generate PWA files: {str(e)}'}), 500
@@ -272,6 +272,27 @@ def download_file(job_id):
     
     filename = f"{job.app_name.replace(' ', '_')}.{job.package_type}"
     return send_file(job.download_path, as_attachment=True, download_name=filename)
+
+@app.route('/pwa-results')
+def pwa_results():
+    """Display PWA generation results"""
+    from flask import session
+    pwa_files = session.get('pwa_files', {})
+    pwa_assessment = session.get('pwa_assessment', {})
+    app_name = session.get('app_name', 'Unknown App')
+    
+    if not pwa_files:
+        flash('No PWA files found. Please generate them first.', 'error')
+        return redirect(url_for('index'))
+    
+    # Calculate PWA score
+    pwa_score = pwa_assessment.get('score', 0)
+    
+    return render_template('pwa_results.html', 
+                         pwa_files=pwa_files,
+                         pwa_assessment=pwa_assessment,
+                         pwa_score=pwa_score,
+                         app_name=app_name)
 
 @app.route('/history')
 def build_history():

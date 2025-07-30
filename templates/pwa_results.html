@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}PWA Files Generated - PWA Builder{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </a>
+                <div>
+                    <h1 class="h3 mb-1">PWA Files Generated</h1>
+                    <p class="text-muted mb-0">{{ app_name }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA Assessment Results -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line text-primary me-2"></i>
+                        PWA Readiness Assessment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="text-center mb-3">
+                                <div class="display-4 fw-bold text-primary">{{ pwa_score }}%</div>
+                                <p class="text-muted">PWA Readiness Score</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="progress mb-3" style="height: 20px;">
+                                <div class="progress-bar bg-{{ 'success' if pwa_score >= 80 else 'warning' if pwa_score >= 50 else 'danger' }}" 
+                                     role="progressbar" 
+                                     style="width: {{ pwa_score }}%"
+                                     aria-valuenow="{{ pwa_score }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ pwa_score }}%
+                                </div>
+                            </div>
+                            <p class="small text-muted">
+                                {% if pwa_score >= 80 %}
+                                    <i class="fas fa-check text-success"></i> Ready for PWA conversion
+                                {% elif pwa_score >= 50 %}
+                                    <i class="fas fa-exclamation-triangle text-warning"></i> Partially ready
+                                {% else %}
+                                    <i class="fas fa-times text-danger"></i> Needs improvement
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generated Files -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-code text-success me-2"></i>
+                        Generated PWA Files
+                    </h5>
+                    <button class="btn btn-outline-primary btn-sm" onclick="downloadAllFiles()">
+                        <i class="fas fa-download me-2"></i>Download All
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for filename, content in pwa_files.items() %}
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h6 class="card-title mb-1">
+                                                <i class="fas fa-{{ 'cog' if 'sw.js' in filename else 'code' if '.html' in filename else 'file-alt' if '.md' in filename else 'file-code' }} me-2"></i>
+                                                {{ filename }}
+                                            </h6>
+                                            <small class="text-muted">
+                                                {% if 'manifest.json' in filename %}
+                                                    Web App Manifest
+                                                {% elif 'sw.js' in filename %}
+                                                    Service Worker
+                                                {% elif 'index.html' in filename %}
+                                                    Enhanced HTML
+                                                {% elif 'offline.html' in filename %}
+                                                    Offline Page
+                                                {% elif '.md' in filename %}
+                                                    Setup Instructions
+                                                {% else %}
+                                                    PWA File
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-secondary" 
+                                                    onclick="viewFileContent('{{ filename }}', {{ content|tojson|safe }})"
+                                                    data-bs-toggle="tooltip" 
+                                                    title="View Content">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-primary" 
+                                                    onclick="downloadFile('{{ filename }}', {{ content|tojson|safe }})"
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Download File">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="small text-muted">
+                                        {{ (content|length / 1024)|round(1) }} KB
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Setup Guide -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-rocket text-warning me-2"></i>
+                        Quick Setup Guide
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>1. Upload Files</h6>
+                            <p class="small text-muted">Upload all generated files to your website's root directory.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>2. Add Icons</h6>
+                            <p class="small text-muted">Create app icons in various sizes (192x192, 512x512, etc.)</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>3. Test Installation</h6>
+                            <p class="small text-muted">Visit your website and check for the "Install App" prompt.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>4. Read Full Instructions</h6>
+                            <p class="small text-muted">Download the setup instructions file for detailed steps.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Content Modal -->
+<div class="modal fade" id="fileContentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fileModalTitle">File Content</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="copyFileContent()">
+                        <i class="fas fa-copy me-1"></i>Copy
+                    </button>
+                </div>
+                <pre id="fileContentPre" class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"><code id="fileContent"></code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentFileContent = '';
+
+function downloadFile(filename, content) {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+function downloadAllFiles() {
+    const files = {{ pwa_files|tojson|safe }};
+    Object.keys(files).forEach(filename => {
+        setTimeout(() => downloadFile(filename, files[filename]), 100);
+    });
+}
+
+function viewFileContent(filename, content) {
+    currentFileContent = content;
+    document.getElementById('fileModalTitle').textContent = filename;
+    document.getElementById('fileContent').textContent = content;
+    
+    // Syntax highlighting based on file type
+    const codeElement = document.getElementById('fileContent');
+    if (filename.endsWith('.json')) {
+        codeElement.className = 'language-json';
+    } else if (filename.endsWith('.js')) {
+        codeElement.className = 'language-javascript';
+    } else if (filename.endsWith('.html')) {
+        codeElement.className = 'language-html';
+    } else if (filename.endsWith('.md')) {
+        codeElement.className = 'language-markdown';
+    } else {
+        codeElement.className = 'language-text';
+    }
+    
+    new bootstrap.Modal(document.getElementById('fileContentModal')).show();
+}
+
+function copyFileContent() {
+    navigator.clipboard.writeText(currentFileContent).then(() => {
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-outline-secondary');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}
