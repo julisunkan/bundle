@@ -192,12 +192,12 @@ def build_package():
     
     return redirect(url_for('build_progress', job_id=build_job.id))
 
-@app.route('/build/<int:job_id>')
+@app.route('/build/<job_id>')
 def build_progress(job_id):
     job = BuildJob.query.get_or_404(job_id)
     return render_template('build_progress.html', job=job)
 
-@app.route('/api/build-status/<int:job_id>')
+@app.route('/api/build-status/<job_id>')
 def build_status(job_id):
     job = BuildJob.query.get_or_404(job_id)
     
@@ -244,7 +244,7 @@ def build_status(job_id):
         'download_url': url_for('download_package', job_id=job.id) if job.status == 'completed' else None
     })
 
-@app.route('/download/<int:job_id>')
+@app.route('/download/<job_id>')
 def download_package(job_id):
     job = BuildJob.query.get_or_404(job_id)
     
@@ -258,7 +258,7 @@ def download_package(job_id):
     
     return render_template('download.html', job=job)
 
-@app.route('/download-file/<int:job_id>')
+@app.route('/download-file/<job_id>')
 def download_file(job_id):
     job = BuildJob.query.get_or_404(job_id)
     
@@ -275,7 +275,7 @@ def download_file(job_id):
 
 @app.route('/history')
 def build_history():
-    jobs = BuildJob.query.order_by(BuildJob.created_at.desc()).limit(50).all()
+    jobs = BuildJob.query.order_by(db.desc(BuildJob.created_at)).limit(50).all()
     return render_template('history.html', jobs=jobs)
 
 @app.errorhandler(404)
