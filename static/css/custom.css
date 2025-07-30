@@ -5,7 +5,7 @@
     --bs-warning-rgb: 255, 193, 7;
     --bs-danger-rgb: 220, 53, 69;
     
-    /* Professional color palette */
+    /* Professional gradients */
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --success-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
     --info-gradient: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
@@ -24,23 +24,73 @@
     --border-radius-xl: 1rem;
 }
 
+/* Dark Theme (default) */
+[data-theme="dark"] {
+    --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --bg-surface: rgba(255, 255, 255, 0.95);
+    --bg-card: rgba(255, 255, 255, 0.98);
+    --bg-feature: rgba(255, 255, 255, 0.1);
+    --bg-nav: rgba(0, 0, 0, 0.9);
+    --bg-footer: rgba(0, 0, 0, 0.95);
+    --text-primary: #333;
+    --text-secondary: #666;
+    --text-on-dark: white;
+    --text-on-dark-muted: rgba(255, 255, 255, 0.8);
+    --border-color: rgba(255, 255, 255, 0.2);
+    --shadow-primary: var(--shadow-xl);
+}
+
+/* Light Theme */
+[data-theme="light"] {
+    --bg-primary: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    --bg-surface: rgba(255, 255, 255, 0.95);
+    --bg-card: rgba(255, 255, 255, 0.98);
+    --bg-feature: rgba(102, 126, 234, 0.05);
+    --bg-nav: rgba(255, 255, 255, 0.95);
+    --bg-footer: rgba(248, 249, 250, 0.95);
+    --text-primary: #333;
+    --text-secondary: #666;
+    --text-on-dark: #333;
+    --text-on-dark-muted: rgba(51, 51, 51, 0.8);
+    --border-color: rgba(0, 0, 0, 0.1);
+    --shadow-primary: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+/* Grey Theme */
+[data-theme="grey"] {
+    --bg-primary: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    --bg-surface: rgba(248, 249, 250, 0.95);
+    --bg-card: rgba(255, 255, 255, 0.98);
+    --bg-feature: rgba(108, 117, 125, 0.1);
+    --bg-nav: rgba(73, 80, 87, 0.95);
+    --bg-footer: rgba(52, 58, 64, 0.95);
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-on-dark: white;
+    --text-on-dark-muted: rgba(255, 255, 255, 0.8);
+    --border-color: rgba(0, 0, 0, 0.15);
+    --shadow-primary: 0 20px 40px rgba(0,0,0,0.15);
+}
+
 /* Professional typography */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     line-height: 1.6;
     font-weight: 400;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--bg-primary);
     background-attachment: fixed;
     min-height: 100vh;
+    transition: all 0.3s ease;
 }
 
 /* Professional hero section */
 .hero-section {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--bg-surface);
     backdrop-filter: blur(10px);
     border-radius: var(--border-radius-xl);
-    box-shadow: var(--shadow-xl);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--shadow-primary);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
 }
 
 .display-4 {
@@ -58,7 +108,7 @@ body {
     border: none;
     box-shadow: var(--shadow-md);
     backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--bg-card);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
 }
@@ -70,13 +120,13 @@ body {
 
 .card-header {
     border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0 !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    background: rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-surface);
     backdrop-filter: blur(5px);
 }
 
 .card-body {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--bg-card);
 }
 
 /* Professional button system */
@@ -223,23 +273,99 @@ body {
 
 /* Professional footer */
 .professional-footer {
-    background: rgba(0, 0, 0, 0.95);
+    background: var(--bg-footer);
     backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--border-color);
     margin-top: 5rem;
+    transition: all 0.3s ease;
+}
+
+/* Theme Switcher */
+.theme-switcher {
+    position: relative;
+    display: inline-flex;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.theme-option {
+    padding: 8px 12px;
+    border-radius: 20px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.theme-option:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.theme-option.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .theme-switcher {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .theme-option {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] .theme-option:hover {
+    color: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .theme-option.active {
+    background: rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.8);
+}
+
+/* Grey theme adjustments */
+[data-theme="grey"] .theme-switcher {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Dynamic text colors based on theme */
+[data-theme="light"] .text-on-dark,
+[data-theme="light"] .text-white {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .text-on-dark-muted,
+[data-theme="light"] .text-white.opacity-8 {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="light"] .professional-footer {
+    color: var(--text-primary) !important;
 }
 
 /* Enhanced feature cards */
 .feature-card {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-feature);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-color);
     transition: all 0.3s ease;
 }
 
 .feature-card:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--bg-feature);
     transform: translateY(-8px);
+    opacity: 0.9;
 }
 
 /* Statistics styling */

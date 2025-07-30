@@ -35,7 +35,7 @@
     
     {% block head %}{% endblock %}
 </head>
-<body>
+<body data-theme="dark">
     <!-- Professional Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark mb-4" style="background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
         <div class="container">
@@ -61,6 +61,19 @@
                         <a class="nav-link px-3 py-2 rounded" href="{{ url_for('build_history') }}" style="transition: all 0.3s ease;">
                             <i class="fas fa-history me-2"></i>History
                         </a>
+                    </li>
+                    <li class="nav-item me-3">
+                        <div class="theme-switcher">
+                            <button class="theme-option" data-theme="dark" title="Dark Theme">
+                                <i class="fas fa-moon"></i>
+                            </button>
+                            <button class="theme-option" data-theme="light" title="Light Theme">
+                                <i class="fas fa-sun"></i>
+                            </button>
+                            <button class="theme-option" data-theme="grey" title="Grey Theme">
+                                <i class="fas fa-circle"></i>
+                            </button>
+                        </div>
                     </li>
                     <li class="nav-item">
                         <button id="install-pwa-btn" class="btn btn-outline-light btn-sm px-3 py-2" style="display: none; border-radius: 25px; font-weight: 500;">
@@ -214,6 +227,9 @@
     
     <!-- PWA Install Script -->
     <script src="{{ url_for('static', filename='js/pwa-install.js') }}"></script>
+    
+    <!-- Theme Switcher -->
+    <script src="{{ url_for('static', filename='js/theme-switcher.js') }}"></script>
     
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
