@@ -13,7 +13,7 @@ class PackageBuilder:
     def __init__(self):
         self.output_dir = app.config['UPLOAD_FOLDER']
     
-    def build_apk(self, metadata, manifest_data, job_id):
+    def build_apk(self, metadata, manifest_data, job_id, target_url):
         """
         Build a real APK package for Android using Cordova-based approach
         """
@@ -22,14 +22,14 @@ class PackageBuilder:
             with tempfile.TemporaryDirectory() as temp_dir:
                 # Create Cordova project structure
                 project_dir = os.path.join(temp_dir, 'cordova_project')
-                self._create_cordova_project(project_dir, metadata, manifest_data)
+                self._create_cordova_project(project_dir, metadata, manifest_data, target_url)
                 
                 # Create the APK file
                 apk_filename = f"{metadata.title.replace(' ', '_')}_{job_id}.apk"
                 apk_path = os.path.join(self.output_dir, apk_filename)
                 
                 # Build using a simplified APK structure (real implementation)
-                self._build_real_apk(project_dir, apk_path, metadata, manifest_data)
+                self._build_real_apk(project_dir, apk_path, metadata, manifest_data, target_url)
                 
                 return apk_path
                 
@@ -37,7 +37,7 @@ class PackageBuilder:
             app.logger.error(f"APK build failed: {str(e)}")
             raise Exception(f"APK build failed: {str(e)}")
     
-    def _create_cordova_project(self, project_dir, metadata, manifest_data):
+    def _create_cordova_project(self, project_dir, metadata, manifest_data, target_url):
         """Create a Cordova-like project structure for real mobile app"""
         os.makedirs(project_dir, exist_ok=True)
         
@@ -46,12 +46,12 @@ class PackageBuilder:
         os.makedirs(www_dir, exist_ok=True)
         
         # Create config.xml
-        config_xml = self._generate_cordova_config(metadata, manifest_data)
+        config_xml = self._generate_cordova_config(metadata, manifest_data, target_url)
         with open(os.path.join(project_dir, 'config.xml'), 'w') as f:
             f.write(config_xml)
         
         # Create index.html for the app
-        index_html = self._generate_app_html(metadata)
+        index_html = self._generate_app_html(metadata, target_url)
         with open(os.path.join(www_dir, 'index.html'), 'w') as f:
             f.write(index_html)
         
@@ -60,11 +60,11 @@ class PackageBuilder:
             json.dump(manifest_data, f, indent=2)
         
         # Create service worker for offline functionality
-        sw_js = self._generate_service_worker(metadata)
+        sw_js = self._generate_service_worker(metadata, target_url)
         with open(os.path.join(www_dir, 'sw.js'), 'w') as f:
             f.write(sw_js)
     
-    def _build_real_apk(self, project_dir, apk_path, metadata, manifest_data):
+    def _build_real_apk(self, project_dir, apk_path, metadata, manifest_data, target_url):
         """Build a real APK from the Cordova project"""
         # Create APK structure
         with zipfile.ZipFile(apk_path, 'w', zipfile.ZIP_DEFLATED) as apk_zip:
@@ -88,7 +88,7 @@ class PackageBuilder:
             # Add classes.dex (simplified - contains WebView activity)
             apk_zip.writestr('classes.dex', self._generate_dex_bytecode())
     
-    def _create_android_structure(self, apk_dir, metadata, manifest_data):
+    def _create_android_structure(self, apk_dir, metadata, manifest_data, target_url):
         """Create basic Android APK structure"""
         
         # Create AndroidManifest.xml
@@ -101,7 +101,7 @@ class PackageBuilder:
         os.makedirs(assets_dir, exist_ok=True)
         
         # Create a basic HTML file that loads the web app
-        html_content = self._generate_webview_html(metadata)
+        html_content = self._generate_webview_html(metadata, target_url)
         with open(os.path.join(assets_dir, 'index.html'), 'w') as f:
             f.write(html_content)
         
@@ -153,7 +153,7 @@ class PackageBuilder:
     </application>
 </manifest>"""
     
-    def _generate_webview_html(self, metadata):
+    def _generate_webview_html(self, metadata, target_url):
         """Generate HTML content for WebView"""
         return f"""<!DOCTYPE html>
 <html lang="en">
@@ -186,7 +186,7 @@ class PackageBuilder:
 </head>
 <body>
     <div class="loading" id="loading">Loading {metadata.title}...</div>
-    <iframe id="webview" src="{metadata.url}" style="display: none;" onload="showWebView()"></iframe>
+    <iframe id="webview" src="{target_url}" style="display: none;" onload="showWebView()"></iframe>
     
     <script>
         function showWebView() {{
@@ -196,13 +196,13 @@ class PackageBuilder:
         
         // Handle offline scenarios
         window.addEventListener('online', function() {{
-            document.getElementById('webview').src = "{metadata.url}";
+            document.getElementById('webview').src = "{target_url}";
         }});
     </script>
 </body>
 </html>"""
     
-    def build_ipa(self, metadata, manifest_data, job_id):
+    def build_ipa(self, metadata, manifest_data, job_id, target_url):
         """Build a real IPA package for iOS"""
         try:
             package_filename = f"{metadata.title.replace(' ', '_')}_{job_id}.ipa"
@@ -219,7 +219,7 @@ class PackageBuilder:
                     f.write(info_plist)
                 
                 # Create main HTML file
-                main_html = self._generate_app_html(metadata)
+                main_html = self._generate_app_html(metadata, target_url)
                 with open(os.path.join(app_dir, 'index.html'), 'w') as f:
                     f.write(main_html)
                 
@@ -248,7 +248,7 @@ class PackageBuilder:
             app.logger.error(f"IPA build failed: {str(e)}")
             raise Exception(f"IPA build failed: {str(e)}")
     
-    def build_msix(self, metadata, manifest_data, job_id):
+    def build_msix(self, metadata, manifest_data, job_id, target_url):
         """Build a real MSIX package for Windows"""
         try:
             package_filename = f"{metadata.title.replace(' ', '_')}_{job_id}.msix"
@@ -256,7 +256,7 @@ class PackageBuilder:
             
             with tempfile.TemporaryDirectory() as temp_dir:
                 # Create Windows app structure
-                self._create_windows_app_structure(temp_dir, metadata, manifest_data)
+                self._create_windows_app_structure(temp_dir, metadata, manifest_data, target_url)
                 
                 # Create MSIX (which is a zip file with specific structure)
                 with zipfile.ZipFile(package_path, 'w', zipfile.ZIP_DEFLATED) as msix_zip:
@@ -272,7 +272,7 @@ class PackageBuilder:
             app.logger.error(f"MSIX build failed: {str(e)}")
             raise Exception(f"MSIX build failed: {str(e)}")
     
-    def build_appx(self, metadata, manifest_data, job_id):
+    def build_appx(self, metadata, manifest_data, job_id, target_url):
         """Build a real APPX package for Windows"""
         try:
             package_filename = f"{metadata.title.replace(' ', '_')}_{job_id}.appx"
@@ -280,7 +280,7 @@ class PackageBuilder:
             
             with tempfile.TemporaryDirectory() as temp_dir:
                 # Create Windows app structure (similar to MSIX)
-                self._create_windows_app_structure(temp_dir, metadata, manifest_data)
+                self._create_windows_app_structure(temp_dir, metadata, manifest_data, target_url)
                 
                 # Create APPX (which is a zip file)
                 with zipfile.ZipFile(package_path, 'w', zipfile.ZIP_DEFLATED) as appx_zip:
@@ -315,7 +315,7 @@ class PackageBuilder:
         zip_file.writestr('Info.plist', plist_content)
         zip_file.writestr('README.txt', 'Mock IPA package - This would contain compiled iOS app binary in production')
     
-    def _generate_cordova_config(self, metadata, manifest_data):
+    def _generate_cordova_config(self, metadata, manifest_data, target_url):
         """Generate Cordova config.xml"""
         package_id = f"com.pwabuilder.{metadata.title.lower().replace(' ', '').replace('-', '')}"
         return f"""<?xml version='1.0' encoding='utf-8'?>
@@ -338,7 +338,7 @@ class PackageBuilder:
     <preference name="BackupWebStorage" value="none" />
 </widget>"""
 
-    def _generate_app_html(self, metadata):
+    def _generate_app_html(self, metadata, target_url):
         """Generate main HTML file for the app"""
         return f"""<!DOCTYPE html>
 <html lang="en">
@@ -399,7 +399,7 @@ class PackageBuilder:
         </div>
         <div class="content" id="content">
             <div class="loading" id="loading">Loading...</div>
-            <iframe id="webview" src="{metadata.url}" style="display: none;" onload="showContent()"></iframe>
+            <iframe id="webview" src="{target_url}" style="display: none;" onload="showContent()"></iframe>
             <div class="offline" id="offline" style="display: none;">
                 <h2>Offline</h2>
                 <p>This app requires an internet connection.</p>
@@ -425,7 +425,7 @@ class PackageBuilder:
         function retry() {{
             document.getElementById('offline').style.display = 'none';
             document.getElementById('loading').style.display = 'flex';
-            document.getElementById('webview').src = "{metadata.url}";
+            document.getElementById('webview').src = "{target_url}";
         }}
         
         window.addEventListener('online', function() {{
@@ -451,7 +451,7 @@ class PackageBuilder:
 </body>
 </html>"""
 
-    def _generate_service_worker(self, metadata):
+    def _generate_service_worker(self, metadata, target_url):
         """Generate service worker for offline functionality"""
         return f"""const CACHE_NAME = '{metadata.title.replace(' ', '-').lower()}-v1';
 const urlsToCache = [
@@ -548,7 +548,7 @@ Created-By: PWA Builder
         # This is a mock binary - in reality would be compiled Objective-C/Swift
         return b'\xca\xfe\xba\xbe' + b'\x00' * 100  # Mock Mach-O header
 
-    def _create_windows_app_structure(self, temp_dir, metadata, manifest_data):
+    def _create_windows_app_structure(self, temp_dir, metadata, manifest_data, target_url):
         """Create Windows app structure for MSIX/APPX"""
         # Create AppxManifest.xml
         manifest_xml = self._generate_windows_manifest(metadata, manifest_data)
@@ -556,7 +556,7 @@ Created-By: PWA Builder
             f.write(manifest_xml)
         
         # Create main HTML file
-        html_content = self._generate_app_html(metadata)
+        html_content = self._generate_app_html(metadata, target_url)
         with open(os.path.join(temp_dir, 'index.html'), 'w') as f:
             f.write(html_content)
         

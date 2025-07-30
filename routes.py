@@ -220,6 +220,8 @@ def build_status(job_id):
             
             # Get metadata
             metadata = AppMetadata.query.filter_by(url=job.url).first()
+            if not metadata:
+                raise Exception("No metadata found for this URL")
             
             # Generate manifest
             manifest_data = generate_manifest(metadata, job.url)
@@ -228,13 +230,13 @@ def build_status(job_id):
             # Build package
             builder = PackageBuilder()
             if job.package_type == 'apk':
-                package_path = builder.build_apk(metadata, manifest_data, job.id)
+                package_path = builder.build_apk(metadata, manifest_data, job.id, job.url)
             elif job.package_type == 'ipa':
-                package_path = builder.build_ipa(metadata, manifest_data, job.id)
+                package_path = builder.build_ipa(metadata, manifest_data, job.id, job.url)
             elif job.package_type == 'msix':
-                package_path = builder.build_msix(metadata, manifest_data, job.id)
+                package_path = builder.build_msix(metadata, manifest_data, job.id, job.url)
             elif job.package_type == 'appx':
-                package_path = builder.build_appx(metadata, manifest_data, job.id)
+                package_path = builder.build_appx(metadata, manifest_data, job.id, job.url)
             else:
                 raise Exception(f"Unsupported package type: {job.package_type}")
             
