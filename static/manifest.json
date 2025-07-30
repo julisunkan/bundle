@@ -1,6 +1,6 @@
 {
-  "name": "PWA Builder - Website to Mobile App Converter",
-  "short_name": "PWA Builder",
+  "name": "DigitalSkeleton - Website to Mobile App Converter",
+  "short_name": "DigitalSkeleton",
   "description": "Convert any website into a mobile app package (APK, IPA, MSIX)",
   "start_url": "/",
   "display": "standalone",

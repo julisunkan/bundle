@@ -1,8 +1,8 @@
-# PWA Builder - Website to Mobile App Converter
+# DigitalSkeleton - Website to Mobile App Converter
 
 ## Overview
 
-PWA Builder is a Flask-based web application that converts websites into mobile app packages. The application scrapes website metadata, generates web app manifests, and creates native app packages (APK, IPA, MSIX) that can be distributed through app stores or sideloaded onto devices.
+DigitalSkeleton is a Flask-based web application that converts websites into mobile app packages. The application scrapes website metadata, generates web app manifests, and creates native app packages (APK, IPA, MSIX) that can be distributed through app stores or sideloaded onto devices.
 
 ## User Preferences
 
@@ -11,7 +11,7 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### Migration from Replit Agent to Replit Environment (July 30, 2025)
-- ✓ Successfully migrated PWA Builder application to Replit environment
+- ✓ Successfully migrated DigitalSkeleton application to Replit environment
 - ✓ Fixed database schema compatibility issues (recreated SQLite database)
 - ✓ Verified all dependencies are properly installed and configured
 - ✓ Confirmed Flask application runs correctly on port 5000 with gunicorn
@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 - ✓ Enhanced user experience for developers who want to customize and build apps
 
 ### PWA Implementation (July 30, 2025)
-- ✓ Converted the PWA Builder web app itself into a Progressive Web App
+- ✓ Converted the DigitalSkeleton web app itself into a Progressive Web App
 - ✓ Added web app manifest with proper metadata and icons
 - ✓ Implemented service worker with caching, offline support, and background sync
 - ✓ Created PWA installation functionality with install prompts
@@ -71,6 +71,13 @@ Preferred communication style: Simple, everyday language.
 - ✓ Built JavaScript theme management with localStorage persistence
 - ✓ Added smooth transitions between theme changes
 - ✓ Implemented responsive theme-aware styling for all components
+
+### Application Rebranding (July 30, 2025)
+- ✓ Changed application name from "PWA Builder" to "DigitalSkeleton"
+- ✓ Updated all templates, documentation, and legal pages with new branding
+- ✓ Modified PWA manifest and configuration files
+- ✓ Updated footer pages and support documentation
+- ✓ Changed all email addresses and contact information to reflect new brand
 
 ## System Architecture
 
