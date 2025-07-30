@@ -92,6 +92,12 @@ class PackageBuilder:
         self._create_file(project_dir, 'build-android.bat', self._generate_capacitor_android_build_script(app_name))
         self._create_file(project_dir, 'build-android.sh', self._generate_capacitor_android_build_script_linux(app_name))
         
+        # Add enhanced build options
+        self._create_file(project_dir, 'build-release.bat', self._generate_android_release_build_script(app_name))
+        self._create_file(project_dir, 'build-release.sh', self._generate_android_release_build_script_linux(app_name))
+        self._create_file(project_dir, 'quick-build.bat', self._generate_android_quick_build_script(app_name))
+        self._create_file(project_dir, 'quick-build.sh', self._generate_android_quick_build_script_linux(app_name))
+        
         # Create app directory structure
         app_dir = os.path.join(project_dir, 'app')
         os.makedirs(app_dir, exist_ok=True)
@@ -133,8 +139,8 @@ class PackageBuilder:
             self.icon_generator.save_icons_to_package(android_icons, project_dir, 'android')
             app.logger.info(f"Generated {len(android_icons)} Android icons for {app_name}")
         
-        # Create README
-        self._create_file(project_dir, 'README.md', self._generate_android_readme(metadata, target_url))
+        # Create comprehensive README with build options
+        self._create_file(project_dir, 'README.md', self._generate_enhanced_android_readme(metadata, target_url))
     
     def _create_xcode_project(self, project_dir, metadata, manifest_data, target_url):
         """Create a Capacitor-based iOS project - modern web-to-mobile solution"""
@@ -1625,6 +1631,8 @@ Original website: {target_url}
     "cap:ios": "npx cap add ios && npx cap sync ios && npx cap open ios",
     "cap:electron": "npx cap add @capacitor-community/electron && npx cap sync @capacitor-community/electron && npx cap open @capacitor-community/electron",
     "build:android": "npm run build:web && npx cap sync android && cd android && ./gradlew assembleDebug",
+    "build:android:release": "npm run build:web && npx cap sync android && cd android && ./gradlew assembleRelease",
+    "build:android:bundle": "npm run build:web && npx cap sync android && cd android && ./gradlew bundleRelease",
     "build:ios": "npm run build:web && npx cap sync ios && cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -destination generic/platform=iOS build",
     "dev": "npm run build:web && npx cap run android --livereload",
     "clean": "npx cap clean && rm -rf android ios electron dist node_modules",
@@ -1918,6 +1926,131 @@ echo "android/app/build/outputs/apk/debug/app-debug.apk"
 echo ""
 echo "To install on device: adb install android/app/build/outputs/apk/debug/app-debug.apk"'''
 
+    def _generate_android_release_build_script(self, app_name):
+        """Generate optimized release build script for Android"""
+        return f'''@echo off
+REM Optimized Release Build for {app_name} Android App
+
+echo Building {app_name} for Google Play Store...
+
+REM Install dependencies
+echo Installing dependencies...
+call npm install
+
+REM Add Android platform if not exists
+echo Setting up Android platform...
+call npx cap add android
+
+REM Sync web assets to native project
+echo Syncing assets...
+call npx cap sync android
+
+REM Build Release APK/AAB
+echo Building release APK and AAB (Google Play Bundle)...
+cd android
+
+echo Building release APK...
+call gradlew assembleRelease
+
+echo Building AAB for Google Play Store...
+call gradlew bundleRelease
+
+cd ..
+
+echo Build complete!
+echo.
+echo APK Location: android/app/build/outputs/apk/release/app-release.apk
+echo AAB Location: android/app/build/outputs/bundle/release/app-release.aab
+echo.
+echo For Google Play Store: Use the AAB file
+echo For direct installation: Use the APK file
+echo.
+pause'''
+
+    def _generate_android_release_build_script_linux(self, app_name):
+        """Generate optimized release build script for Android (Linux/Mac)"""
+        return f'''#!/bin/bash
+# Optimized Release Build for {app_name} Android App
+
+echo "Building {app_name} for Google Play Store..."
+
+# Install dependencies
+echo "Installing dependencies..."
+npm install
+
+# Add Android platform if not exists
+echo "Setting up Android platform..."
+npx cap add android
+
+# Sync web assets to native project 
+echo "Syncing assets..."
+npx cap sync android
+
+# Build Release APK/AAB
+echo "Building release APK and AAB (Google Play Bundle)..."
+cd android
+
+echo "Building release APK..."
+./gradlew assembleRelease
+
+echo "Building AAB for Google Play Store..."
+./gradlew bundleRelease
+
+cd ..
+
+echo "Build complete!"
+echo ""
+echo "APK Location: android/app/build/outputs/apk/release/app-release.apk"
+echo "AAB Location: android/app/build/outputs/bundle/release/app-release.aab"
+echo ""
+echo "For Google Play Store: Use the AAB file"
+echo "For direct installation: Use the APK file"'''
+
+    def _generate_android_quick_build_script(self, app_name):
+        """Generate quick development build script"""
+        return f'''@echo off
+REM Quick Development Build for {app_name}
+
+echo Quick building {app_name} for testing...
+
+REM Sync only (faster than full build)
+echo Syncing web assets...
+call npx cap sync android
+
+REM Quick debug build
+echo Building debug APK (fast)...
+cd android
+call gradlew assembleDebug --daemon --parallel
+cd ..
+
+echo Quick build complete!
+echo APK: android/app/build/outputs/apk/debug/app-debug.apk
+echo.
+echo Install: adb install android/app/build/outputs/apk/debug/app-debug.apk
+pause'''
+
+    def _generate_android_quick_build_script_linux(self, app_name):
+        """Generate quick development build script (Linux/Mac)"""
+        return f'''#!/bin/bash
+# Quick Development Build for {app_name}
+
+echo "Quick building {app_name} for testing..."
+
+# Sync only (faster than full build)
+echo "Syncing web assets..."
+npx cap sync android
+
+# Quick debug build  
+echo "Building debug APK (fast)..."
+cd android
+./gradlew assembleDebug --daemon --parallel
+cd ..
+
+echo "Quick build complete!"
+echo "APK: android/app/build/outputs/apk/debug/app-debug.apk"
+echo ""
+echo "Install: adb install android/app/build/outputs/apk/debug/app-debug.apk"'''
+
     def _generate_capacitor_ios_build_script(self, app_name):
         """Generate iOS build script for Capacitor"""
         return f'''@echo off
@@ -1973,3 +2106,153 @@ echo "To build IPA:"
 echo "1. Open ios/App/App.xcworkspace in Xcode"
 echo "2. Configure signing and provisioning"
 echo "3. Build and archive for distribution"'''
+
+    def _generate_enhanced_android_readme(self, metadata, target_url):
+        """Generate comprehensive README with multiple build options"""
+        return f'''# {metadata.title} - Capacitor Android Project
+
+This project converts the website [{target_url}]({target_url}) into a native Android APK using modern Capacitor technology.
+
+## Quick Start (Recommended)
+
+### 🚀 Super Fast Development Build
+```bash
+# Windows
+quick-build.bat
+
+# Mac/Linux  
+./quick-build.sh
+```
+**Perfect for:** Testing, development, quick iterations
+
+### 📱 Google Play Store Release
+```bash
+# Windows
+build-release.bat
+
+# Mac/Linux
+./build-release.sh
+```
+**Perfect for:** App store submission, production deployment
+
+## Build Options Explained
+
+| Build Type | Speed | Output | Use Case |
+|------------|-------|---------|----------|
+| **Quick Build** | ⚡ Fastest | Debug APK | Testing & Development |
+| **Release Build** | 🐌 Slower | Release APK + AAB | Production & Play Store |
+| **Manual Build** | ⚖️ Medium | Debug APK | Learning & Customization |
+
+## Prerequisites
+
+1. **Node.js** (v16+): [Download](https://nodejs.org/)
+2. **Android Studio**: [Download](https://developer.android.com/studio)
+   - Install Android SDK (API 34 recommended)
+   - Set up Android SDK path in system environment
+
+## Manual Build Process
+
+If you prefer step-by-step control:
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Add Android platform
+npx cap add android
+
+# 3. Sync web assets
+npx cap sync android
+
+# 4. Build APK (choose one)
+cd android
+./gradlew assembleDebug          # Debug APK
+./gradlew assembleRelease        # Release APK  
+./gradlew bundleRelease          # AAB for Play Store
+cd ..
+```
+
+## Output Locations
+
+After building, find your files here:
+
+- **Debug APK**: `android/app/build/outputs/apk/debug/app-debug.apk`
+- **Release APK**: `android/app/build/outputs/apk/release/app-release.apk`
+- **AAB Bundle**: `android/app/build/outputs/bundle/release/app-release.aab`
+
+## Installation & Testing
+
+### Install on Device
+```bash
+# Install via ADB
+adb install android/app/build/outputs/apk/debug/app-debug.apk
+
+# Or drag & drop APK file to Android device
+```
+
+### Testing Options
+1. **Physical Device**: Enable Developer Options + USB Debugging
+2. **Android Emulator**: Create virtual device in Android Studio
+3. **Live Reload**: `npm run dev` for real-time testing
+
+## App Store Deployment
+
+### Google Play Store
+1. Use **AAB file** (app-release.aab) for Play Console upload
+2. Sign the app with release keystore
+3. Follow Play Store guidelines for review
+
+### Direct Distribution  
+1. Use **APK file** (app-release.apk) for direct installation
+2. Users need to enable "Install from Unknown Sources"
+
+## Customization
+
+### Change Website URL
+Edit `main.js` and update the `targetUrl` variable.
+
+### App Icons & Branding
+- Replace icons in `assets/` folder
+- Update `capacitor.config.ts` for app metadata
+- Modify colors in `index.html` styles
+
+### Add Native Features
+```javascript
+// Add to main.js for native capabilities
+import {{ Camera }} from '@capacitor/camera';
+import {{ Geolocation }} from '@capacitor/geolocation';
+import {{ Device }} from '@capacitor/device';
+```
+
+## Troubleshooting
+
+### Build Issues
+- **Gradle sync failed**: Update Android SDK and build tools
+- **License not accepted**: Run `sdkmanager --licenses` in terminal
+- **Build tools missing**: Install via Android Studio SDK Manager
+
+### Performance Optimization
+- **Slow builds**: Use `quick-build` scripts with daemon/parallel flags
+- **Large APK size**: Enable ProGuard in `android/app/build.gradle`
+- **Network issues**: Add network security config for HTTPS sites
+
+## Technical Details
+
+- **Framework**: Capacitor ^6.0.0 (Modern Cordova successor)
+- **Build System**: Gradle with Android SDK
+- **Web Engine**: System WebView with native bridge
+- **Target SDK**: Android 14 (API 34) with backward compatibility
+- **Minimum SDK**: Android 7.0 (API 24)
+- **Architecture**: ARM64, ARMv7, x86_64 support
+
+## Support & Resources
+
+- **Original Website**: {target_url}
+- **Capacitor Docs**: [capacitorjs.com](https://capacitorjs.com)
+- **Android Developer**: [developer.android.com](https://developer.android.com)
+- **Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} by DigitalSkeleton
+
+---
+
+**Pro Tip**: Use `quick-build` for development and `build-release` for production. The AAB format is preferred by Google Play Store for smaller download sizes and dynamic delivery features.
+'''

@@ -102,18 +102,38 @@
                             
                             {% if job.package_type == 'apk' %}
                                 <div class="installation-steps">
-                                    <h6 class="text-primary">Capacitor Android Build:</h6>
-                                    <ol class="mb-0">
-                                        <li>Download and extract the ZIP file to your computer</li>
-                                        <li>Install <a href="https://nodejs.org/" target="_blank" class="text-info">Node.js</a> (version 16 or later)</li>
-                                        <li>Install <a href="https://developer.android.com/studio" target="_blank" class="text-info">Android Studio</a> and Android SDK</li>
-                                        <li>Open Command Prompt/Terminal in the extracted folder</li>
-                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm install</code> to install dependencies</li>
-                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm run cap:android</code> to set up Android project</li>
-                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm run build:android</code> to build APK</li>
-                                    </ol>
+                                    <h6 class="text-primary">Multiple Build Options Available:</h6>
+                                    
+                                    <div class="mb-3">
+                                        <h6 class="text-success">🚀 Quick Development Build (Recommended for Testing):</h6>
+                                        <ol class="mb-2">
+                                            <li>Download and extract the ZIP file</li>
+                                            <li>Install <a href="https://nodejs.org/" target="_blank" class="text-info">Node.js</a> (version 16+)</li>
+                                            <li>Install <a href="https://developer.android.com/studio" target="_blank" class="text-info">Android Studio</a> + Android SDK</li>
+                                            <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">quick-build.bat</code> (Windows) or <code class="bg-dark text-warning px-2 py-1 rounded">./quick-build.sh</code> (Mac/Linux)</li>
+                                        </ol>
+                                        <small class="text-success">⚡ <strong>Fastest option:</strong> Uses parallel builds and daemon processes</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <h6 class="text-warning">📱 Google Play Store Build:</h6>
+                                        <ol class="mb-2">
+                                            <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">build-release.bat</code> (Windows) or <code class="bg-dark text-warning px-2 py-1 rounded">./build-release.sh</code> (Mac/Linux)</li>
+                                        </ol>
+                                        <small class="text-warning">🏪 <strong>For app stores:</strong> Generates both APK and AAB (Android App Bundle) files</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <h6 class="text-info">🛠️ Manual Build Process:</h6>
+                                        <ol class="mb-2">
+                                            <li><code class="bg-dark text-warning px-2 py-1 rounded">npm install</code></li>
+                                            <li><code class="bg-dark text-warning px-2 py-1 rounded">npm run cap:android</code></li>
+                                            <li><code class="bg-dark text-warning px-2 py-1 rounded">npm run build:android</code></li>
+                                        </ol>
+                                    </div>
+                                    
                                     <div class="alert alert-success mt-3 mb-0">
-                                        <small><strong>Modern web-to-mobile:</strong> This Capacitor project generates real native Android APK files using modern web technologies. No Java/Kotlin knowledge required!</small>
+                                        <small><strong>Modern web-to-mobile:</strong> Capacitor generates real native Android APK/AAB files using web technologies. Multiple build options for different needs - development testing, app store deployment, or manual control.</small>
                                     </div>
                                 </div>
                             {% elif job.package_type == 'ipa' %}
