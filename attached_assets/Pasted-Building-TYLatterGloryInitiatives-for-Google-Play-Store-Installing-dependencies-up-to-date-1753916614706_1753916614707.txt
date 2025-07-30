@@ -1,0 +1,91 @@
+Building TYLatterGloryInitiatives for Google Play Store...
+Installing dependencies...
+
+up to date, audited 129 packages in 2s
+
+21 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+Setting up Android platform...
+[error] android platform already exists.
+        To re-add this platform, first remove .\android, then run this command again.
+        WARNING: Your native project will be completely removed.
+Syncing assets...
+√ Copying web assets from dist to android\app\src\main\assets\public in 108.93ms
+√ Creating capacitor.config.json in android\app\src\main\assets in 3.79ms
+√ copy android in 136.64ms
+√ Updating Android plugins in 3.41ms
+√ update android in 150.85ms
+[info] Sync finished in 0.309s
+Building release APK and AAB (Google Play Bundle)...
+Building release APK...
+Downloading https://services.gradle.org/distributions/gradle-8.1-bin.zip
+...........10%............20%............30%............40%............50%............60%............70%............80%...........90%............100%
+
+Welcome to Gradle 8.1!
+
+Here are the highlights of this release:
+ - Stable configuration cache
+ - Experimental Kotlin DSL assignment syntax
+ - Building with Java 20
+
+For more details see https://docs.gradle.org/8.1/release-notes.html
+
+Starting a Gradle Daemon (subsequent builds will be faster)
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+A problem occurred configuring root project 'android'.
+> Could not resolve all files for configuration ':classpath'.
+   > Cannot resolve external dependency com.android.tools.build:gradle:8.1.0 because no repositories are defined.
+     Required by:
+         project :
+   > Cannot resolve external dependency org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10 because no repositories are defined.
+     Required by:
+         project :
+   > Cannot resolve external dependency com.google.gms:google-services:4.4.0 because no repositories are defined.
+     Required by:
+         project :
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+
+* Get more help at https://help.gradle.org
+
+BUILD FAILED in 53s
+Building AAB for Google Play Store...
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+A problem occurred configuring root project 'android'.
+> Could not resolve all files for configuration ':classpath'.
+   > Cannot resolve external dependency com.android.tools.build:gradle:8.1.0 because no repositories are defined.
+     Required by:
+         project :
+   > Cannot resolve external dependency org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10 because no repositories are defined.
+     Required by:
+         project :
+   > Cannot resolve external dependency com.google.gms:google-services:4.4.0 because no repositories are defined.
+     Required by:
+         project :
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+
+* Get more help at https://help.gradle.org
+
+BUILD FAILED in 1s
+Build complete!
+
+APK Location: android/app/build/outputs/apk/release/app-release.apk
+AAB Location: android/app/build/outputs/bundle/release/app-release.aab
+
+For Google Play Store: Use the AAB file
+For direct installation: Use the APK file
