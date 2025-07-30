@@ -144,30 +144,38 @@ class PackageBuilder:
         self._create_file(project_dir, 'setup-gradle.bat', self._generate_gradle_setup_script())
         self._create_file(project_dir, 'setup-gradle.sh', self._generate_gradle_setup_script_linux())
         
+        # Create capacitor-cordova-android-plugins directory structure
+        cordova_plugins_dir = os.path.join(android_dir, 'capacitor-cordova-android-plugins')
+        os.makedirs(cordova_plugins_dir, exist_ok=True)
+        self._create_file(cordova_plugins_dir, 'build.gradle', self._generate_cordova_plugins_gradle())
+        
         # Create app directory structure
-        app_dir = os.path.join(project_dir, 'app')
+        app_dir = os.path.join(android_dir, 'app')
         os.makedirs(app_dir, exist_ok=True)
         
         # Create app/build.gradle
-        self._create_file(app_dir, 'build.gradle', self._generate_app_gradle(package_name, metadata))
+        self._create_file(app_dir, 'build.gradle', self._generate_capacitor_app_gradle(package_name, metadata))
         
-        # Create src/main directory structure
+        # Create src/main directory structure for Capacitor
         main_dir = os.path.join(app_dir, 'src', 'main')
-        java_dir = os.path.join(main_dir, 'java', 'com', 'pwabuilder', app_name.lower())
+        java_dir = os.path.join(main_dir, 'java', *package_name.split('.'))
         res_dir = os.path.join(main_dir, 'res')
-        assets_dir = os.path.join(main_dir, 'assets')
+        assets_dir = os.path.join(main_dir, 'assets', 'public')
         
         os.makedirs(java_dir, exist_ok=True)
         os.makedirs(os.path.join(res_dir, 'layout'), exist_ok=True)
         os.makedirs(os.path.join(res_dir, 'values'), exist_ok=True)
-        os.makedirs(os.path.join(res_dir, 'mipmap-hdpi'), exist_ok=True)
+        os.makedirs(os.path.join(res_dir, 'drawable'), exist_ok=True)
         os.makedirs(assets_dir, exist_ok=True)
         
-        # Create AndroidManifest.xml
-        self._create_file(main_dir, 'AndroidManifest.xml', self._generate_android_manifest_xml(package_name, metadata))
+        # Create capacitor.build.gradle file for app
+        self._create_file(app_dir, 'capacitor.build.gradle', self._generate_capacitor_build_gradle())
         
-        # Create MainActivity.java
-        self._create_file(java_dir, 'MainActivity.java', self._generate_main_activity(package_name, metadata, target_url))
+        # Create AndroidManifest.xml for Capacitor
+        self._create_file(main_dir, 'AndroidManifest.xml', self._generate_capacitor_manifest(package_name, metadata))
+        
+        # Create MainActivity.java for Capacitor
+        self._create_file(java_dir, 'MainActivity.java', self._generate_capacitor_main_activity(package_name, metadata, target_url))
         
         # Create layout files
         self._create_file(os.path.join(res_dir, 'layout'), 'activity_main.xml', self._generate_activity_layout())
@@ -1649,6 +1657,200 @@ cd ..
 # NOTE: If you have Android Studio installed, the SDK is typically auto-detected.
 # If build fails, please set ANDROID_HOME environment variable or manually set sdk.dir below:
 # sdk.dir=/path/to/your/android/sdk
+'''
+
+    def _generate_cordova_plugins_gradle(self):
+        """Generate build.gradle for capacitor-cordova-android-plugins"""
+        return '''apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 34
+    namespace "capacitor.plugins"
+    
+    defaultConfig {
+        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 22
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 34
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+'''
+
+    def _generate_capacitor_app_gradle(self, package_name, metadata):
+        """Generate modern Capacitor app/build.gradle"""
+        return f'''apply plugin: 'com.android.application'
+
+android {{
+    namespace '{package_name}'
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    
+    defaultConfig {{
+        applicationId "{package_name}"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {{
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }}
+    }}
+    
+    buildTypes {{
+        release {{
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }}
+    }}
+    
+    compileOptions {{
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }}
+}}
+
+repositories {{
+    flatDir {{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }}
+}}
+
+dependencies {{
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:${{rootProject.ext.androidxAppCompatVersion}}"
+    implementation "androidx.core:core:${{rootProject.ext.androidxCoreVersion}}"
+    implementation "androidx.activity:activity:${{rootProject.ext.androidxActivityVersion}}"
+    implementation "androidx.fragment:fragment:${{rootProject.ext.androidxFragmentVersion}}"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:${{rootProject.ext.androidxCoordinatorLayoutVersion}}"
+    implementation "androidx.webkit:webkit:${{rootProject.ext.androidxWebkitVersion}}"
+    implementation "androidx.core:core-splashscreen:${{rootProject.ext.coreSplashScreenVersion}}"
+    
+    testImplementation "junit:junit:${{rootProject.ext.junitVersion}}"
+    androidTestImplementation "androidx.test.ext:junit:${{rootProject.ext.androidxJunitVersion}}"
+    androidTestImplementation "androidx.test.espresso:espresso-core:${{rootProject.ext.androidxEspressoCoreVersion}}"
+    
+    implementation project(':capacitor-cordova-android-plugins')
+}}
+
+apply from: 'capacitor.build.gradle'
+
+try {{
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {{
+        apply plugin: 'com.google.gms.google-services'
+    }}
+}} catch(Exception e) {{
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}}
+'''
+
+    def _generate_capacitor_build_gradle(self):
+        """Generate capacitor.build.gradle for Capacitor app"""
+        return '''// Capacitor Build Configuration
+// This file contains build configurations specific to Capacitor
+
+// Apply Capacitor Gradle Plugin
+apply plugin: 'com.capacitor.gradle-plugin'
+
+repositories {
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+}
+
+dependencies {
+    implementation 'com.capacitorjs:core:4.8.0'
+}
+'''
+
+    def _generate_capacitor_manifest(self, package_name, metadata):
+        """Generate AndroidManifest.xml for Capacitor app"""
+        return f'''<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="{package_name}">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="{metadata.title}"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme.NoActionBarLaunch"
+        android:usesCleartextTraffic="true">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/AppTheme.NoActionBarLaunch">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${{applicationId}}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+</manifest>
+'''
+
+    def _generate_capacitor_main_activity(self, package_name, metadata, target_url):
+        """Generate MainActivity.java for Capacitor app"""
+        class_name = package_name.split('.')[-1].capitalize()
+        return f'''package {package_name};
+
+import android.os.Bundle;
+
+import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.Plugin;
+
+import java.util.ArrayList;
+
+public class MainActivity extends BridgeActivity {{
+    @Override
+    public void onCreate(Bundle savedInstanceState) {{
+        super.onCreate(savedInstanceState);
+
+        // Initializes the Bridge
+        this.init(savedInstanceState, new ArrayList<Class<? extends Plugin>>() {{{{
+            // Additional plugins you've installed go here
+            // Ex: add(TotallyAwesomePlugin.class);
+        }}}});
+    }}
+}}
 '''
     
     # Electron generators for Windows
