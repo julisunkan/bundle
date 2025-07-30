@@ -358,6 +358,32 @@ def build_history():
     jobs = BuildJob.query.order_by(db.desc(BuildJob.created_at)).limit(50).all()
     return render_template('history.html', jobs=jobs)
 
+# Footer Pages
+@app.route('/documentation')
+def documentation():
+    """Documentation page"""
+    return render_template('documentation.html')
+
+@app.route('/api-reference')
+def api_reference():
+    """API Reference page"""
+    return render_template('api_reference.html')
+
+@app.route('/privacy')
+def privacy():
+    """Privacy Policy page"""
+    return render_template('privacy.html')
+
+@app.route('/terms')
+def terms():
+    """Terms of Service page"""
+    return render_template('terms.html')
+
+@app.route('/support')
+def support():
+    """Support page"""
+    return render_template('support.html')
+
 # PWA Routes
 @app.route('/manifest.json')
 def serve_manifest():
