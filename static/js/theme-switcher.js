@@ -36,8 +36,8 @@ class ThemeSwitcher {
                     nav.classList.add('navbar-light');
                     break;
                 case 'grey':
-                    nav.style.background = 'rgba(73, 80, 87, 0.95)';
-                    nav.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
+                    nav.style.background = 'rgba(134, 142, 150, 0.95)';
+                    nav.style.borderBottom = '1px solid rgba(255, 255, 255, 0.15)';
                     nav.classList.remove('navbar-light');
                     nav.classList.add('navbar-dark');
                     break;
