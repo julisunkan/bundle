@@ -933,7 +933,7 @@ namespace {app_name}
         {{
             try
             {{
-                await WebView.EnsureCoreWebView2Async(null);
+                await WebView.EnsureCoreWebView2Async();
                 WebView.Source = new System.Uri("{target_url}");
             }}
             catch (System.Exception ex)
