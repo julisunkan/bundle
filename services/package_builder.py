@@ -128,6 +128,11 @@ class PackageBuilder:
         os.makedirs(gradle_wrapper_dir, exist_ok=True)
         self._create_file(gradle_wrapper_dir, 'gradle-wrapper.properties', self._generate_gradle_wrapper_properties())
         
+        # Create a minimal gradle-wrapper.jar placeholder (real jar would be downloaded by Gradle)
+        # For now, create setup instructions instead of the actual jar
+        self._create_file(android_dir, 'setup-gradle.bat', self._generate_gradle_setup_script())
+        self._create_file(android_dir, 'setup-gradle.sh', self._generate_gradle_setup_script_linux())
+        
         # Create app directory structure
         app_dir = os.path.join(project_dir, 'app')
         os.makedirs(app_dir, exist_ok=True)
@@ -1478,6 +1483,67 @@ networkTimeout=10000
 zipStoreBase=GRADLE_USER_HOME
 zipStorePath=wrapper/dists
 '''
+
+    def _generate_gradle_setup_script(self):
+        """Generate script to setup Gradle wrapper"""
+        return '''@echo off
+REM Setup Gradle Wrapper for Android Build
+
+echo Setting up Gradle wrapper...
+
+REM Create gradle wrapper directory if it doesn't exist
+if not exist "gradle\\wrapper" mkdir gradle\\wrapper
+
+REM Download gradle wrapper jar if it doesn't exist
+if not exist "gradle\\wrapper\\gradle-wrapper.jar" (
+    echo Downloading Gradle wrapper...
+    curl -L https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar -o gradle\\wrapper\\gradle-wrapper.jar
+    
+    REM If curl fails, try with PowerShell
+    if %errorlevel% neq 0 (
+        echo Trying with PowerShell...
+        powershell -Command "Invoke-WebRequest -Uri 'https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar' -OutFile 'gradle\\wrapper\\gradle-wrapper.jar'"
+    )
+)
+
+if exist "gradle\\wrapper\\gradle-wrapper.jar" (
+    echo Gradle wrapper setup complete!
+) else (
+    echo Failed to download Gradle wrapper. Please ensure you have internet connection.
+    echo You can manually download gradle-wrapper.jar and place it in gradle\\wrapper\\ directory.
+)
+'''
+
+    def _generate_gradle_setup_script_linux(self):
+        """Generate script to setup Gradle wrapper (Linux/Mac)"""
+        return '''#!/bin/bash
+# Setup Gradle Wrapper for Android Build
+
+echo "Setting up Gradle wrapper..."
+
+# Create gradle wrapper directory if it doesn't exist
+mkdir -p gradle/wrapper
+
+# Download gradle wrapper jar if it doesn't exist
+if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+    echo "Downloading Gradle wrapper..."
+    curl -L https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+    
+    # If curl fails, try with wget
+    if [ $? -ne 0 ]; then
+        echo "Trying with wget..."
+        wget https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar -O gradle/wrapper/gradle-wrapper.jar
+    fi
+fi
+
+if [ -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+    echo "Gradle wrapper setup complete!"
+    chmod +x ../gradlew
+else
+    echo "Failed to download Gradle wrapper. Please ensure you have internet connection."
+    echo "You can manually download gradle-wrapper.jar and place it in gradle/wrapper/ directory."
+fi
+'''
     
     # Electron generators for Windows
     def _generate_electron_package_json(self, app_name, metadata):
@@ -2317,6 +2383,13 @@ call npx cap sync android
 REM Build APK
 echo Building APK...
 cd android
+
+REM Check if gradle wrapper exists, if not, set it up
+if not exist "gradle\wrapper\gradle-wrapper.jar" (
+    echo Setting up Gradle wrapper...
+    call ..\setup-gradle.bat
+)
+
 call gradlew.bat assembleDebug
 cd ..
 
