@@ -38,11 +38,19 @@ class PackageBuilder:
             raise Exception(f"Android build failed: {str(e)}")
     
     def build_ipa(self, metadata, manifest_data, job_id, target_url):
-        """Build an Xcode project structure that can be imported"""
+        """Build iOS app using simple, reliable methods"""
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
-                project_dir = os.path.join(temp_dir, 'ios_project')
-                self._create_xcode_project(project_dir, metadata, manifest_data, target_url)
+                project_dir = os.path.join(temp_dir, 'ios_simple')
+                
+                # Method 1: Simple iOS Web Wrapper
+                self._create_ios_web_wrapper(project_dir, metadata, manifest_data, target_url)
+                
+                # Method 2: iOS Online Builder Instructions  
+                self._create_ios_online_instructions(project_dir, metadata, manifest_data, target_url)
+                
+                # Method 3: PWA to iOS Converter
+                self._create_ios_pwa_converter(project_dir, metadata, manifest_data, target_url)
                 
                 zip_filename = f"{metadata.title.replace(' ', '_')}_ios_{job_id}.zip"
                 zip_path = os.path.join(self.output_dir, zip_filename)
@@ -51,8 +59,8 @@ class PackageBuilder:
                 return zip_path
                 
         except Exception as e:
-            app.logger.error(f"iOS project build failed: {str(e)}")
-            raise Exception(f"iOS project build failed: {str(e)}")
+            app.logger.error(f"iOS build failed: {str(e)}")
+            raise Exception(f"iOS build failed: {str(e)}")
     
     def build_msix(self, metadata, manifest_data, job_id, target_url):
         """Build a Visual Studio project structure that can be imported"""
@@ -4140,24 +4148,29 @@ body {
 
 This is a simple, reliable web wrapper that works with any online APK builder.
 
-## 🚀 Build APK in 3 Steps
+## 🚀 Build APK in 3 Easy Steps
 
-### Step 1: Choose an Online Builder
-- **AppsGeyser** (Free): https://appsgeyser.com/
-- **Appy Pie** (Trial): https://www.appypie.com/
-- **AppMakr** (Free): https://appmakr.com/
+### Step 1: Choose Your Preferred Builder
+- **AppsGeyser** (Fastest & Free): https://appsgeyser.com/
+- **Appy Pie** (More Features): https://www.appypie.com/app-maker
+- **PWA Builder** (Microsoft - High Quality): https://www.pwabuilder.com/
 
-### Step 2: Upload This Wrapper
+### Step 2: Import Your App
+**Method A - Direct URL (Easiest):**
 1. Go to your chosen builder
-2. Select "Upload HTML" or "Website App"
-3. Upload the `index.html` file from this folder
-4. Or host these files and use the URL
+2. Select "Website App" or "URL App"
+3. Enter: `{target_url}`
 
-### Step 3: Configure & Build
-- App Name: {metadata.title}
-- Website URL: {target_url}
-- Upload app icon (from icons folder)
-- Click "Generate APK"
+**Method B - Upload Files (Advanced):**
+1. Host the web wrapper files online (Netlify, GitHub Pages)
+2. Use hosted URL with the builder
+3. Or upload HTML files directly if supported
+
+### Step 3: Customize & Generate
+- **App Name**: {metadata.title}
+- **Icon**: Upload from icons folder (512x512px recommended)
+- **Package Name**: com.yourname.{metadata.title.lower().replace(' ', '')}
+- **Generate APK** and download when ready
 
 ## ✅ What You Get
 
@@ -4247,35 +4260,42 @@ Edit `app.js` to add more functionality like:
 
 ## Build APK in 5 Minutes (No Coding Required!)
 
-### Method 1: AppsGeyser (Fastest & Free)
+### Method 1: AppsGeyser (Fastest & Free) ⭐ RECOMMENDED
 
 1. **Visit**: https://appsgeyser.com/
-2. **Click**: "Create App"
-3. **Select**: "Website"
+2. **Click**: "Create Free App"
+3. **Choose**: "Website" template
 4. **Enter URL**: `{target_url}`
-5. **Set Name**: {metadata.title}
-6. **Upload Icon**: Use any icon from the icons folder
-7. **Click**: "Create App"
-8. **Download**: Your APK file
+5. **App Details**:
+   - Name: {metadata.title}
+   - Description: Mobile app for {metadata.title}
+   - Category: Choose appropriate category
+6. **Upload Icon**: Use 512x512px icon from package
+7. **Create App** → Wait 2-3 minutes for processing
+8. **Download APK** directly to your device
 
-**Result**: Ready-to-install Android APK
+**✅ Results**: Professional Android APK ready for installation
 
-### Method 2: Appy Pie (More Features)
+### Method 2: Appy Pie (Advanced Features)
 
 1. **Visit**: https://www.appypie.com/app-maker
-2. **Start**: Free trial
-3. **Choose**: "Website App"
-4. **Enter URL**: `{target_url}`
-5. **Customize**: Colors, name, icon
-6. **Generate**: APK file
+2. **Sign up** for free account
+3. **Choose**: "Website App" template
+4. **Enter Details**:
+   - Website URL: `{target_url}`
+   - App Name: {metadata.title}
+   - App Icon: Upload from package
+5. **Customize**: Colors, splash screen, navigation
+6. **Build**: Generate APK (may require subscription for download)
 
-### Method 3: PWA Builder (Microsoft)
+### Method 3: PWA Builder (Microsoft - Highest Quality)
 
-1. **Visit**: https://www.pwabuilder.com/
-2. **Enter URL**: `{target_url}`
-3. **Click**: "Start"
-4. **Select**: "Android"
-5. **Download**: APK package
+1. **Host Files**: Upload web wrapper to Netlify/GitHub Pages first
+2. **Visit**: https://www.pwabuilder.com/
+3. **Enter**: Your hosted URL (not original website)
+4. **Analyze**: Click "Start" to scan PWA readiness
+5. **Generate**: Select "Android" → "Generate Package"
+6. **Download**: Professional-grade APK with Play Store compatibility
 
 ## Alternative: Use Web Wrapper
 
@@ -5024,3 +5044,525 @@ Edit `manifest.json` to change:
     </div>
 </body>
 </html>'''
+
+    # iOS-specific generation methods
+    def _create_ios_web_wrapper(self, project_dir, metadata, manifest_data, target_url):
+        """Create simple iOS web wrapper"""
+        wrapper_dir = os.path.join(project_dir, 'ios_web_wrapper')
+        os.makedirs(wrapper_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        
+        # Create iOS-optimized HTML app
+        self._create_file(wrapper_dir, 'index.html', self._generate_ios_wrapper_html(metadata, target_url))
+        self._create_file(wrapper_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
+        self._create_file(wrapper_dir, 'sw.js', self._generate_simple_service_worker())
+        self._create_file(wrapper_dir, 'styles.css', self._generate_ios_wrapper_styles())
+        self._create_file(wrapper_dir, 'app.js', self._generate_ios_wrapper_js(target_url))
+        self._create_file(wrapper_dir, 'README.md', self._generate_ios_wrapper_readme(metadata, target_url))
+        
+        # Create icons folder
+        icons_dir = os.path.join(wrapper_dir, 'icons')
+        os.makedirs(icons_dir, exist_ok=True)
+
+    def _create_ios_online_instructions(self, project_dir, metadata, manifest_data, target_url):
+        """Create comprehensive instructions for iOS online builders"""
+        instructions_dir = os.path.join(project_dir, 'ios_builders')
+        os.makedirs(instructions_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        
+        # Create instruction files
+        self._create_file(instructions_dir, 'IOS_QUICK_START.md', self._generate_ios_quick_start_guide(metadata, target_url))
+        self._create_file(instructions_dir, 'ios-step-by-step.html', self._generate_ios_step_by_step_html(metadata, target_url))
+        self._create_file(instructions_dir, 'ios-app-config.json', self._generate_ios_app_config(app_name, metadata, target_url))
+        self._create_file(instructions_dir, 'ios-builder-links.txt', self._generate_ios_builder_links())
+        self._create_file(instructions_dir, 'ios-troubleshooting.md', self._generate_ios_troubleshooting_guide())
+
+    def _create_ios_pwa_converter(self, project_dir, metadata, manifest_data, target_url):
+        """Create PWA optimized for iOS conversion"""
+        pwa_dir = os.path.join(project_dir, 'ios_pwa_converter')
+        os.makedirs(pwa_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        
+        # Create iOS-optimized PWA files
+        self._create_file(pwa_dir, 'index.html', self._generate_ios_pwa_html(metadata, target_url))
+        self._create_file(pwa_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
+        self._create_file(pwa_dir, 'sw.js', self._generate_simple_service_worker())
+        self._create_file(pwa_dir, 'config.xml', self._generate_ios_config_xml(app_name, metadata, target_url))
+        self._create_file(pwa_dir, 'README.md', self._generate_ios_pwa_readme(metadata, target_url))
+        self._create_file(pwa_dir, 'ios-convert-guide.html', self._generate_ios_conversion_guide_html(metadata, target_url))
+
+    def _generate_ios_wrapper_html(self, metadata, target_url):
+        """Generate iOS-optimized HTML wrapper"""
+        return f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{metadata.title}</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="theme-color" content="#007AFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{metadata.title}">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+</head>
+<body>
+    <div id="ios-loading-screen">
+        <div class="ios-loading-content">
+            <div class="ios-app-icon"></div>
+            <h1>{metadata.title}</h1>
+            <div class="ios-loading-spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+    
+    <iframe 
+        id="ios-app-frame" 
+        src="{target_url}" 
+        style="display:none;">
+    </iframe>
+    
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {{
+            navigator.serviceWorker.register('sw.js');
+        }}
+    </script>
+</body>
+</html>'''
+
+    # iOS-specific helper methods start here
+    def _generate_ios_wrapper_readme(self, metadata, target_url):
+        """Generate README for iOS wrapper"""
+        return f"""# {metadata.title} - iOS Web Wrapper
+
+This is an iOS-optimized web wrapper that works with online iOS app builders.
+
+## 🚀 Build iOS App in 3 Easy Steps
+
+### Step 1: Choose Your iOS Builder
+- **Appy Pie** (iOS Support): https://www.appypie.com/app-maker
+- **BuildFire** (Professional): https://buildfire.com/
+- **PWA Builder** (Microsoft - High Quality): https://www.pwabuilder.com/
+
+### Step 2: Import Your App
+**Method A - Direct URL (Easiest):**
+1. Go to your chosen builder
+2. Select "Website App" or "URL App"  
+3. Enter: `{target_url}`
+
+**Method B - Upload Files (Advanced):**
+1. Host these iOS wrapper files online (Netlify, GitHub Pages)
+2. Use hosted URL with the builder
+3. Upload HTML files directly if supported
+
+### Step 3: Configure & Generate
+- **App Name**: {metadata.title}
+- **Bundle ID**: com.yourcompany.{metadata.title.lower().replace(" ", "")}
+- **Icon**: Upload from icons folder (1024x1024px for iOS)
+- **Generate IPA** and download when ready
+
+Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+"""
+
+    def _generate_ios_quick_start_guide(self, metadata, target_url):
+        """Generate iOS quick start guide"""  
+        return f"""# iOS Quick Start Guide - {metadata.title}
+
+## Build iOS App in 10 Minutes (No Mac Required!)
+
+### Method 1: Appy Pie (iOS Support) ⭐ RECOMMENDED
+
+1. **Visit**: https://www.appypie.com/app-maker
+2. **Sign up** for free account
+3. **Choose**: "Website App" template
+4. **Enter Details**:
+   - Website URL: `{target_url}`
+   - App Name: {metadata.title}
+   - Platform: Select "iOS"
+5. **Upload Icon**: Use 1024x1024px icon from package
+6. **Build**: Generate IPA (subscription required for download)
+7. **Download IPA** for iOS installation
+
+**✅ Results**: Professional iOS IPA ready for installation
+
+Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+"""
+
+    def _generate_ios_step_by_step_html(self, metadata, target_url):
+        """Generate step-by-step iOS HTML guide"""
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build {metadata.title} iOS App - Step by Step</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Helvetica, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #1d1d1f;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 30px;
+        }}
+        .step {{
+            background: #f5f5f7;
+            border-left: 4px solid #007AFF;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }}
+        .btn {{
+            display: inline-block;
+            background: #007AFF;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin: 5px;
+            font-weight: 500;
+        }}
+        .url-box {{
+            background: #f5f5f7;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 15px 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🍎 Build Your iOS App</h1>
+        <p>Convert <strong>{metadata.title}</strong> to iOS IPA - No Mac or Xcode required!</p>
+    </div>
+
+    <div class="step">
+        <strong>Step 1: Visit Appy Pie</strong><br>
+        <a href="https://www.appypie.com/app-maker" target="_blank" class="btn">Go to Appy Pie</a>
+    </div>
+
+    <div class="step">
+        <strong>Step 2: Enter Your Website</strong><br>
+        <div class="url-box">{target_url}</div>
+    </div>
+
+    <div class="step">
+        <strong>Step 3: Configure iOS App</strong><br>
+        • App Name: <strong>{metadata.title}</strong><br>
+        • Bundle ID: <strong>com.yourcompany.{metadata.title.lower().replace(" ", "")}</strong><br>
+        • Upload 1024x1024px icon from package
+    </div>
+
+    <div class="step">
+        <strong>Step 4: Generate & Download IPA</strong><br>
+        Click "Build iOS App" and download when ready
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; color: #86868b;">
+        <p>Generated on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} by DigitalSkeleton</p>
+        <p>🍎 Optimized for iOS</p>
+    </div>
+</body>
+</html>"""
+
+    def _generate_ios_app_config(self, app_name, metadata, target_url):
+        """Generate iOS app config JSON"""
+        return json.dumps({
+            "appName": metadata.title,
+            "bundleId": f"com.yourcompany.{app_name.lower()}",
+            "websiteUrl": target_url,
+            "description": getattr(metadata, 'description', f"iOS app for {metadata.title}"),
+            "version": "1.0.0",
+            "platform": "iOS",
+            "iosSpecific": {
+                "minimumOSVersion": "12.0",
+                "supportedDevices": ["iPhone", "iPad"],
+                "iconSizes": ["1024x1024", "180x180", "120x120"],
+                "bundleIdentifier": f"com.yourcompany.{app_name.lower()}"
+            }
+        }, indent=2)
+
+    def _generate_ios_builder_links(self):
+        """Generate list of iOS builder links"""
+        return """# iOS App Builders - Working Links
+
+## iOS-Compatible Builders
+
+1. **Appy Pie** (Best for iOS)
+   URL: https://www.appypie.com/app-maker
+   Features: Native iOS support, App Store ready
+   
+2. **BuildFire** (Professional iOS)
+   URL: https://buildfire.com/
+   Features: Enterprise iOS features, App Store optimization
+
+3. **PWA Builder** (Microsoft)
+   URL: https://www.pwabuilder.com/
+   Features: High quality iOS apps, TestFlight ready
+
+## iOS Publishing Process
+
+### TestFlight (Beta)
+1. Create Apple Developer account ($99/year)
+2. Upload IPA to App Store Connect
+3. Set up TestFlight for beta testing
+
+### App Store (Production)
+1. Complete app metadata in App Store Connect
+2. Submit for App Store review
+3. Release when approved by Apple
+"""
+
+    def _generate_ios_troubleshooting_guide(self):
+        """Generate iOS troubleshooting guide"""
+        return """# iOS Troubleshooting Guide
+
+## Common iOS Issues & Solutions
+
+### IPA Generation Problems
+
+**Problem**: Builder says "iOS not supported"
+**Solution**: 
+- Use Appy Pie or BuildFire (both support iOS)
+- Try PWA Builder for high-quality iOS apps
+- Ensure website is HTTPS (required for iOS)
+
+**Problem**: "Invalid Bundle ID" error
+**Solution**:
+- Use reverse domain format: com.yourcompany.appname
+- Only use lowercase letters, numbers, and dots
+- Example: com.mycompany.myapp
+
+### iOS Installation Problems
+
+**Problem**: "Cannot install app" on iOS device
+**Solution**:
+- Use TestFlight for beta testing distribution
+- Need Apple Developer account for device installation
+
+## iOS Tips
+
+✅ **Always test on real iOS devices**
+✅ **Use HTTPS URLs (required for iOS)**
+✅ **Upload high-resolution icons (1024x1024px)**
+✅ **Follow Apple Human Interface Guidelines**
+✅ **Use TestFlight for beta testing**
+
+### Required for iOS Distribution
+
+- **Apple Developer Account**: $99/year for App Store
+- **Bundle ID**: Unique identifier for your app
+- **App Icons**: High-resolution icons for all iOS devices
+- **Privacy Policy**: Required for App Store submission
+"""
+
+    def _generate_ios_pwa_html(self, metadata, target_url):
+        """Generate iOS-optimized PWA HTML"""
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{metadata.title}</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007AFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{metadata.title}">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <style>
+        body {{
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, sans-serif;
+            background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .ios-container {{
+            text-align: center;
+            color: white;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            max-width: 400px;
+        }}
+        .ios-btn {{
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            margin: 15px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }}
+    </style>
+</head>
+<body>
+    <div class="ios-container">
+        <h1>{metadata.title}</h1>
+        <p>iOS Progressive Web App</p>
+        <a href="{target_url}" class="ios-btn" target="_blank">Open Website</a>
+    </div>
+    
+    <script>
+        if ('serviceWorker' in navigator) {{
+            navigator.serviceWorker.register('sw.js');
+        }}
+    </script>
+</body>
+</html>"""
+
+    def _generate_ios_config_xml(self, app_name, metadata, target_url):
+        """Generate iOS config.xml for Cordova/PhoneGap"""
+        return f"""<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.yourcompany.{app_name.lower()}" version="1.0.0" xmlns="http://www.w3.org/ns/widgets">
+    <name>{metadata.title}</name>
+    <description>iOS app for {metadata.title}</description>
+    <author email="your@email.com" href="{target_url}">Your Company</author>
+    <content src="{target_url}" />
+    <preference name="orientation" value="default" />
+    <preference name="fullscreen" value="true" />
+    <platform name="ios">
+        <preference name="deployment-target" value="12.0" />
+    </platform>
+    <access origin="*" />
+</widget>"""
+
+    def _generate_ios_pwa_readme(self, metadata, target_url):
+        """Generate iOS PWA README"""
+        return f"""# {metadata.title} - iOS PWA to App Converter
+
+This folder contains an iOS-optimized Progressive Web App that can be converted to a native iOS app.
+
+## 🍎 Quick iOS App Generation
+
+### Method 1: Appy Pie (iOS Specialist)
+1. **Host these files** on any web server
+2. **Visit**: https://www.appypie.com/app-maker
+3. **Select**: "Website App" → "iOS"
+4. **Enter** your hosted URL
+5. **Download** IPA file
+
+### Method 2: PWA Builder (Microsoft)
+1. **Host these files** on web server
+2. **Visit**: https://www.pwabuilder.com/
+3. **Enter** your hosted URL
+4. **Generate** iOS package
+
+## 📁 iOS Files Included
+
+- index.html - iOS-optimized PWA entry point
+- manifest.json - Web app manifest with iOS support
+- sw.js - Service worker for offline functionality
+- config.xml - Cordova configuration
+
+Website: {target_url}
+Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+"""
+
+    def _generate_ios_conversion_guide_html(self, metadata, target_url):
+        """Generate iOS conversion guide HTML"""
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert {metadata.title} to iOS App</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+            min-height: 100vh;
+            color: #1d1d1f;
+        }}
+        .container {{
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+        }}
+        h1 {{
+            color: #007AFF;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }}
+        .ios-method {{
+            background: #f5f5f7;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }}
+        .method-title {{
+            color: #007AFF;
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }}
+        .ios-btn {{
+            display: inline-block;
+            background: #007AFF;
+            color: white;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            margin: 10px 5px;
+            font-weight: 500;
+        }}
+        .url-display {{
+            background: #f5f5f7;
+            padding: 16px;
+            border-radius: 12px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 20px 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍎 Convert {metadata.title} to iOS App</h1>
+        
+        <div class="ios-method">
+            <div class="method-title">📱 Method 1: Appy Pie (iOS Specialist)</div>
+            <p>Visit <a href="https://www.appypie.com/app-maker" target="_blank" class="ios-btn">Appy Pie iOS Builder</a></p>
+            <p>Choose "Website App" → "iOS Platform"</p>
+            <div class="url-display">{target_url}</div>
+        </div>
+
+        <div class="ios-method">
+            <div class="method-title">⚡ Method 2: PWA Builder (Highest Quality)</div>
+            <p>Visit <a href="https://www.pwabuilder.com/" target="_blank" class="ios-btn">PWA Builder</a></p>
+            <p>Enter hosted URL and generate iOS package</p>
+        </div>
+
+        <div style="text-align: center; margin-top: 50px; color: #86868b;">
+            <p><strong>Website:</strong> {target_url}</p>
+            <p><strong>Generated:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+        </div>
+    </div>
+</body>
+</html>"""
