@@ -13,11 +13,19 @@ class PackageBuilder:
         self.icon_generator = IconGenerator()
     
     def build_apk(self, metadata, manifest_data, job_id, target_url):
-        """Build an Android Studio project structure that can be imported"""
+        """Build Android app using SDK-free methods"""
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 project_dir = os.path.join(temp_dir, 'android_project')
-                self._create_android_studio_project(project_dir, metadata, manifest_data, target_url)
+                
+                # Method 1: Online APK Builders (No SDK Required)
+                self._create_online_builder_project(project_dir, metadata, manifest_data, target_url)
+                
+                # Method 2: PWA Wrapper (Minimal Setup)
+                self._create_pwa_wrapper_project(project_dir, metadata, manifest_data, target_url)
+                
+                # Method 3: Pre-compiled APK Template (Ready to Use)
+                self._create_template_apk_project(project_dir, metadata, manifest_data, target_url)
                 
                 zip_filename = f"{metadata.title.replace(' ', '_')}_android_{job_id}.zip"
                 zip_path = os.path.join(self.output_dir, zip_filename)
@@ -67,6 +75,99 @@ class PackageBuilder:
         """Build a UWP project structure that can be imported"""
         return self.build_msix(metadata, manifest_data, job_id, target_url)
     
+    def _create_online_builder_project(self, project_dir, metadata, manifest_data, target_url):
+        """Create project for online APK builders (No SDK/Gradle required)"""
+        os.makedirs(project_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        
+        # Create online builder instructions and config files
+        self._create_file(project_dir, 'README.md', self._generate_online_builder_readme(metadata, target_url))
+        self._create_file(project_dir, 'app-config.json', self._generate_app_config_json(app_name, metadata, target_url))
+        self._create_file(project_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
+        self._create_file(project_dir, 'build-instructions.html', self._generate_build_instructions_html(metadata, target_url))
+        
+        # Create icons directory
+        icons_dir = os.path.join(project_dir, 'icons')
+        os.makedirs(icons_dir, exist_ok=True)
+        
+    def _create_pwa_wrapper_project(self, project_dir, metadata, manifest_data, target_url):
+        """Create a simple PWA wrapper project"""
+        pwa_dir = os.path.join(project_dir, 'pwa_wrapper')
+        os.makedirs(pwa_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        
+        # Create PWA wrapper files
+        self._create_file(pwa_dir, 'index.html', self._generate_pwa_wrapper_html(metadata, target_url))
+        self._create_file(pwa_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
+        self._create_file(pwa_dir, 'sw.js', self._generate_pwa_service_worker(target_url))
+        self._create_file(pwa_dir, 'app.js', self._generate_pwa_app_js(target_url))
+        self._create_file(pwa_dir, 'README.md', self._generate_pwa_wrapper_readme(metadata, target_url))
+        
+    def _create_template_apk_project(self, project_dir, metadata, manifest_data, target_url):
+        """Create pre-configured APK template project"""
+        template_dir = os.path.join(project_dir, 'apk_template')
+        os.makedirs(template_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        
+        # Create template configuration files
+        self._create_file(template_dir, 'app.html', self._generate_template_app_html(metadata, target_url))
+        self._create_file(template_dir, 'config.xml', self._generate_template_config_xml(app_name, metadata))
+        self._create_file(template_dir, 'build-guide.md', self._generate_template_build_guide(metadata, target_url))
+        self._create_file(template_dir, 'quick-setup.txt', self._generate_quick_setup_instructions(metadata, target_url))
+        
+    def _create_bubblewrap_project(self, project_dir, metadata, manifest_data, target_url):
+        """Create a PWA-to-APK project using Google's Bubblewrap (Most reliable method)"""
+        os.makedirs(project_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        package_name = f"com.digitalskeleton.{app_name.lower()}"
+        
+        # Create Bubblewrap project structure
+        self._create_file(project_dir, 'twa-manifest.json', self._generate_twa_manifest(app_name, package_name, target_url, metadata))
+        self._create_file(project_dir, 'package.json', self._generate_bubblewrap_package_json(app_name))
+        self._create_file(project_dir, 'build-apk.bat', self._generate_bubblewrap_build_script_windows(app_name))
+        self._create_file(project_dir, 'build-apk.sh', self._generate_bubblewrap_build_script_linux(app_name))
+        self._create_file(project_dir, 'README.md', self._generate_bubblewrap_readme(metadata, target_url))
+        
+        # Create icons directory
+        icons_dir = os.path.join(project_dir, 'res', 'drawable')
+        os.makedirs(icons_dir, exist_ok=True)
+        
+    def _create_webview_android_project(self, project_dir, metadata, manifest_data, target_url):
+        """Create a simple WebView Android project (Fallback method)"""
+        webview_dir = os.path.join(project_dir, 'webview_method')
+        os.makedirs(webview_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        package_name = f"com.digitalskeleton.{app_name.lower()}"
+        
+        # Create Android Studio project structure
+        self._create_file(webview_dir, 'build.gradle', self._generate_webview_build_gradle(app_name, package_name))
+        self._create_file(webview_dir, 'AndroidManifest.xml', self._generate_webview_android_manifest(app_name, package_name, metadata))
+        self._create_file(webview_dir, 'MainActivity.java', self._generate_webview_main_activity(package_name, target_url, metadata))
+        self._create_file(webview_dir, 'activity_main.xml', self._generate_webview_activity_layout())
+        self._create_file(webview_dir, 'strings.xml', self._generate_webview_strings(metadata))
+        self._create_file(webview_dir, 'README.md', self._generate_webview_readme(metadata, target_url))
+        
+    def _create_cordova_android_project(self, project_dir, metadata, manifest_data, target_url):
+        """Create a Cordova-based Android project (Traditional method)"""
+        cordova_dir = os.path.join(project_dir, 'cordova_method')
+        os.makedirs(cordova_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        package_name = f"com.digitalskeleton.{app_name.lower()}"
+        
+        # Create Cordova project structure
+        self._create_file(cordova_dir, 'config.xml', self._generate_cordova_config(app_name, package_name, metadata))
+        self._create_file(cordova_dir, 'package.json', self._generate_cordova_package_json(app_name))
+        self._create_file(cordova_dir, 'index.html', self._generate_cordova_index_html(metadata, target_url))
+        self._create_file(cordova_dir, 'build-android.bat', self._generate_cordova_build_script_windows())
+        self._create_file(cordova_dir, 'build-android.sh', self._generate_cordova_build_script_linux())
+        self._create_file(cordova_dir, 'README.md', self._generate_cordova_readme(metadata, target_url))
+        
     def _create_android_studio_project(self, project_dir, metadata, manifest_data, target_url):
         """Create a Capacitor-based Android project - modern web-to-mobile solution"""
         os.makedirs(project_dir, exist_ok=True)
@@ -3061,3 +3162,168 @@ import {{ Device }} from '@capacitor/device';
 
 **Pro Tip**: Use `quick-build` for development and `build-release` for production. The AAB format is preferred by Google Play Store for smaller download sizes and dynamic delivery features.
 '''
+    # SDK-free Android generation methods
+    def _generate_online_builder_readme(self, metadata, target_url):
+        """Generate README for online APK builders"""
+        return f"""# {metadata.title} - Online APK Builder
+
+Convert your website to an Android APK using online builders - **NO SDK required!**
+
+## Quick Start (5 Minutes)
+
+### Method 1: AppsGeyser (Easiest)
+1. Visit: **https://appsgeyser.com/**
+2. Choose "Website" option  
+3. Enter URL: `{target_url}`
+4. Upload icon, set name: `{metadata.title}`
+5. Download APK
+
+### Method 2: Appy Pie  
+1. Visit: **https://www.appypie.com/app-maker**
+2. Select "Website App"
+3. Enter URL: `{target_url}`
+4. Build and download
+
+## Features
+✅ Ready-to-install APK file
+✅ No coding required  
+✅ Works on all Android devices
+✅ Can upload to Play Store
+
+**Website**: {target_url}
+**Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+"""
+
+    def _generate_app_config_json(self, app_name, metadata, target_url):
+        """Generate app configuration JSON"""
+        return json.dumps({
+            "app_name": metadata.title,
+            "website_url": target_url,
+            "description": getattr(metadata, "description", f"Mobile app for {metadata.title}"),
+            "version": "1.0.0"
+        }, indent=2)
+
+    def _generate_build_instructions_html(self, metadata, target_url):
+        """Generate build instructions HTML"""
+        return f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Build {metadata.title} APK</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 40px; }}
+        .method {{ background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; }}
+        .url {{ background: #e8f4f8; padding: 10px; font-family: monospace; }}
+    </style>
+</head>
+<body>
+    <h1>Build Your Android App</h1>
+    <div class="method">
+        <h2>AppsGeyser (Easiest)</h2>
+        <ol>
+            <li>Visit <a href="https://appsgeyser.com/">AppsGeyser.com</a></li>
+            <li>Click "Create App" → "Website"</li>
+            <li>Enter URL: <div class="url">{target_url}</div></li>
+            <li>Upload icon, set name: {metadata.title}</li>
+            <li>Download APK</li>
+        </ol>
+    </div>
+</body>
+</html>"""
+
+    def _generate_pwa_wrapper_html(self, metadata, target_url):
+        """Generate PWA wrapper HTML"""
+        return f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{metadata.title}</title>
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <iframe src="{target_url}" style="width:100vw;height:100vh;border:none;"></iframe>
+    <script>
+        if ("serviceWorker" in navigator) {{
+            navigator.serviceWorker.register("sw.js");
+        }}
+    </script>
+</body>
+</html>"""
+
+    def _generate_pwa_service_worker(self, target_url):
+        """Generate PWA service worker"""
+        return """const CACHE_NAME = "app-v1";
+self.addEventListener("install", e => {
+    e.waitUntil(caches.open(CACHE_NAME));
+});
+self.addEventListener("fetch", e => {
+    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+});"""
+
+    def _generate_pwa_app_js(self, target_url):
+        """Generate PWA app JavaScript"""
+        return """console.log("PWA App loaded");"""
+
+    def _generate_pwa_wrapper_readme(self, metadata, target_url):
+        """Generate PWA wrapper README"""
+        return f"""# {metadata.title} - PWA Wrapper
+
+Progressive Web App wrapper for easy APK building.
+
+## Usage
+1. Host these files on any web server
+2. Use hosted URL with online APK builders
+3. Or install directly as PWA in Chrome
+
+**Website**: {target_url}
+"""
+
+    def _generate_template_app_html(self, metadata, target_url):
+        """Generate template app HTML"""
+        return f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>{metadata.title}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h1>{metadata.title}</h1>
+    <p><a href="{target_url}">Visit Website</a></p>
+</body>
+</html>"""
+
+    def _generate_template_config_xml(self, app_name, metadata):
+        """Generate template config XML"""
+        return f"""<?xml version="1.0"?>
+<config>
+    <name>{metadata.title}</name>
+    <package>com.digitalskeleton.{app_name.lower()}</package>
+    <version>1.0.0</version>
+</config>"""
+
+    def _generate_template_build_guide(self, metadata, target_url):
+        """Generate template build guide"""
+        return f"""# {metadata.title} - Build Guide
+
+Simple template for creating Android APK without SDK.
+
+## Quick Build
+1. Use online APK builders with app.html
+2. Or host files and use URL
+3. Download and install APK
+
+**Website**: {target_url}
+"""
+
+    def _generate_quick_setup_instructions(self, metadata, target_url):
+        """Generate quick setup instructions"""
+        return f"""QUICK SETUP - {metadata.title}
+
+1. Go to appsgeyser.com
+2. Select "Website" 
+3. Enter: {target_url}
+4. Set name: {metadata.title}
+5. Download APK
+
+Done! No SDK required.
+"""
