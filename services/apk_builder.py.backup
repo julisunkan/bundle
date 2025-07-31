@@ -568,11 +568,11 @@ Created: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
         app_name = self._sanitize_name(metadata.title)
         package_name = f"com.digitalskeleton.{app_name.lower()}"
         
-        config_xml = """<?xml version='1.0' encoding='utf-8'?>
-<widget id="%s" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>%s</name>
+        return f'''<?xml version='1.0' encoding='utf-8'?>
+<widget id="{package_name}" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>{metadata.title}</name>
     <description>
-        %s
+        {metadata.description or f"Mobile app for {metadata.title}"}
     </description>
     <author email="info@digitalskeleton.com" href="https://digitalskeleton.com">
         DigitalSkeleton Team
@@ -605,22 +605,16 @@ Created: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
     </platform>
     
     <!-- Plugins compatible with Cordova Android 12.x -->
-    <plugin name="cordova-plugin-inappbrowser" version="6.0.0" />
-    <plugin name="cordova-plugin-network-information" version="3.0.0" />
-    <plugin name="cordova-plugin-splashscreen" version="6.0.0" />
+    <plugin name="cordova-plugin-inappbrowser" version="^6.0.0" />
+    <plugin name="cordova-plugin-network-information" version="^3.0.0" />
+    <plugin name="cordova-plugin-splashscreen" version="^6.0.0" />
     
     <!-- Universal Links -->
-    <plugin name="cordova-plugin-customurlscheme" version="5.0.0">
-        <variable name="URL_SCHEME" value="%s" />
+    <plugin name="cordova-plugin-customurlscheme" version="^5.0.0">
+        <variable name="URL_SCHEME" value="{app_name.lower()}" />
     </plugin>
-</widget>""" % (
-            package_name,
-            metadata.title,
-            metadata.description or f"Mobile app for {metadata.title}",
-            app_name.lower()
-        )
-        
-        return config_xml
+</widget>'''
+    
     def _sanitize_name(self, name):
         """Sanitize name for use in file paths and package names"""
         import re

@@ -15,26 +15,32 @@ class PackageBuilder:
         self._apk_builder = None
     
     def build_apk(self, metadata, manifest_data, job_id, target_url):
-        """Build actual Android APK file using Cordova"""
+        """Build actual Android APK file using Enhanced APK Builder"""
         try:
-            app.logger.info(f"Building APK-ready project for {metadata.title}")
+            app.logger.info(f"Building enhanced APK-ready project for {metadata.title}")
             
-            # Import APKBuilder here to avoid circular import
-            from .apk_builder import APKBuilder
-            if self._apk_builder is None:
-                self._apk_builder = APKBuilder()
+            # Import EnhancedAPKBuilder to avoid circular import
+            from .enhanced_apk_builder import EnhancedAPKBuilder
+            enhanced_builder = EnhancedAPKBuilder()
             
-            # Use the APK builder to generate APK-ready project
-            apk_path = self._apk_builder.build_android_apk(metadata, manifest_data, job_id, target_url)
+            # Use the enhanced APK builder to generate APK-ready project
+            apk_path = enhanced_builder.build_android_apk(metadata, manifest_data, job_id, target_url)
             
-            app.logger.info(f"APK project built successfully: {apk_path}")
+            app.logger.info(f"Enhanced APK project built successfully: {apk_path}")
             return apk_path
                 
         except Exception as e:
-            app.logger.error(f"APK build failed: {str(e)}")
-            # Fallback to project files if APK build fails
-            app.logger.info("Falling back to project file generation")
-            return self._build_apk_fallback(metadata, manifest_data, job_id, target_url)
+            app.logger.error(f"Enhanced APK build failed: {str(e)}")
+            # Fallback to original APK builder if enhanced fails
+            app.logger.info("Falling back to original APK builder")
+            try:
+                from .apk_builder import APKBuilder
+                if self._apk_builder is None:
+                    self._apk_builder = APKBuilder()
+                return self._apk_builder.build_android_apk(metadata, manifest_data, job_id, target_url)
+            except Exception as fallback_error:
+                app.logger.error(f"Fallback APK build also failed: {str(fallback_error)}")
+                return self._build_apk_fallback(metadata, manifest_data, job_id, target_url)
     
     def _build_apk_fallback(self, metadata, manifest_data, job_id, target_url):
         """Fallback method to create project files if APK build fails"""
