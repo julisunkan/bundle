@@ -104,6 +104,16 @@ class EnhancedAPKBuilder:
         with open(os.path.join(www_dir, 'index.html'), 'w', encoding='utf-8') as f:
             f.write(index_html)
         
+        # Create offline page
+        offline_html = self._generate_offline_page(metadata, target_url)
+        with open(os.path.join(www_dir, 'offline.html'), 'w', encoding='utf-8') as f:
+            f.write(offline_html)
+        
+        # Create service worker for offline support
+        sw_js = self._generate_service_worker(target_url)
+        with open(os.path.join(www_dir, 'sw.js'), 'w', encoding='utf-8') as f:
+            f.write(sw_js)
+        
         # Create enhanced manifest.json
         with open(os.path.join(www_dir, 'manifest.json'), 'w', encoding='utf-8') as f:
             json.dump(manifest_data, f, indent=2)
@@ -167,7 +177,7 @@ class EnhancedAPKBuilder:
 </widget>"""
     
     def _generate_enhanced_index_html(self, metadata, target_url):
-        """Generate enhanced index.html with better error handling and loading states"""
+        """Generate enhanced index.html with offline page support"""
         return f"""<!DOCTYPE html>
 <html>
 <head>
@@ -189,6 +199,7 @@ class EnhancedAPKBuilder:
             height: 100%;
             overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
         }}
         
         #webview {{
@@ -204,6 +215,10 @@ class EnhancedAPKBuilder:
             transform: translate(-50%, -50%);
             text-align: center;
             z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }}
         
         .loading h2 {{
@@ -227,56 +242,31 @@ class EnhancedAPKBuilder:
             100% {{ transform: rotate(360deg); }}
         }}
         
-        .error {{
+        .offline-indicator {{
             position: fixed;
-            top: 50%;
+            top: 10px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            padding: 30px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            max-width: 300px;
-            z-index: 1000;
-        }}
-        
-        .error h3 {{
-            color: #e74c3c;
-            margin-bottom: 15px;
-        }}
-        
-        .error p {{
-            color: #666;
-            margin-bottom: 20px;
-            line-height: 1.4;
-        }}
-        
-        .retry-btn {{
-            background: #3498db;
+            transform: translateX(-50%);
+            background: #e74c3c;
             color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 2000;
+            display: none;
         }}
         
-        .retry-btn:hover {{
-            background: #2980b9;
+        .offline-indicator.online {{
+            background: #27ae60;
         }}
     </style>
 </head>
 <body>
+    <div id="offline-indicator" class="offline-indicator">No Internet Connection</div>
+    
     <div id="loading" class="loading">
         <h2>Loading {metadata.title}...</h2>
         <div class="spinner"></div>
-    </div>
-    
-    <div id="error" class="error" style="display: none;">
-        <h3>Connection Error</h3>
-        <p>Unable to load the website. Please check your internet connection and try again.</p>
-        <button class="retry-btn" onclick="location.reload()">Retry</button>
     </div>
     
     <iframe id="webview" style="display: none;"></iframe>
@@ -284,27 +274,73 @@ class EnhancedAPKBuilder:
     <script>
         let isDeviceReady = false;
         let isWebsiteLoaded = false;
+        let isOnline = navigator.onLine;
+        let offlineIndicator = document.getElementById('offline-indicator');
+        
+        // Register service worker for offline support
+        if ('serviceWorker' in navigator) {{
+            navigator.serviceWorker.register('sw.js')
+                .then(function(registration) {{
+                    console.log('Service Worker registered:', registration);
+                }})
+                .catch(function(error) {{
+                    console.log('Service Worker registration failed:', error);
+                }});
+        }}
+        
+        // Handle online/offline status
+        window.addEventListener('online', function() {{
+            console.log('Device is online');
+            isOnline = true;
+            offlineIndicator.textContent = 'Connected';
+            offlineIndicator.className = 'offline-indicator online';
+            offlineIndicator.style.display = 'block';
+            setTimeout(function() {{
+                offlineIndicator.style.display = 'none';
+            }}, 3000);
+            
+            // Reload content when back online
+            if (isWebsiteLoaded) {{
+                document.getElementById('webview').src = '{target_url}';
+            }}
+        }});
+        
+        window.addEventListener('offline', function() {{
+            console.log('Device is offline');
+            isOnline = false;
+            offlineIndicator.textContent = 'No Internet Connection';
+            offlineIndicator.className = 'offline-indicator';
+            offlineIndicator.style.display = 'block';
+            
+            // Show offline page
+            showOfflinePage();
+        }});
         
         // Cordova device ready event
         document.addEventListener('deviceready', function() {{
             console.log('Cordova device ready');
             isDeviceReady = true;
-            if (!isWebsiteLoaded) {{
-                loadWebsite();
-            }}
+            checkConnectionAndLoad();
         }}, false);
         
         // Fallback for web browser testing
         setTimeout(function() {{
             if (!isDeviceReady) {{
-                console.log('Fallback: Loading website in browser');
-                loadWebsite();
+                console.log('Fallback: Loading in browser');
+                checkConnectionAndLoad();
             }}
         }}, 1000);
         
+        function checkConnectionAndLoad() {{
+            if (isOnline) {{
+                loadWebsite();
+            }} else {{
+                showOfflinePage();
+            }}
+        }}
+        
         function loadWebsite() {{
             const loading = document.getElementById('loading');
-            const error = document.getElementById('error');
             const webview = document.getElementById('webview');
             
             webview.onload = function() {{
@@ -316,20 +352,29 @@ class EnhancedAPKBuilder:
             
             webview.onerror = function() {{
                 console.error('Failed to load website');
-                loading.style.display = 'none';
-                error.style.display = 'block';
+                showOfflinePage();
             }};
             
             // Set timeout for loading
             setTimeout(function() {{
                 if (!isWebsiteLoaded) {{
                     console.warn('Website loading timeout');
-                    loading.style.display = 'none';
-                    error.style.display = 'block';
+                    showOfflinePage();
                 }}
             }}, 15000);
             
             webview.src = '{target_url}';
+        }}
+        
+        function showOfflinePage() {{
+            const loading = document.getElementById('loading');
+            const webview = document.getElementById('webview');
+            
+            loading.style.display = 'none';
+            webview.style.display = 'block';
+            webview.src = 'offline.html';
+            
+            offlineIndicator.style.display = 'block';
         }}
         
         // Handle external links
@@ -344,12 +389,25 @@ class EnhancedAPKBuilder:
             }}
         }});
         
-        // Handle network status
-        if (typeof navigator !== 'undefined' && navigator.connection) {{
-            navigator.connection.addEventListener('change', function() {{
-                console.log('Network status changed:', navigator.connection.type);
-            }});
-        }}
+        // Handle Cordova network information
+        document.addEventListener('deviceready', function() {{
+            if (typeof navigator.connection !== 'undefined') {{
+                navigator.connection.addEventListener('change', function() {{
+                    const networkState = navigator.connection.type;
+                    console.log('Network status changed:', networkState);
+                    
+                    if (networkState === 'none') {{
+                        isOnline = false;
+                        showOfflinePage();
+                    }} else {{
+                        isOnline = true;
+                        if (!isWebsiteLoaded) {{
+                            loadWebsite();
+                        }}
+                    }}
+                }});
+            }}
+        }});
     </script>
     
     <script src="cordova.js"></script>
@@ -479,12 +537,342 @@ echo
         except:
             pass
     
+    def _generate_offline_page(self, metadata, target_url):
+        """Generate offline.html page that displays when no connection is available"""
+        return f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{metadata.title} - Offline</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }}
+        
+        .offline-container {{
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }}
+        
+        .offline-icon {{
+            font-size: 60px;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }}
+        
+        h1 {{
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }}
+        
+        .app-name {{
+            font-size: 20px;
+            margin-bottom: 20px;
+            opacity: 0.9;
+            font-weight: 500;
+        }}
+        
+        .message {{
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }}
+        
+        .retry-button {{
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }}
+        
+        .retry-button:hover {{
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }}
+        
+        .features {{
+            margin-top: 30px;
+            text-align: left;
+        }}
+        
+        .feature {{
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+            opacity: 0.8;
+        }}
+        
+        .feature-icon {{
+            margin-right: 10px;
+            font-size: 16px;
+        }}
+        
+        .network-status {{
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            backdrop-filter: blur(10px);
+        }}
+        
+        .network-status.online {{
+            background: rgba(39, 174, 96, 0.9);
+        }}
+        
+        @keyframes pulse {{
+            0% {{ opacity: 1; }}
+            50% {{ opacity: 0.6; }}
+            100% {{ opacity: 1; }}
+        }}
+        
+        .pulse {{
+            animation: pulse 2s infinite;
+        }}
+    </style>
+</head>
+<body>
+    <div class="network-status" id="networkStatus">
+        📡 Offline
+    </div>
+    
+    <div class="offline-container">
+        <div class="offline-icon">📱</div>
+        <h1>You're Offline</h1>
+        <div class="app-name">{metadata.title}</div>
+        <div class="message">
+            This app needs an internet connection to load content from the website. 
+            Please check your network connection and try again.
+        </div>
+        
+        <button class="retry-button" onclick="retryConnection()">
+            <span id="retryText">Try Again</span>
+        </button>
+        
+        <div class="features">
+            <div class="feature">
+                <span class="feature-icon">🌐</span>
+                <span>Connects to: {target_url}</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">🔄</span>
+                <span>Auto-retry when connection returns</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">📱</span>
+                <span>Native mobile app experience</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let retryAttempts = 0;
+        const maxRetries = 3;
+        
+        // Monitor network status
+        function updateNetworkStatus() {{
+            const networkStatus = document.getElementById('networkStatus');
+            if (navigator.onLine) {{
+                networkStatus.textContent = '📡 Online';
+                networkStatus.className = 'network-status online';
+                // Auto-retry when connection is restored
+                setTimeout(retryConnection, 1000);
+            }} else {{
+                networkStatus.textContent = '📡 Offline';
+                networkStatus.className = 'network-status';
+            }}
+        }}
+        
+        function retryConnection() {{
+            const retryButton = document.querySelector('.retry-button');
+            const retryText = document.getElementById('retryText');
+            
+            if (!navigator.onLine) {{
+                retryText.textContent = 'Still Offline';
+                setTimeout(() => {{
+                    retryText.textContent = 'Try Again';
+                }}, 2000);
+                return;
+            }}
+            
+            retryAttempts++;
+            retryText.textContent = 'Connecting...';
+            retryButton.classList.add('pulse');
+            
+            // Test connection by trying to load the main page
+            fetch('{target_url}', {{ 
+                method: 'HEAD',
+                cache: 'no-cache',
+                mode: 'no-cors'
+            }})
+            .then(() => {{
+                // Connection successful, redirect to main app
+                window.location.href = 'index.html';
+            }})
+            .catch(() => {{
+                // Connection failed
+                retryButton.classList.remove('pulse');
+                if (retryAttempts >= maxRetries) {{
+                    retryText.textContent = 'Connection Failed';
+                    setTimeout(() => {{
+                        retryText.textContent = 'Try Again';
+                        retryAttempts = 0;
+                    }}, 3000);
+                }} else {{
+                    retryText.textContent = `Retry (${{retryAttempts}}/${{maxRetries}})`;
+                    setTimeout(() => {{
+                        retryText.textContent = 'Try Again';
+                    }}, 2000);
+                }}
+            }});
+        }}
+        
+        // Listen for network status changes
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        
+        // Initial network status check
+        updateNetworkStatus();
+        
+        // Auto-retry every 30 seconds when offline
+        setInterval(() => {{
+            if (!navigator.onLine) {{
+                updateNetworkStatus();
+            }}
+        }}, 30000);
+    </script>
+</body>
+</html>"""
+    
+    def _generate_service_worker(self, target_url):
+        """Generate service worker for offline support"""
+        return f"""// Service Worker for offline support
+const CACHE_NAME = 'offline-cache-v1';
+const OFFLINE_URL = 'offline.html';
+
+// Install event - cache offline page
+self.addEventListener('install', event => {{
+    console.log('Service Worker installing');
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => {{
+                console.log('Caching offline page');
+                return cache.addAll([
+                    OFFLINE_URL,
+                    'index.html',
+                    'manifest.json'
+                ]);
+            }})
+            .then(() => self.skipWaiting())
+    );
+}});
+
+// Activate event - clean up old caches
+self.addEventListener('activate', event => {{
+    console.log('Service Worker activating');
+    event.waitUntil(
+        caches.keys().then(cacheNames => {{
+            return Promise.all(
+                cacheNames.map(cacheName => {{
+                    if (cacheName !== CACHE_NAME) {{
+                        console.log('Deleting old cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }}
+                }})
+            );
+        }}).then(() => self.clients.claim())
+    );
+}});
+
+// Fetch event - serve offline page when network fails
+self.addEventListener('fetch', event => {{
+    // Only handle navigation requests (page loads)
+    if (event.request.mode === 'navigate') {{
+        event.respondWith(
+            fetch(event.request)
+                .catch(() => {{
+                    console.log('Network failed, serving offline page');
+                    return caches.match(OFFLINE_URL);
+                }})
+        );
+    }}
+}});
+
+// Handle background sync (when connection is restored)
+self.addEventListener('sync', event => {{
+    console.log('Background sync event:', event.tag);
+    if (event.tag === 'retry-connection') {{
+        event.waitUntil(
+            // Notify the main app that connection might be available
+            self.clients.matchAll().then(clients => {{
+                clients.forEach(client => {{
+                    client.postMessage({{
+                        type: 'CONNECTION_RETRY',
+                        url: '{target_url}'
+                    }});
+                }});
+            }})
+        );
+    }}
+}});
+
+// Handle messages from main app
+self.addEventListener('message', event => {{
+    if (event.data && event.data.type === 'CHECK_CONNECTION') {{
+        // Test connection to the target URL
+        fetch('{target_url}', {{ 
+            method: 'HEAD',
+            cache: 'no-cache',
+            mode: 'no-cors'
+        }})
+        .then(() => {{
+            event.source.postMessage({{ type: 'CONNECTION_OK' }});
+        }})
+        .catch(() => {{
+            event.source.postMessage({{ type: 'CONNECTION_FAILED' }});
+        }});
+    }}
+}});"""
+    
     def _create_enhanced_documentation(self, project_dir, metadata, target_url):
         """Create comprehensive documentation for the enhanced APK project"""
         
         readme_content = f"""# {metadata.title} - Enhanced Android APK Project
 
-This is an enhanced Cordova-based Android app project that wraps the website **{target_url}** into a native Android application.
+This is an enhanced Cordova-based Android app project that wraps the website **{target_url}** into a native Android application with **full offline page support**.
 
 ## 🚀 Quick Start
 
@@ -537,20 +925,25 @@ npx cordova build android --debug
 ## 📱 Features
 
 - **Native Android App**: Full native app experience
-- **Offline Capability**: Basic offline support
-- **Network Detection**: Automatic network status monitoring
+- **Offline Page Support**: Shows beautiful offline page instead of URLs when no connection
+- **Smart Network Detection**: Real-time network status monitoring with visual indicators
+- **Auto-Retry Mechanism**: Automatically attempts to reconnect when internet returns
+- **Service Worker**: Advanced offline caching and background sync
 - **External Links**: Opens external links in system browser
-- **Splash Screen**: Professional loading experience
-- **Error Handling**: Comprehensive error messages and retry functionality
+- **Professional UI**: Loading states, animations, and modern design
+- **Connection Resilience**: Handles network interruptions gracefully
 
 ## 📂 Project Structure
 
 ```
 ├── www/                 # Web app source files
-│   ├── index.html      # Main app interface
-│   └── manifest.json   # PWA manifest
+│   ├── index.html      # Main app interface with network detection
+│   ├── offline.html    # Beautiful offline page (shows when no connection)
+│   ├── sw.js           # Service worker for offline caching
+│   ├── manifest.json   # PWA manifest
+│   └── icons/          # Generated app icons
 ├── config.xml          # Cordova configuration
-├── package.json        # Node.js dependencies
+├── package.json        # Node.js dependencies with modern plugins
 ├── build_apk.bat       # Windows build script
 ├── build_apk.sh        # Linux/Mac build script
 └── platforms/          # Generated after building
@@ -570,8 +963,13 @@ Edit `config.xml` to customize:
 ### App Content
 Edit `www/index.html` to modify:
 - Loading screen appearance
-- Error messages
-- App behavior
+- Network detection behavior
+- Online/offline transitions
+
+Edit `www/offline.html` to customize:
+- Offline page design
+- Retry button behavior
+- App information display
 
 ### Build Settings
 Edit `package.json` to modify:
