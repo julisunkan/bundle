@@ -206,19 +206,51 @@ def build_package():
             flash('Failed to scrape website metadata. Please check the URL and try again.', 'error')
             return redirect(url_for('index'))
     
-    # Create build job
+    # Create build job and process immediately since builds are fast
     job_id = str(uuid.uuid4())
     build_job = BuildJob(
         id=job_id,
         url=url,
         app_name=metadata.title,
         package_type=package_type,
-        status='pending'
+        status='building',
+        created_at=datetime.utcnow()
     )
     db.session.add(build_job)
     db.session.commit()
     
-    return redirect(url_for('build_progress', job_id=build_job.id))
+    try:
+        # Process build immediately
+        manifest_data = generate_manifest(metadata, url)
+        build_job.manifest_data = json.dumps(manifest_data)
+        
+        # Build package
+        builder = PackageBuilder()
+        if package_type == 'apk':
+            package_path = builder.build_apk(metadata, manifest_data, job_id, url)
+        elif package_type == 'ipa':
+            package_path = builder.build_ipa(metadata, manifest_data, job_id, url)
+        elif package_type == 'msix':
+            package_path = builder.build_msix(metadata, manifest_data, job_id, url)
+        elif package_type == 'appx':
+            package_path = builder.build_appx(metadata, manifest_data, job_id, url)
+        else:
+            raise Exception(f"Unsupported package type: {package_type}")
+        
+        build_job.download_path = package_path
+        build_job.status = 'completed'
+        build_job.completed_at = datetime.utcnow()
+        db.session.commit()
+        
+        # Redirect directly to download page since build completed
+        return redirect(url_for('download_package', job_id=job_id))
+        
+    except Exception as e:
+        build_job.status = 'failed'
+        build_job.error_message = str(e)
+        db.session.commit()
+        app.logger.error(f"Build failed for job {job_id}: {str(e)}")
+        return redirect(url_for('build_progress', job_id=job_id))
 
 @app.route('/build/<job_id>')
 def build_progress(job_id):
