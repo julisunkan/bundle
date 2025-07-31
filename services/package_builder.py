@@ -13,29 +13,29 @@ class PackageBuilder:
         self.icon_generator = IconGenerator()
     
     def build_apk(self, metadata, manifest_data, job_id, target_url):
-        """Build Android app using SDK-free methods"""
+        """Build Android app using React Native"""
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
-                project_dir = os.path.join(temp_dir, 'android_project')
+                project_dir = os.path.join(temp_dir, 'react_native_project')
                 
-                # Method 1: Online APK Builders (No SDK Required)
-                self._create_online_builder_project(project_dir, metadata, manifest_data, target_url)
+                # Method 1: React Native CLI Project (Most Powerful)
+                self._create_react_native_project(project_dir, metadata, manifest_data, target_url)
                 
-                # Method 2: PWA Wrapper (Minimal Setup)
-                self._create_pwa_wrapper_project(project_dir, metadata, manifest_data, target_url)
+                # Method 2: Expo Managed Project (Easiest)
+                self._create_expo_project(project_dir, metadata, manifest_data, target_url)
                 
-                # Method 3: Pre-compiled APK Template (Ready to Use)
-                self._create_template_apk_project(project_dir, metadata, manifest_data, target_url)
+                # Method 3: React Native Web Wrapper (Web-to-Mobile)
+                self._create_react_native_web_project(project_dir, metadata, manifest_data, target_url)
                 
-                zip_filename = f"{metadata.title.replace(' ', '_')}_android_{job_id}.zip"
+                zip_filename = f"{metadata.title.replace(' ', '_')}_react_native_{job_id}.zip"
                 zip_path = os.path.join(self.output_dir, zip_filename)
                 
                 self._create_project_zip(project_dir, zip_path)
                 return zip_path
                 
         except Exception as e:
-            app.logger.error(f"Android project build failed: {str(e)}")
-            raise Exception(f"Android project build failed: {str(e)}")
+            app.logger.error(f"React Native project build failed: {str(e)}")
+            raise Exception(f"React Native project build failed: {str(e)}")
     
     def build_ipa(self, metadata, manifest_data, job_id, target_url):
         """Build an Xcode project structure that can be imported"""
@@ -75,48 +75,68 @@ class PackageBuilder:
         """Build a UWP project structure that can be imported"""
         return self.build_msix(metadata, manifest_data, job_id, target_url)
     
-    def _create_online_builder_project(self, project_dir, metadata, manifest_data, target_url):
-        """Create project for online APK builders (No SDK/Gradle required)"""
+    def _create_react_native_project(self, project_dir, metadata, manifest_data, target_url):
+        """Create React Native CLI project"""
         os.makedirs(project_dir, exist_ok=True)
         
         app_name = self._sanitize_name(metadata.title)
+        package_name = f"com.digitalskeleton.{app_name.lower()}"
         
-        # Create online builder instructions and config files
-        self._create_file(project_dir, 'README.md', self._generate_online_builder_readme(metadata, target_url))
-        self._create_file(project_dir, 'app-config.json', self._generate_app_config_json(app_name, metadata, target_url))
-        self._create_file(project_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
-        self._create_file(project_dir, 'build-instructions.html', self._generate_build_instructions_html(metadata, target_url))
+        # Create React Native project structure
+        self._create_file(project_dir, 'package.json', self._generate_react_native_package_json(app_name, metadata))
+        self._create_file(project_dir, 'App.js', self._generate_react_native_app_js(metadata, target_url))
+        self._create_file(project_dir, 'index.js', self._generate_react_native_index_js(app_name))
+        self._create_file(project_dir, 'app.json', self._generate_react_native_app_json(app_name, metadata))
+        self._create_file(project_dir, 'metro.config.js', self._generate_react_native_metro_config())
+        self._create_file(project_dir, 'babel.config.js', self._generate_react_native_babel_config())
         
-        # Create icons directory
-        icons_dir = os.path.join(project_dir, 'icons')
-        os.makedirs(icons_dir, exist_ok=True)
+        # Build scripts
+        self._create_file(project_dir, 'build-android.bat', self._generate_react_native_build_script_windows())
+        self._create_file(project_dir, 'build-android.sh', self._generate_react_native_build_script_linux())
+        self._create_file(project_dir, 'README.md', self._generate_react_native_readme(metadata, target_url))
         
-    def _create_pwa_wrapper_project(self, project_dir, metadata, manifest_data, target_url):
-        """Create a simple PWA wrapper project"""
-        pwa_dir = os.path.join(project_dir, 'pwa_wrapper')
-        os.makedirs(pwa_dir, exist_ok=True)
+        # Android directory structure
+        android_dir = os.path.join(project_dir, 'android')
+        os.makedirs(android_dir, exist_ok=True)
+        self._create_file(android_dir, 'build.gradle', self._generate_react_native_android_build_gradle())
+        self._create_file(android_dir, 'settings.gradle', self._generate_react_native_android_settings_gradle(app_name))
+        
+        # App directory
+        app_dir = os.path.join(android_dir, 'app')
+        os.makedirs(app_dir, exist_ok=True)
+        self._create_file(app_dir, 'build.gradle', self._generate_react_native_app_build_gradle(package_name))
+        
+    def _create_expo_project(self, project_dir, metadata, manifest_data, target_url):
+        """Create Expo managed project (easiest React Native approach)"""
+        expo_dir = os.path.join(project_dir, 'expo_project')
+        os.makedirs(expo_dir, exist_ok=True)
         
         app_name = self._sanitize_name(metadata.title)
         
-        # Create PWA wrapper files
-        self._create_file(pwa_dir, 'index.html', self._generate_pwa_wrapper_html(metadata, target_url))
-        self._create_file(pwa_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
-        self._create_file(pwa_dir, 'sw.js', self._generate_pwa_service_worker(target_url))
-        self._create_file(pwa_dir, 'app.js', self._generate_pwa_app_js(target_url))
-        self._create_file(pwa_dir, 'README.md', self._generate_pwa_wrapper_readme(metadata, target_url))
+        # Create Expo project files
+        self._create_file(expo_dir, 'package.json', self._generate_expo_package_json(app_name, metadata))
+        self._create_file(expo_dir, 'App.js', self._generate_expo_app_js(metadata, target_url))
+        self._create_file(expo_dir, 'app.json', self._generate_expo_app_json(app_name, metadata))
+        self._create_file(expo_dir, 'eas.json', self._generate_expo_eas_json())
+        self._create_file(expo_dir, 'build-apk.bat', self._generate_expo_build_script_windows())
+        self._create_file(expo_dir, 'build-apk.sh', self._generate_expo_build_script_linux())
+        self._create_file(expo_dir, 'README.md', self._generate_expo_readme(metadata, target_url))
         
-    def _create_template_apk_project(self, project_dir, metadata, manifest_data, target_url):
-        """Create pre-configured APK template project"""
-        template_dir = os.path.join(project_dir, 'apk_template')
-        os.makedirs(template_dir, exist_ok=True)
+    def _create_react_native_web_project(self, project_dir, metadata, manifest_data, target_url):
+        """Create React Native Web wrapper project"""
+        web_dir = os.path.join(project_dir, 'react_native_web')
+        os.makedirs(web_dir, exist_ok=True)
         
         app_name = self._sanitize_name(metadata.title)
         
-        # Create template configuration files
-        self._create_file(template_dir, 'app.html', self._generate_template_app_html(metadata, target_url))
-        self._create_file(template_dir, 'config.xml', self._generate_template_config_xml(app_name, metadata))
-        self._create_file(template_dir, 'build-guide.md', self._generate_template_build_guide(metadata, target_url))
-        self._create_file(template_dir, 'quick-setup.txt', self._generate_quick_setup_instructions(metadata, target_url))
+        # Create React Native Web files
+        self._create_file(web_dir, 'package.json', self._generate_react_native_web_package_json(app_name, metadata))
+        self._create_file(web_dir, 'App.js', self._generate_react_native_web_app_js(metadata, target_url))
+        self._create_file(web_dir, 'index.js', self._generate_react_native_web_index_js())
+        self._create_file(web_dir, 'webpack.config.js', self._generate_react_native_web_webpack_config())
+        self._create_file(web_dir, 'build-all.bat', self._generate_react_native_web_build_script_windows())
+        self._create_file(web_dir, 'build-all.sh', self._generate_react_native_web_build_script_linux())
+        self._create_file(web_dir, 'README.md', self._generate_react_native_web_readme(metadata, target_url))
         
     def _create_bubblewrap_project(self, project_dir, metadata, manifest_data, target_url):
         """Create a PWA-to-APK project using Google's Bubblewrap (Most reliable method)"""
@@ -3326,4 +3346,639 @@ Simple template for creating Android APK without SDK.
 5. Download APK
 
 Done! No SDK required.
+"""
+
+    # React Native generator methods
+    def _generate_react_native_package_json(self, app_name, metadata):
+        """Generate package.json for React Native project"""
+        return json.dumps({
+            "name": app_name.lower().replace(" ", ""),
+            "version": "1.0.0",
+            "description": getattr(metadata, 'description', f"React Native app for {metadata.title}"),
+            "main": "index.js",
+            "scripts": {
+                "android": "react-native run-android",
+                "start": "react-native start",
+                "build-apk": "cd android && ./gradlew assembleDebug"
+            },
+            "dependencies": {
+                "react": "18.2.0",
+                "react-native": "0.72.6",
+                "react-native-webview": "^13.6.3"
+            },
+            "devDependencies": {
+                "@babel/core": "^7.20.0",
+                "@babel/preset-env": "^7.20.0",
+                "metro-react-native-babel-preset": "0.76.8"
+            }
+        }, indent=2)
+
+    def _generate_react_native_app_js(self, metadata, target_url):
+        """Generate App.js for React Native"""
+        return f'''import React from 'react';
+import {{
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+}} from 'react-native';
+import {{WebView}} from 'react-native-webview';
+
+const App = () => {{
+  const [loading, setLoading] = React.useState(true);
+
+  return (
+    <SafeAreaView style={{{{flex: 1}}}}>
+      <StatusBar barStyle="dark-content" />
+      
+      {{loading && (
+        <View style={{styles.loadingContainer}}>
+          <ActivityIndicator size="large" color="#0066cc" />
+          <Text style={{styles.loadingText}}>Loading {metadata.title}...</Text>
+        </View>
+      )}}
+      
+      <WebView
+        source={{{{uri: '{target_url}'}}}}
+        style={{{{flex: 1}}}}
+        onLoadStart={{() => setLoading(true)}}
+        onLoadEnd={{() => setLoading(false)}}
+        javaScriptEnabled={{true}}
+        domStorageEnabled={{true}}
+        startInLoadingState={{true}}
+        scalesPageToFit={{true}}
+        allowsBackForwardNavigationGestures={{true}}
+      />
+    </SafeAreaView>
+  );
+}};
+
+const styles = StyleSheet.create({{
+  loadingContainer: {{
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    zIndex: 1000,
+  }},
+  loadingText: {{
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+  }},
+}});
+
+export default App;'''
+
+    def _generate_react_native_index_js(self, app_name):
+        """Generate index.js for React Native"""
+        return f"""import {{AppRegistry}} from 'react-native';
+import App from './App';
+import {{name as appName}} from './app.json';
+
+AppRegistry.registerComponent(appName, () => App);"""
+
+    def _generate_react_native_app_json(self, app_name, metadata):
+        """Generate app.json for React Native"""
+        return json.dumps({
+            "name": app_name.lower().replace(" ", ""),
+            "displayName": metadata.title
+        }, indent=2)
+
+    def _generate_react_native_metro_config(self):
+        """Generate metro.config.js for React Native"""
+        return """const {{getDefaultConfig, mergeConfig}} = require('@react-native/metro-config');
+
+const config = {{}};
+
+module.exports = mergeConfig(getDefaultConfig(__dirname), config);"""
+
+    def _generate_react_native_babel_config(self):
+        """Generate babel.config.js for React Native"""
+        return """module.exports = {{
+  presets: ['module:metro-react-native-babel-preset'],
+}};"""
+
+    def _generate_react_native_build_script_windows(self):
+        """Generate Windows build script for React Native"""
+        return """@echo off
+echo Building React Native Android APK...
+
+echo.
+echo === Installing Dependencies ===
+npm install
+
+echo.
+echo === Building APK ===
+cd android
+call gradlew assembleDebug
+
+echo.
+echo === Build Complete ===
+echo APK location: android/app/build/outputs/apk/debug/app-debug.apk
+pause"""
+
+    def _generate_react_native_build_script_linux(self):
+        """Generate Linux build script for React Native"""
+        return """#!/bin/bash
+echo "Building React Native Android APK..."
+
+echo
+echo "=== Installing Dependencies ==="
+npm install
+
+echo
+echo "=== Building APK ==="
+cd android
+./gradlew assembleDebug
+
+echo
+echo "=== Build Complete ==="
+echo "APK location: android/app/build/outputs/apk/debug/app-debug.apk\""""
+
+    def _generate_react_native_readme(self, metadata, target_url):
+        """Generate README for React Native project"""
+        return f"""# {metadata.title} - React Native App
+
+React Native mobile app that displays your website with native performance.
+
+## Features
+
+✅ **Native Performance** - True native mobile app
+✅ **Cross-Platform** - Works on Android and iOS
+✅ **WebView Integration** - Displays your website seamlessly
+✅ **Modern Framework** - Built with React Native
+✅ **Easy to Customize** - Modify with JavaScript/React
+
+## Quick Start
+
+### Prerequisites
+- Node.js 16+ 
+- React Native CLI: `npm install -g react-native-cli`
+- Android Studio (for Android builds)
+
+### Build APK
+
+**Windows:**
+```cmd
+build-android.bat
+```
+
+**Linux/Mac:**
+```bash
+chmod +x build-android.sh
+./build-android.sh
+```
+
+## Development
+
+### Run on device/emulator:
+```bash
+npm run android
+```
+
+### Start Metro server:
+```bash
+npm start
+```
+
+## Website Details
+
+- **Original URL**: {target_url}
+- **App Name**: {metadata.title}
+- **Framework**: React Native 0.72.6
+- **Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+
+---
+*React Native gives you the best mobile app experience possible!*
+"""
+
+    def _generate_react_native_android_build_gradle(self):
+        """Generate Android build.gradle for React Native"""
+        return """buildscript {{
+    ext {{
+        buildToolsVersion = "33.0.0"
+        minSdkVersion = 21
+        compileSdkVersion = 33
+        targetSdkVersion = 33
+        ndkVersion = "23.1.7779620"
+    }}
+    dependencies {{
+        classpath("com.android.tools.build:gradle:7.3.1")
+        classpath("com.facebook.react:react-native-gradle-plugin")
+    }}
+}}
+
+apply plugin: "com.facebook.react.rootproject\""""
+
+    def _generate_react_native_android_settings_gradle(self, app_name):
+        """Generate Android settings.gradle for React Native"""
+        return f"""rootProject.name = '{app_name.lower().replace(" ", "")}'
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
+include ':app'
+includeBuild('../node_modules/@react-native/gradle-plugin')"""
+
+    def _generate_react_native_app_build_gradle(self, package_name):
+        """Generate app build.gradle for React Native"""
+        return f"""apply plugin: "com.android.application"
+apply plugin: "com.facebook.react"
+
+android {{{{
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    defaultConfig {{{{
+        applicationId "{package_name}"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+    }}}}
+
+    buildTypes {{{{
+        release {{{{
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }}}}
+    }}}}
+}}
+
+dependencies {{{{
+    implementation "com.facebook.react:react-android"
+    implementation "org.webkit:android-jsc:+"
+}}}}"""
+
+    # Expo generator methods  
+    def _generate_expo_package_json(self, app_name, metadata):
+        """Generate package.json for Expo project"""
+        return json.dumps({
+            "name": app_name.lower().replace(" ", "-"),
+            "version": "1.0.0",
+            "main": "node_modules/expo/AppEntry.js",
+            "scripts": {
+                "start": "expo start",
+                "android": "expo start --android",
+                "build": "eas build",
+                "build-android": "eas build --platform android"
+            },
+            "dependencies": {
+                "expo": "~49.0.15",
+                "expo-status-bar": "~1.6.0",
+                "react": "18.2.0",
+                "react-native": "0.72.6",
+                "expo-web-browser": "~12.3.2"
+            }
+        }, indent=2)
+
+    def _generate_expo_app_js(self, metadata, target_url):
+        """Generate App.js for Expo"""
+        return f"""import React from 'react';
+import {{{{ StyleSheet, Text, View, ActivityIndicator }}}} from 'react-native';
+import {{{{ WebBrowser }}}} from 'expo-web-browser';
+import {{{{ StatusBar }}}} from 'expo-status-bar';
+
+export default function App() {{{{
+  const [loading, setLoading] = React.useState(false);
+
+  const openWebsite = async () => {{{{
+    setLoading(true);
+    try {{{{
+      await WebBrowser.openBrowserAsync('{target_url}');
+    }}}} catch (error) {{{{
+      console.error('Error opening website:', error);
+    }}}} finally {{{{
+      setLoading(false);
+    }}}}
+  }}}};
+
+  React.useEffect(() => {{{{
+    openWebsite();
+  }}}}, []);
+
+  return (
+    <View style={{styles.container}}>
+      <Text style={{styles.title}}>{metadata.title}</Text>
+      <Text style={{styles.subtitle}}>Mobile App</Text>
+      
+      {{{{loading && (
+        <View style={{styles.loadingContainer}}>
+          <ActivityIndicator size="large" color="#0066cc" />
+          <Text style={{styles.loadingText}}>Opening website...</Text>
+        </View>
+      )}}}}
+      
+      <StatusBar style="auto" />
+    </View>
+  );
+}}}}
+
+const styles = StyleSheet.create({{{{
+  container: {{{{
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  }}}},
+  title: {{{{
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  }}}},
+  subtitle: {{{{
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 30,
+  }}}},
+  loadingContainer: {{{{
+    alignItems: 'center',
+    marginTop: 20,
+  }}}},
+  loadingText: {{{{
+    marginTop: 10,
+    color: '#666',
+  }}}},
+}}}});"""
+
+    def _generate_expo_app_json(self, app_name, metadata):
+        """Generate app.json for Expo"""
+        return json.dumps({
+            "expo": {
+                "name": metadata.title,
+                "slug": app_name.lower().replace(" ", "-"),
+                "version": "1.0.0",
+                "orientation": "portrait",
+                "android": {
+                    "package": f"com.digitalskeleton.{app_name.lower().replace(' ', '')}"
+                }
+            }
+        }, indent=2)
+
+    def _generate_expo_eas_json(self):
+        """Generate eas.json for Expo builds"""
+        return json.dumps({
+            "cli": {"version": ">= 5.4.0"},
+            "build": {
+                "development": {"developmentClient": True, "distribution": "internal"},
+                "preview": {"distribution": "internal"},
+                "production": {}
+            }
+        }, indent=2)
+
+    def _generate_expo_build_script_windows(self):
+        """Generate Windows build script for Expo"""
+        return """@echo off
+echo Building Expo APK...
+
+echo.
+echo === Installing Expo CLI ===
+npm install -g @expo/cli eas-cli
+
+echo.
+echo === Installing Dependencies ===
+npm install
+
+echo.
+echo === Building APK ===
+eas build --platform android --profile preview
+
+echo.
+echo === Build Complete ===
+echo Download your APK from the Expo dashboard
+pause"""
+
+    def _generate_expo_build_script_linux(self):
+        """Generate Linux build script for Expo"""
+        return """#!/bin/bash
+echo "Building Expo APK..."
+
+echo
+echo "=== Installing Expo CLI ==="
+npm install -g @expo/cli eas-cli
+
+echo
+echo "=== Installing Dependencies ==="
+npm install
+
+echo
+echo "=== Building APK ==="
+eas build --platform android --profile preview
+
+echo
+echo "=== Build Complete ==="
+echo "Download your APK from the Expo dashboard\""""
+
+    def _generate_expo_readme(self, metadata, target_url):
+        """Generate README for Expo project"""
+        return f"""# {metadata.title} - Expo App
+
+Expo-based mobile app - the easiest way to build React Native apps!
+
+## Super Quick Start (Cloud Build)
+
+1. **Install Expo CLI:**
+   ```bash
+   npm install -g @expo/cli eas-cli
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Build APK in the cloud:**
+   ```bash
+   eas build --platform android
+   ```
+
+## Features
+
+✅ **No Android Studio Required** - Build in the cloud
+✅ **Live Preview** - Test on device instantly  
+✅ **Easy Publishing** - One command to build and deploy
+✅ **Cross-Platform** - Same code for Android and iOS
+
+## Website Details
+
+- **Original URL**: {target_url}
+- **App Name**: {metadata.title}
+- **Platform**: Expo SDK 49
+- **Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+
+---
+*Expo is perfect for beginners who want rapid development!*
+"""
+
+    # React Native Web generator methods
+    def _generate_react_native_web_package_json(self, app_name, metadata):
+        """Generate package.json for React Native Web"""
+        return json.dumps({
+            "name": app_name.lower().replace(" ", "-"),
+            "version": "1.0.0",
+            "scripts": {
+                "start": "webpack serve --mode development",
+                "build": "webpack --mode production"
+            },
+            "dependencies": {
+                "react": "^18.2.0",
+                "react-dom": "^18.2.0",
+                "react-native-web": "^0.19.9"
+            },
+            "devDependencies": {
+                "@babel/core": "^7.22.0",
+                "@babel/preset-react": "^7.22.0",
+                "babel-loader": "^9.1.0",
+                "webpack": "^5.88.0",
+                "webpack-cli": "^5.1.0",
+                "webpack-dev-server": "^4.15.0"
+            }
+        }, indent=2)
+
+    def _generate_react_native_web_app_js(self, metadata, target_url):
+        """Generate App.js for React Native Web"""
+        return f"""import React from 'react';
+import {{{{ View, Text, StyleSheet }}}} from 'react-native';
+
+const App = () => {{{{
+  React.useEffect(() => {{{{
+    window.location.href = '{target_url}';
+  }}}}, []);
+
+  return (
+    <View style={{styles.container}}>
+      <Text style={{styles.title}}>{metadata.title}</Text>
+      <Text style={{styles.message}}>Redirecting to website...</Text>
+    </View>
+  );
+}}}};
+
+const styles = StyleSheet.create({{{{
+  container: {{{{
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  }}}},
+  title: {{{{
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  }}}},
+  message: {{{{
+    fontSize: 16,
+    color: '#666',
+  }}}},
+}}}});
+
+export default App;"""
+
+    def _generate_react_native_web_index_js(self):
+        """Generate index.js for React Native Web"""
+        return """import {{AppRegistry}} from 'react-native';
+import App from './App';
+
+AppRegistry.registerComponent('App', () => App);
+AppRegistry.runApplication('App', {{
+  rootTag: document.getElementById('root'),
+}});"""
+
+    def _generate_react_native_web_webpack_config(self):
+        """Generate webpack.config.js for React Native Web"""
+        return """const path = require('path');
+
+module.exports = {{
+  entry: './index.js',
+  mode: 'development',
+  module: {{
+    rules: [
+      {{
+        test: /\\.js$/,
+        use: {{
+          loader: 'babel-loader',
+          options: {{
+            presets: ['@babel/preset-react'],
+          }},
+        }},
+      }},
+    ],
+  }},
+  resolve: {{
+    alias: {{
+      'react-native$': 'react-native-web',
+    }},
+    extensions: ['.web.js', '.js'],
+  }},
+  devServer: {{
+    contentBase: path.join(__dirname, 'dist'),
+    port: 3000,
+  }},
+}};"""
+
+    def _generate_react_native_web_build_script_windows(self):
+        """Generate Windows build script for React Native Web"""
+        return """@echo off
+echo Building React Native Web...
+
+echo.
+echo === Installing Dependencies ===
+npm install
+
+echo.
+echo === Building Web Version ===
+npm run build
+
+echo.
+echo === Build Complete ===
+pause"""
+
+    def _generate_react_native_web_build_script_linux(self):
+        """Generate Linux build script for React Native Web"""
+        return """#!/bin/bash
+echo "Building React Native Web..."
+
+echo
+echo "=== Installing Dependencies ==="
+npm install
+
+echo
+echo "=== Building Web Version ==="
+npm run build
+
+echo
+echo "=== Build Complete ==="""""
+
+    def _generate_react_native_web_readme(self, metadata, target_url):
+        """Generate README for React Native Web"""
+        return f"""# {metadata.title} - React Native Web
+
+Hybrid approach: React Native code that works on web and mobile!
+
+## Quick Build
+
+### Build Web Version:
+```bash
+npm install
+npm run build
+```
+
+## Features
+
+✅ **One Codebase** - Web and mobile from same code
+✅ **React Native** - Use familiar React Native components  
+✅ **Web Compatible** - Runs in browsers
+✅ **Mobile Ready** - Converts to native apps
+
+## Website Details
+
+- **Original URL**: {target_url}
+- **App Name**: {metadata.title}
+- **Framework**: React Native Web
+- **Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 """
