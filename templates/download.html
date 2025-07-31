@@ -93,56 +93,56 @@
                     </div>
 
                     <!-- Installation Instructions -->
-                    <div class="card border-0 bg-secondary text-light">
-                        <div class="card-body bg-secondary text-light">
-                            <h6 class="card-title">
-                                <i class="fas fa-info-circle text-info me-2"></i>
-                                Import Instructions
+                    <div class="card border-0" style="background: rgba(248, 249, 250, 0.95); color: #333;">
+                        <div class="card-body" style="background: rgba(248, 249, 250, 0.95); color: #333;">
+                            <h6 class="card-title" style="color: #333;">
+                                <i class="fas fa-info-circle text-primary me-2"></i>
+                                Build Instructions
                             </h6>
                             
                             {% if job.package_type == 'apk' %}
                                 <div class="installation-steps">
-                                    <h6 class="text-primary">TWA (Trusted Web Activity) Build Options:</h6>
+                                    <h6 style="color: #0d6efd; font-weight: 600;">TWA (Trusted Web Activity) Build Options:</h6>
                                     
                                     <div class="mb-3">
-                                        <h6 class="text-success">🌟 PWA Builder (Recommended - No SDK Required):</h6>
-                                        <ol class="mb-2">
-                                            <li>Visit <a href="https://www.pwabuilder.com/" target="_blank" class="text-info">pwabuilder.com</a></li>
+                                        <h6 style="color: #198754; font-weight: 600;">🌟 PWA Builder (Recommended - No SDK Required):</h6>
+                                        <ol class="mb-2" style="color: #333;">
+                                            <li>Visit <a href="https://www.pwabuilder.com/" target="_blank" style="color: #0d6efd;">pwabuilder.com</a></li>
                                             <li>Enter your website URL in the analyzer</li>
                                             <li>Click "Package For Stores" → "Android"</li>
                                             <li>Download professional TWA package</li>
                                         </ol>
-                                        <small class="text-success">✨ <strong>Microsoft's official tool:</strong> Creates Google Play Store ready APKs with TWA technology</small>
+                                        <small style="color: #198754;">✨ <strong>Microsoft's official tool:</strong> Creates Google Play Store ready APKs with TWA technology</small>
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <h6 class="text-warning">🔧 Bubblewrap CLI (Advanced Users):</h6>
-                                        <ol class="mb-2">
-                                            <li>Install <a href="https://nodejs.org/" target="_blank" class="text-info">Node.js</a> and <a href="https://developer.android.com/studio" target="_blank" class="text-info">Android Studio</a></li>
-                                            <li><code class="bg-dark text-warning px-2 py-1 rounded">npm install -g @bubblewrap/cli</code></li>
-                                            <li>Use the included <code>twa-manifest.json</code> configuration</li>
-                                            <li><code class="bg-dark text-warning px-2 py-1 rounded">bubblewrap build</code></li>
+                                        <h6 style="color: #fd7e14; font-weight: 600;">🔧 Bubblewrap CLI (Advanced Users):</h6>
+                                        <ol class="mb-2" style="color: #333;">
+                                            <li>Install <a href="https://nodejs.org/" target="_blank" style="color: #0d6efd;">Node.js</a> and <a href="https://developer.android.com/studio" target="_blank" style="color: #0d6efd;">Android Studio</a></li>
+                                            <li><code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">npm install -g @bubblewrap/cli</code></li>
+                                            <li>Use the included <code style="background: #e9ecef; color: #495057; padding: 2px 4px; border-radius: 3px;">twa-manifest.json</code> configuration</li>
+                                            <li><code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">bubblewrap build</code></li>
                                         </ol>
-                                        <small class="text-warning">🛠️ <strong>Google's official CLI:</strong> Full control over TWA generation and signing</small>
+                                        <small style="color: #fd7e14;">🛠️ <strong>Google's official CLI:</strong> Full control over TWA generation and signing</small>
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <h6 class="text-info">📱 Quick Online Builders:</h6>
-                                        <ol class="mb-2">
-                                            <li>Upload web wrapper files to <a href="https://appsgeyser.com/" target="_blank" class="text-info">AppsGeyser</a> or <a href="https://www.appypie.com/" target="_blank" class="text-info">Appy Pie</a></li>
+                                        <h6 style="color: #0dcaf0; font-weight: 600;">📱 Quick Online Builders:</h6>
+                                        <ol class="mb-2" style="color: #333;">
+                                            <li>Upload web wrapper files to <a href="https://appsgeyser.com/" target="_blank" style="color: #0d6efd;">AppsGeyser</a> or <a href="https://www.appypie.com/" target="_blank" style="color: #0d6efd;">Appy Pie</a></li>
                                             <li>Use included step-by-step HTML guide</li>
                                             <li>Download APK instantly</li>
                                         </ol>
-                                        <small class="text-info">🚀 <strong>No setup required:</strong> Works directly with the included web wrapper</small>
+                                        <small style="color: #0dcaf0;">🚀 <strong>No setup required:</strong> Works directly with the included web wrapper</small>
                                     </div>
                                     
-                                    <div class="alert alert-success mt-3 mb-0">
-                                        <small><strong>TWA Technology:</strong> Your package uses Trusted Web Activities - Google's official method for converting websites to Android apps. TWA apps run in Chrome's rendering engine and pass Google Play Store requirements.</small>
+                                    <div style="background: rgba(25, 135, 84, 0.1); border: 1px solid #198754; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                                        <small style="color: #333;"><strong style="color: #198754;">TWA Technology:</strong> Your package uses Trusted Web Activities - Google's official method for converting websites to Android apps. TWA apps run in Chrome's rendering engine and pass Google Play Store requirements.</small>
                                     </div>
                                     
-                                    <div class="alert alert-info mt-3 mb-0">
-                                        <h6 class="text-primary mb-2">📋 What's Included in Your Package:</h6>
-                                        <ul class="mb-0 small">
+                                    <div style="background: rgba(13, 110, 253, 0.1); border: 1px solid #0d6efd; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                                        <h6 style="color: #0d6efd; margin-bottom: 8px; font-weight: 600;">📋 What's Included in Your Package:</h6>
+                                        <ul style="margin-bottom: 0; font-size: 0.9em; color: #333;">
                                             <li><strong>Web Wrapper:</strong> Ready-to-use HTML files for online builders</li>
                                             <li><strong>TWA Manifest:</strong> Bubblewrap configuration for CLI builds</li>
                                             <li><strong>Digital Asset Links:</strong> Domain verification files</li>
@@ -153,34 +153,34 @@
                                 </div>
                             {% elif job.package_type == 'ipa' %}
                                 <div class="installation-steps">
-                                    <h6 class="text-info">Capacitor iOS Build:</h6>
-                                    <ol class="mb-0">
+                                    <h6 style="color: #0dcaf0; font-weight: 600;">iOS PWA Build Options:</h6>
+                                    <ol style="color: #333;">
                                         <li>Download and extract the ZIP file to your Mac</li>
-                                        <li>Install <a href="https://nodejs.org/" target="_blank" class="text-info">Node.js</a> (version 16 or later)</li>
-                                        <li>Install <a href="https://developer.apple.com/xcode/" target="_blank" class="text-info">Xcode</a> from Mac App Store</li>
+                                        <li>Install <a href="https://nodejs.org/" target="_blank" style="color: #0d6efd;">Node.js</a> (version 16 or later)</li>
+                                        <li>Install <a href="https://developer.apple.com/xcode/" target="_blank" style="color: #0d6efd;">Xcode</a> from Mac App Store</li>
                                         <li>Open Terminal in the extracted folder</li>
-                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm install</code> to install dependencies</li>
-                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm run cap:ios</code> to set up iOS project</li>
+                                        <li>Run <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">npm install</code> to install dependencies</li>
+                                        <li>Run <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">npm run cap:ios</code> to set up iOS project</li>
                                         <li>Configure signing in Xcode and build for App Store or device</li>
                                     </ol>
-                                    <div class="alert alert-info mt-3 mb-0">
-                                        <small><strong>PWA to iOS:</strong> This project contains optimized PWA files and comprehensive guides for converting to iOS apps using online builders and App Store deployment methods.</small>
+                                    <div style="background: rgba(13, 202, 240, 0.1); border: 1px solid #0dcaf0; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                                        <small style="color: #333;"><strong style="color: #0dcaf0;">PWA to iOS:</strong> This project contains optimized PWA files and comprehensive guides for converting to iOS apps using online builders and App Store deployment methods.</small>
                                     </div>
                                 </div>
                             {% else %}
                                 <div class="installation-steps">
-                                    <h6 class="text-warning">Electron Desktop App Build:</h6>
-                                    <ol class="mb-0">
+                                    <h6 style="color: #fd7e14; font-weight: 600;">Electron Desktop App Build:</h6>
+                                    <ol style="color: #333;">
                                         <li>Download and extract the ZIP file to your computer</li>
-                                        <li>Install <a href="https://nodejs.org/" target="_blank" class="text-info">Node.js</a> (version 16 or later)</li>
+                                        <li>Install <a href="https://nodejs.org/" target="_blank" style="color: #0d6efd;">Node.js</a> (version 16 or later)</li>
                                         <li>Open Command Prompt/Terminal in the extracted folder</li>
-                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm install</code> to install dependencies</li>
-                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm start</code> to test the app</li>
-                                        <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">npm run build</code> to create executable</li>
-                                        <li>Find your app installer in the <code>dist</code> folder</li>
+                                        <li>Run <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">npm install</code> to install dependencies</li>
+                                        <li>Run <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">npm start</code> to test the app</li>
+                                        <li>Run <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">npm run build</code> to create executable</li>
+                                        <li>Find your app installer in the <code style="background: #e9ecef; color: #495057; padding: 2px 4px; border-radius: 3px;">dist</code> folder</li>
                                     </ol>
-                                    <div class="alert alert-warning mt-3 mb-0">
-                                        <small><strong>Cross-platform ready:</strong> This Electron project creates desktop apps for Windows (.exe), Mac (.dmg), and Linux (.AppImage). No compilation errors or complex dependencies!</small>
+                                    <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                                        <small style="color: #333;"><strong style="color: #fd7e14;">Cross-platform ready:</strong> This Electron project creates desktop apps for Windows (.exe), Mac (.dmg), and Linux (.AppImage). No compilation errors or complex dependencies!</small>
                                     </div>
                                 </div>
                             {% endif %}
