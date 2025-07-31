@@ -62,9 +62,9 @@
                             <h6 class="text-light">Package Type</h6>
                             <p>
                                 {% if job.package_type == 'apk' %}
-                                    Capacitor Android Project - <span class="text-success">Ready to Build APK</span>
+                                    TWA Android Project - <span class="text-success">Google-Approved Technology</span>
                                 {% elif job.package_type == 'ipa' %}
-                                    Capacitor iOS Project - <span class="text-info">Ready to Build IPA</span>
+                                    iOS PWA Project - <span class="text-info">Ready for App Store</span>
                                 {% elif job.package_type == 'msix' %}
                                     Electron Windows App - <span class="text-warning">Ready to Build</span>
                                 {% elif job.package_type == 'appx' %}
@@ -81,11 +81,11 @@
                         <a href="{{ url_for('download_file', job_id=job.id) }}" class="btn btn-success btn-lg">
                             <i class="fas fa-download me-2"></i>
                             {% if job.package_type == 'apk' %}
-                                Download {{ job.app_name.replace(' ', '_') }}_android_project.zip
+                                Download {{ job.app_name.replace(' ', '_') }}_TWA_android.zip
                             {% elif job.package_type == 'ipa' %}
-                                Download {{ job.app_name.replace(' ', '_') }}_ios_project.zip
+                                Download {{ job.app_name.replace(' ', '_') }}_ios_pwa.zip
                             {% elif job.package_type in ['msix', 'appx'] %}
-                                Download {{ job.app_name.replace(' ', '_') }}_windows_project.zip
+                                Download {{ job.app_name.replace(' ', '_') }}_electron_app.zip
                             {% else %}
                                 Download {{ job.app_name.replace(' ', '_') }}_project.zip
                             {% endif %}
@@ -102,38 +102,53 @@
                             
                             {% if job.package_type == 'apk' %}
                                 <div class="installation-steps">
-                                    <h6 class="text-primary">Multiple Build Options Available:</h6>
+                                    <h6 class="text-primary">TWA (Trusted Web Activity) Build Options:</h6>
                                     
                                     <div class="mb-3">
-                                        <h6 class="text-success">🚀 Quick Development Build (Recommended for Testing):</h6>
+                                        <h6 class="text-success">🌟 PWA Builder (Recommended - No SDK Required):</h6>
                                         <ol class="mb-2">
-                                            <li>Download and extract the ZIP file</li>
-                                            <li>Install <a href="https://nodejs.org/" target="_blank" class="text-info">Node.js</a> (version 16+)</li>
-                                            <li>Install <a href="https://developer.android.com/studio" target="_blank" class="text-info">Android Studio</a> + Android SDK</li>
-                                            <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">quick-build.bat</code> (Windows) or <code class="bg-dark text-warning px-2 py-1 rounded">./quick-build.sh</code> (Mac/Linux)</li>
+                                            <li>Visit <a href="https://www.pwabuilder.com/" target="_blank" class="text-info">pwabuilder.com</a></li>
+                                            <li>Enter your website URL in the analyzer</li>
+                                            <li>Click "Package For Stores" → "Android"</li>
+                                            <li>Download professional TWA package</li>
                                         </ol>
-                                        <small class="text-success">⚡ <strong>Fastest option:</strong> Uses parallel builds and daemon processes</small>
+                                        <small class="text-success">✨ <strong>Microsoft's official tool:</strong> Creates Google Play Store ready APKs with TWA technology</small>
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <h6 class="text-warning">📱 Google Play Store Build:</h6>
+                                        <h6 class="text-warning">🔧 Bubblewrap CLI (Advanced Users):</h6>
                                         <ol class="mb-2">
-                                            <li>Run <code class="bg-dark text-warning px-2 py-1 rounded">build-release.bat</code> (Windows) or <code class="bg-dark text-warning px-2 py-1 rounded">./build-release.sh</code> (Mac/Linux)</li>
+                                            <li>Install <a href="https://nodejs.org/" target="_blank" class="text-info">Node.js</a> and <a href="https://developer.android.com/studio" target="_blank" class="text-info">Android Studio</a></li>
+                                            <li><code class="bg-dark text-warning px-2 py-1 rounded">npm install -g @bubblewrap/cli</code></li>
+                                            <li>Use the included <code>twa-manifest.json</code> configuration</li>
+                                            <li><code class="bg-dark text-warning px-2 py-1 rounded">bubblewrap build</code></li>
                                         </ol>
-                                        <small class="text-warning">🏪 <strong>For app stores:</strong> Generates both APK and AAB (Android App Bundle) files</small>
+                                        <small class="text-warning">🛠️ <strong>Google's official CLI:</strong> Full control over TWA generation and signing</small>
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <h6 class="text-info">🛠️ Manual Build Process:</h6>
+                                        <h6 class="text-info">📱 Quick Online Builders:</h6>
                                         <ol class="mb-2">
-                                            <li><code class="bg-dark text-warning px-2 py-1 rounded">npm install</code></li>
-                                            <li><code class="bg-dark text-warning px-2 py-1 rounded">npm run cap:android</code></li>
-                                            <li><code class="bg-dark text-warning px-2 py-1 rounded">npm run build:android</code></li>
+                                            <li>Upload web wrapper files to <a href="https://appsgeyser.com/" target="_blank" class="text-info">AppsGeyser</a> or <a href="https://www.appypie.com/" target="_blank" class="text-info">Appy Pie</a></li>
+                                            <li>Use included step-by-step HTML guide</li>
+                                            <li>Download APK instantly</li>
                                         </ol>
+                                        <small class="text-info">🚀 <strong>No setup required:</strong> Works directly with the included web wrapper</small>
                                     </div>
                                     
                                     <div class="alert alert-success mt-3 mb-0">
-                                        <small><strong>Modern web-to-mobile:</strong> Capacitor generates real native Android APK/AAB files using web technologies. Multiple build options for different needs - development testing, app store deployment, or manual control.</small>
+                                        <small><strong>TWA Technology:</strong> Your package uses Trusted Web Activities - Google's official method for converting websites to Android apps. TWA apps run in Chrome's rendering engine and pass Google Play Store requirements.</small>
+                                    </div>
+                                    
+                                    <div class="alert alert-info mt-3 mb-0">
+                                        <h6 class="text-primary mb-2">📋 What's Included in Your Package:</h6>
+                                        <ul class="mb-0 small">
+                                            <li><strong>Web Wrapper:</strong> Ready-to-use HTML files for online builders</li>
+                                            <li><strong>TWA Manifest:</strong> Bubblewrap configuration for CLI builds</li>
+                                            <li><strong>Digital Asset Links:</strong> Domain verification files</li>
+                                            <li><strong>Step-by-Step Guides:</strong> HTML instructions for each method</li>
+                                            <li><strong>Online Builder Configs:</strong> Pre-configured app settings</li>
+                                        </ul>
                                     </div>
                                 </div>
                             {% elif job.package_type == 'ipa' %}
@@ -149,7 +164,7 @@
                                         <li>Configure signing in Xcode and build for App Store or device</li>
                                     </ol>
                                     <div class="alert alert-info mt-3 mb-0">
-                                        <small><strong>Modern web-to-mobile:</strong> This Capacitor project generates real native iOS IPA files using modern web technologies. No Swift/Objective-C knowledge required!</small>
+                                        <small><strong>PWA to iOS:</strong> This project contains optimized PWA files and comprehensive guides for converting to iOS apps using online builders and App Store deployment methods.</small>
                                     </div>
                                 </div>
                             {% else %}
