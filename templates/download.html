@@ -116,14 +116,14 @@
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <h6 style="color: #fd7e14; font-weight: 600;">⚡ TWA Generator (Working Alternative):</h6>
+                                        <h6 style="color: #fd7e14; font-weight: 600;">🐧 Linux/WSL TWA Build (Recommended):</h6>
                                         <ol class="mb-2" style="color: #333;">
-                                            <li>Visit <a href="https://twa-generator.appspot.com/" target="_blank" style="color: #0d6efd;">TWA Generator</a> (Google's online tool)</li>
-                                            <li>Upload the included <code style="background: #e9ecef; color: #495057; padding: 2px 4px; border-radius: 3px;">twa-manifest.json</code> file</li>
-                                            <li>Download the generated APK directly</li>
-                                            <li>No CLI installation required</li>
+                                            <li>Install Node.js: <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">sudo apt update && sudo apt install nodejs npm</code></li>
+                                            <li>Install Android SDK: <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">sudo apt install android-sdk</code></li>
+                                            <li>Set ANDROID_HOME: <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">export ANDROID_HOME=/usr/lib/android-sdk</code></li>
+                                            <li>Use PWA Builder or online tools for reliable APK generation</li>
                                         </ol>
-                                        <small style="color: #fd7e14;">🛠️ <strong>Google's official web tool:</strong> Reliable alternative to deprecated CLI</small>
+                                        <small style="color: #fd7e14;">🛠️ <strong>Linux optimized:</strong> Works perfectly in Ubuntu, WSL, and other Linux distributions</small>
                                     </div>
                                     
                                     <div class="mb-3">
@@ -152,12 +152,13 @@
                                     </div>
                                     
                                     <div style="background: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; border-radius: 8px; padding: 15px; margin-top: 15px;">
-                                        <h6 style="color: #dc3545; margin-bottom: 8px; font-weight: 600;">⚠️ Troubleshooting APK Generation:</h6>
+                                        <h6 style="color: #dc3545; margin-bottom: 8px; font-weight: 600;">🐧 Linux/WSL Troubleshooting:</h6>
                                         <ul style="margin-bottom: 0; font-size: 0.9em; color: #333;">
                                             <li><strong>CLI Not Installing:</strong> Use PWA Builder or online tools instead</li>
-                                            <li><strong>Deprecated Packages:</strong> Web-based methods don't require CLI installation</li>
-                                            <li><strong>APK Not Generated:</strong> Try AppsGeyser or Appy Pie as backup options</li>
-                                            <li><strong>Store Rejection:</strong> PWA Builder creates store-compliant packages</li>
+                                            <li><strong>WSL Environment:</strong> Included scripts handle Java, Node.js, and Android SDK setup</li>
+                                            <li><strong>Permission Issues:</strong> Run <code style="background: #e9ecef; color: #495057; padding: 2px 4px; border-radius: 3px;">chmod +x *.sh</code> in project folder</li>
+                                            <li><strong>SDK Missing:</strong> Scripts automatically install Android SDK to ~/Android/Sdk</li>
+                                            <li><strong>Build Failures:</strong> Try AppsGeyser or Appy Pie as reliable alternatives</li>
                                         </ul>
                                     </div>
                                 </div>

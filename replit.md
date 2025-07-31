@@ -86,7 +86,11 @@ Preferred communication style: Simple, everyday language.
 - ✓ Replaced deprecated Bubblewrap CLI instructions with reliable web-based alternatives
 - ✓ Enhanced download page with proven APK generation methods
 - ✓ Fixed text visibility issues on download page for better user experience
-- ✅ **TWA approach fully operational with current, working build methods**
+- ✓ **Optimized for Linux/WSL environments (July 31, 2025)**
+- ✓ Enhanced build scripts with automatic Android SDK installation for Linux
+- ✓ Added comprehensive Linux/WSL setup scripts with Java, Node.js, and SDK handling
+- ✓ Updated download instructions with Linux-specific troubleshooting
+- ✅ **TWA approach fully operational with Linux/WSL optimization**
 
 ### Simple APK Generation System (July 31, 2025)
 - ✓ **Replaced complex React Native with simple, reliable methods**

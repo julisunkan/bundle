@@ -1669,11 +1669,24 @@ cd ..
 '''
 
     def _generate_gradle_setup_script_linux(self):
-        """Generate script to setup Gradle wrapper (Linux/Mac)"""
+        """Generate Linux/WSL optimized Gradle setup script"""
         return '''#!/bin/bash
-# Setup Gradle Wrapper for Android Build
+# Linux/WSL Gradle Setup Script
+# Optimized for Ubuntu, Debian, and WSL environments
 
-echo "Setting up Gradle wrapper..."
+echo "🐧 Setting up Gradle for Linux/WSL Android build..."
+
+# Install required packages
+echo "📦 Installing required packages..."
+sudo apt update
+sudo apt install -y openjdk-11-jdk wget curl unzip
+
+# Set JAVA_HOME if not set
+if [ -z "$JAVA_HOME" ]; then
+    export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+    echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> ~/.bashrc
+    echo "✅ JAVA_HOME set to $JAVA_HOME"
+fi
 
 # Navigate to android directory
 cd android
@@ -1683,31 +1696,50 @@ mkdir -p gradle/wrapper
 
 # Download gradle wrapper jar if it doesn't exist
 if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-    echo "Downloading Gradle wrapper jar..."
-    curl -L https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+    echo "📥 Downloading Gradle wrapper jar..."
+    
+    # Try official Gradle distribution first
+    curl -sL https://services.gradle.org/distributions/gradle-8.0-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
     
     # If curl fails, try with wget
     if [ $? -ne 0 ]; then
-        echo "Trying with wget..."
-        wget https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar -O gradle/wrapper/gradle-wrapper.jar
+        echo "🔄 Trying with wget..."
+        wget -q https://services.gradle.org/distributions/gradle-8.0-wrapper.jar -O gradle/wrapper/gradle-wrapper.jar
     fi
     
-    # Try alternative source if both fail
+    # Try GitHub backup if both fail
     if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-        echo "Trying alternative download source..."
-        curl -L https://services.gradle.org/distributions-snapshots/gradle-8.1-20230123230022+0000-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+        echo "🔄 Trying GitHub backup..."
+        curl -sL https://github.com/gradle/gradle/raw/v8.0.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+    fi
+    
+    # Try Maven Central as last resort
+    if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+        echo "🔄 Trying Maven Central..."
+        wget -q https://repo1.maven.org/maven2/org/gradle/gradle-wrapper/8.0/gradle-wrapper-8.0.jar -O gradle/wrapper/gradle-wrapper.jar
     fi
 fi
 
 if [ -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-    echo "Gradle wrapper setup complete!"
-    echo "File size: $(ls -la gradle/wrapper/gradle-wrapper.jar)"
+    echo "✅ Gradle wrapper setup complete!"
+    echo "📋 File size: $(ls -la gradle/wrapper/gradle-wrapper.jar)"
     chmod +x gradlew
+    
+    # Test Gradle installation
+    echo "🧪 Testing Gradle installation..."
+    ./gradlew --version
+    
+    echo ""
+    echo "📋 Next steps:"
+    echo "1. Build debug APK: ./gradlew assembleDebug"
+    echo "2. Build release APK: ./gradlew assembleRelease"
+    echo "3. Clean and build: ./gradlew clean assembleDebug"
 else
-    echo "Failed to download Gradle wrapper automatically."
-    echo "Please manually download gradle-wrapper.jar from:"
-    echo "https://github.com/gradle/gradle/raw/v8.1.1/gradle/wrapper/gradle-wrapper.jar"
-    echo "And place it in android/gradle/wrapper/ directory."
+    echo "❌ Failed to download Gradle wrapper automatically."
+    echo "🔧 Manual download required:"
+    echo "1. Download from: https://services.gradle.org/distributions/gradle-8.0-wrapper.jar"
+    echo "2. Place in: android/gradle/wrapper/gradle-wrapper.jar"
+    echo "3. Run: chmod +x gradlew"
 fi
 
 cd ..
@@ -2825,34 +2857,99 @@ echo To install on device: adb install android/app/build/outputs/apk/debug/app-d
 pause'''
 
     def _generate_capacitor_android_build_script_linux(self, app_name):
-        """Generate Android build script for Capacitor (Linux/Mac)"""
+        """Generate Linux/WSL optimized build script for Capacitor Android projects"""
         return f'''#!/bin/bash
-# Build script for {app_name} Android App
+# Linux/WSL Android Build Script for {app_name}
+# Optimized for Ubuntu, Debian, and WSL environments
 
-echo "Building {app_name} Android App..."
+echo "🐧 Starting Linux/WSL Android build for {app_name}..."
 
-# Install dependencies
-echo "Installing dependencies..."
+# Function to install Android SDK on Linux
+install_android_sdk() {{
+    echo "📱 Installing Android SDK for Linux/WSL..."
+    
+    # Update package list
+    sudo apt update
+    
+    # Install required packages
+    sudo apt install -y openjdk-11-jdk wget unzip curl
+    
+    # Set JAVA_HOME
+    export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+    echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> ~/.bashrc
+    
+    # Download Android command line tools
+    cd ~
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+    unzip -q commandlinetools-linux-8512546_latest.zip
+    
+    # Create Android SDK directory
+    mkdir -p ~/Android/Sdk/cmdline-tools
+    mv cmdline-tools ~/Android/Sdk/cmdline-tools/latest
+    
+    # Set Android environment variables
+    export ANDROID_HOME=~/Android/Sdk
+    export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+    echo "export ANDROID_HOME=~/Android/Sdk" >> ~/.bashrc
+    echo "export PATH=\\$PATH:\\$ANDROID_HOME/cmdline-tools/latest/bin:\\$ANDROID_HOME/platform-tools" >> ~/.bashrc
+    
+    # Accept licenses and install required packages
+    yes | ~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+    ~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+    
+    echo "✅ Android SDK installed successfully!"
+}}
+
+# Check if Node.js is installed
+if ! command -v node &> /dev/null; then
+    echo "📦 Installing Node.js for Linux/WSL..."
+    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+fi
+
+# Check if Android SDK is available
+if [ -z "$ANDROID_HOME" ] || [ ! -d "$ANDROID_HOME" ]; then
+    echo "⚠️  ANDROID_HOME not set or SDK not found. Installing Android SDK..."
+    install_android_sdk
+    source ~/.bashrc
+fi
+
+# Install project dependencies
+echo "📋 Installing project dependencies..."
 npm install
 
-# Add Android platform if not exists
-echo "Setting up Android platform..."
+# Install Capacitor CLI
+echo "🔧 Installing Capacitor CLI..."
+npm install -g @capacitor/cli
+
+# Add Android platform
+echo "📱 Adding Android platform..."
 npx cap add android
 
-# Sync web assets to native project
-echo "Syncing assets..."
+# Sync project files
+echo "🔄 Syncing files to Android project..."
 npx cap sync android
 
+# Make gradlew executable
+echo "🔐 Setting permissions..."
+chmod +x android/gradlew
+
 # Build APK
-echo "Building APK..."
+echo "🏗️  Building APK..."
 cd android
 ./gradlew assembleDebug
-cd ..
 
-echo "Build complete! APK location:"
-echo "android/app/build/outputs/apk/debug/app-debug.apk"
 echo ""
-echo "To install on device: adb install android/app/build/outputs/apk/debug/app-debug.apk"'''
+echo "✅ Build completed successfully!"
+echo "📱 APK location: android/app/build/outputs/apk/debug/app-debug.apk"
+echo ""
+echo "📋 Next steps:"
+echo "1. Install on device: adb install app/build/outputs/apk/debug/app-debug.apk"
+echo "2. Test with emulator: ../gradlew installDebug"
+echo "3. Build release: ./gradlew assembleRelease"
+echo ""
+echo "🔧 For customization:"
+echo "Open Android Studio and import the android/ folder"'''
 
     def _generate_android_release_build_script(self, app_name):
         """Generate optimized release build script for Android"""
