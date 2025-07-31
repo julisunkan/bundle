@@ -127,8 +127,8 @@ let currentStep = 0;
 const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
 const stepTexts = {
     'pending': 'Initializing build process...',
-    'building': 'Building your app package...',
-    'completed': 'Package ready for download!',
+    'building': 'Building your APK-ready project...',
+    'completed': 'APK-ready project successfully created!',
     'failed': 'Build process failed.'
 };
 
@@ -174,7 +174,7 @@ function checkBuildStatus() {
         .then(data => {
             console.log('Build status response:', data);
             if (data.status === 'building') {
-                updateProgress(Math.min(currentStep * 20 + 20, 80), 'building', 'Building your app package...');
+                updateProgress(Math.min(currentStep * 20 + 20, 80), 'building', 'Building your APK-ready project...');
                 if (currentStep < steps.length - 1) {
                     completeStep(currentStep);
                     currentStep++;
@@ -184,7 +184,7 @@ function checkBuildStatus() {
                 for (let i = currentStep; i < steps.length; i++) {
                     completeStep(i);
                 }
-                updateProgress(100, 'completed', 'Package ready for download!');
+                updateProgress(100, 'completed', 'APK-ready project successfully created!');
                 document.getElementById('downloadBtn').style.display = 'inline-block';
                 clearInterval(pollInterval);
             } else if (data.status === 'failed') {
@@ -196,6 +196,15 @@ function checkBuildStatus() {
             } else {
                 // Handle other statuses or default case
                 console.log('Unknown status:', data.status);
+                // If status is already completed, show success immediately
+                if (data.status === 'completed' || (data.download_url && data.download_url.length > 0)) {
+                    for (let i = currentStep; i < steps.length; i++) {
+                        completeStep(i);
+                    }
+                    updateProgress(100, 'completed', 'APK-ready project successfully created!');
+                    document.getElementById('downloadBtn').style.display = 'inline-block';
+                    clearInterval(pollInterval);
+                }
             }
         })
         .catch(error => {
@@ -211,8 +220,33 @@ function checkBuildStatus() {
 // Start polling for build status
 pollInterval = setInterval(checkBuildStatus, 2000);
 
-// Initial check
+// Initial check - handle builds that complete before page loads
 checkBuildStatus();
+
+// If build is already completed on first check, show completion immediately
+setTimeout(() => {
+    fetch(BUILD_STATUS_URL)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'completed') {
+                // Simulate progress steps quickly for visual feedback
+                let step = 0;
+                const quickProgress = setInterval(() => {
+                    if (step < steps.length) {
+                        completeStep(step);
+                        updateProgress((step + 1) * 20, 'building', 'Building your APK-ready project...');
+                        step++;
+                    } else {
+                        clearInterval(quickProgress);
+                        updateProgress(100, 'completed', 'APK-ready project successfully created!');
+                        document.getElementById('downloadBtn').style.display = 'inline-block';
+                        clearInterval(pollInterval);
+                    }
+                }, 300);
+            }
+        })
+        .catch(error => console.log('Initial status check failed:', error));
+}, 500);
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
