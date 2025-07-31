@@ -4481,20 +4481,20 @@ If online builders don't work:
 
     def _generate_simple_app_config(self, app_name, metadata, target_url):
         """Generate simple app config JSON"""
-        return json.dumps({{
+        return json.dumps({
             "appName": metadata.title,
-            "packageName": f"com.digitalskeleton.{{app_name.lower()}}",
+            "packageName": f"com.digitalskeleton.{app_name.lower()}",
             "websiteUrl": target_url,
-            "description": getattr(metadata, 'description', f"Mobile app for {{metadata.title}}"),
+            "description": getattr(metadata, 'description', f"Mobile app for {metadata.title}"),
             "version": "1.0.0",
-            "instructions": {{
+            "instructions": {
                 "step1": "Visit any online APK builder",
                 "step2": "Choose 'Website App' option",
-                "step3": f"Enter URL: {{target_url}}",
-                "step4": f"Set app name: {{metadata.title}}",
+                "step3": f"Enter URL: {target_url}",
+                "step4": f"Set app name: {metadata.title}",
                 "step5": "Upload icon and generate APK"
-            }}
-        }}, indent=2)
+            }
+        }, indent=2)
 
     def _generate_builder_links(self):
         """Generate list of APK builder links"""
@@ -4754,8 +4754,8 @@ Last Updated: {datetime.now().strftime("%Y-%m-%d")}'''
 
     def _generate_twa_manifest(self, app_name, metadata, target_url):
         """Generate TWA manifest for advanced users"""
-        return json.dumps({{
-            "packageId": f"com.digitalskeleton.{{app_name.lower()}}",
+        return json.dumps({
+            "packageId": f"com.digitalskeleton.{app_name.lower()}",
             "host": target_url.replace('https://', '').replace('http://', '').split('/')[0],
             "name": metadata.title,
             "launcherName": metadata.title,
@@ -4767,11 +4767,11 @@ Last Updated: {datetime.now().strftime("%Y-%m-%d")}'''
             "iconUrl": "https://via.placeholder.com/512x512/667eea/ffffff?text=APP",
             "webManifestUrl": "/manifest.json",
             "shortcuts": [],
-            "signingKey": {{
+            "signingKey": {
                 "alias": "android",
                 "fullName": "CN=Android Debug,O=Android,C=US"
-            }}
-        }}, indent=2)
+            }
+        }, indent=2)
 
     def _generate_pwa_converter_readme(self, metadata, target_url):
         """Generate PWA converter README"""
