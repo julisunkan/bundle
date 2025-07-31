@@ -13,29 +13,29 @@ class PackageBuilder:
         self.icon_generator = IconGenerator()
     
     def build_apk(self, metadata, manifest_data, job_id, target_url):
-        """Build Android app using simple, reliable methods"""
+        """Build Android TWA (Trusted Web Activity) package using bubblewrap"""
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
-                project_dir = os.path.join(temp_dir, 'android_simple')
+                project_dir = os.path.join(temp_dir, 'android_twa')
                 
-                # Method 1: Simple Web Wrapper (Most Reliable)
-                self._create_simple_web_wrapper(project_dir, metadata, manifest_data, target_url)
+                # Method 1: TWA using Bubblewrap (Primary Method)
+                self._create_twa_bubblewrap_project(project_dir, metadata, manifest_data, target_url)
                 
-                # Method 2: Online APK Builder Instructions (No Tools Required)
-                self._create_online_apk_instructions(project_dir, metadata, manifest_data, target_url)
+                # Method 2: Manual TWA Setup Instructions (Fallback)
+                self._create_manual_twa_setup(project_dir, metadata, manifest_data, target_url)
                 
-                # Method 3: PWA to APK Converter (Browser-based)
-                self._create_pwa_to_apk_converter(project_dir, metadata, manifest_data, target_url)
+                # Method 3: Online TWA Builders (Alternative)
+                self._create_online_twa_builders(project_dir, metadata, manifest_data, target_url)
                 
-                zip_filename = f"{metadata.title.replace(' ', '_')}_android_{job_id}.zip"
+                zip_filename = f"{metadata.title.replace(' ', '_')}_android_twa_{job_id}.zip"
                 zip_path = os.path.join(self.output_dir, zip_filename)
                 
                 self._create_project_zip(project_dir, zip_path)
                 return zip_path
                 
         except Exception as e:
-            app.logger.error(f"Android build failed: {str(e)}")
-            raise Exception(f"Android build failed: {str(e)}")
+            app.logger.error(f"Android TWA build failed: {str(e)}")
+            raise Exception(f"Android TWA build failed: {str(e)}")
     
     def build_ipa(self, metadata, manifest_data, job_id, target_url):
         """Build iOS app using simple, reliable methods"""
@@ -5562,6 +5562,805 @@ Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
         <div style="text-align: center; margin-top: 50px; color: #86868b;">
             <p><strong>Website:</strong> {target_url}</p>
             <p><strong>Generated:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    # TWA (Trusted Web Activity) Methods for Android
+    
+    def _create_twa_bubblewrap_project(self, project_dir, metadata, manifest_data, target_url):
+        """Create TWA project using Google's Bubblewrap CLI"""
+        twa_dir = os.path.join(project_dir, 'bubblewrap_twa')
+        os.makedirs(twa_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        package_name = f"com.digitalskeleton.{app_name.lower()}"
+        
+        # Create Bubblewrap TWA manifest
+        twa_manifest = {
+            "packageId": package_name,
+            "host": self._extract_host(target_url),
+            "name": metadata.title,
+            "launcherName": app_name,
+            "display": "standalone",
+            "orientation": "default",
+            "themeColor": manifest_data.get("theme_color", "#000000"),
+            "backgroundColor": manifest_data.get("background_color", "#ffffff"),
+            "startUrl": target_url,
+            "iconUrl": metadata.icon_url or f"{target_url}/favicon.ico",
+            "maskableIconUrl": metadata.icon_url or f"{target_url}/favicon.ico",
+            "monochromeIconUrl": metadata.icon_url or f"{target_url}/favicon.ico",
+            "fallbackType": "customtabs",
+            "webManifestUrl": f"{target_url}/manifest.json",
+            "fingerprints": [],
+            "additionalTrustedOrigins": [],
+            "retainedBundles": [],
+            "appVersionName": "1.0.0",
+            "appVersionCode": 1,
+            "shortcuts": [],
+            "generatorApp": "DigitalSkeleton"
+        }
+        
+        # Create project files
+        self._create_file(twa_dir, 'twa-manifest.json', json.dumps(twa_manifest, indent=2))
+        self._create_file(twa_dir, 'package.json', self._generate_bubblewrap_package_json(app_name))
+        self._create_file(twa_dir, 'build-apk.sh', self._generate_bubblewrap_build_script(app_name))
+        self._create_file(twa_dir, 'build-apk.bat', self._generate_bubblewrap_build_script_windows(app_name))
+        self._create_file(twa_dir, 'README.md', self._generate_bubblewrap_readme(metadata, target_url))
+        self._create_file(twa_dir, 'setup-environment.sh', self._generate_bubblewrap_setup_script())
+        self._create_file(twa_dir, 'setup-environment.bat', self._generate_bubblewrap_setup_script_windows())
+        
+    def _create_manual_twa_setup(self, project_dir, metadata, manifest_data, target_url):
+        """Create manual TWA setup instructions for Android Studio"""
+        manual_dir = os.path.join(project_dir, 'manual_twa_setup')
+        os.makedirs(manual_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        package_name = f"com.digitalskeleton.{app_name.lower()}"
+        
+        # Create Android Studio TWA project files
+        self._create_file(manual_dir, 'build.gradle', self._generate_twa_build_gradle(app_name, package_name))
+        self._create_file(manual_dir, 'AndroidManifest.xml', self._generate_twa_android_manifest(app_name, package_name, metadata, target_url))
+        self._create_file(manual_dir, 'strings.xml', self._generate_twa_strings(metadata, target_url))
+        self._create_file(manual_dir, 'colors.xml', self._generate_twa_colors(manifest_data))
+        self._create_file(manual_dir, 'LauncherActivity.java', self._generate_twa_launcher_activity(package_name))
+        self._create_file(manual_dir, 'README-MANUAL-SETUP.md', self._generate_manual_twa_readme(metadata, target_url))
+        self._create_file(manual_dir, 'digital-asset-links.json', self._generate_digital_asset_links(package_name))
+        
+    def _create_online_twa_builders(self, project_dir, metadata, manifest_data, target_url):
+        """Create instructions for online TWA builders"""
+        online_dir = os.path.join(project_dir, 'online_twa_builders')
+        os.makedirs(online_dir, exist_ok=True)
+        
+        app_name = self._sanitize_name(metadata.title)
+        
+        # Create configuration files for different online builders
+        self._create_file(online_dir, 'pwa-builder-config.json', self._generate_pwa_builder_config(metadata, target_url))
+        self._create_file(online_dir, 'twa-generator-config.json', self._generate_twa_generator_config(metadata, target_url))
+        self._create_file(online_dir, 'ONLINE-BUILDERS-GUIDE.md', self._generate_online_builders_guide(metadata, target_url))
+        self._create_file(online_dir, 'quick-links.html', self._generate_quick_links_html(metadata, target_url))
+        
+    def _extract_host(self, url):
+        """Extract host from URL for TWA manifest"""
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            return parsed.netloc
+        except:
+            return url.replace('https://', '').replace('http://', '').split('/')[0]
+    
+    def _generate_bubblewrap_package_json(self, app_name):
+        """Generate package.json for Bubblewrap project"""
+        return json.dumps({
+            "name": app_name.lower().replace(' ', '-'),
+            "version": "1.0.0",
+            "description": f"TWA for {app_name}",
+            "scripts": {
+                "init": "bubblewrap init --manifest=twa-manifest.json",
+                "build": "bubblewrap build",
+                "install": "bubblewrap install"
+            },
+            "dependencies": {
+                "@bubblewrap/cli": "^1.19.4"
+            }
+        }, indent=2)
+    
+    def _generate_bubblewrap_build_script(self, app_name):
+        """Generate Linux/Mac build script for Bubblewrap"""
+        return f"""#!/bin/bash
+# TWA Build Script for {app_name}
+# Requires Node.js, Java 8+, and Android SDK
+
+echo "🚀 Building TWA for {app_name}..."
+
+# Check if Node.js is installed
+if ! command -v node &> /dev/null; then
+    echo "❌ Node.js is required. Please install Node.js first."
+    exit 1
+fi
+
+# Check if Java is installed
+if ! command -v java &> /dev/null; then
+    echo "❌ Java is required. Please install Java 8+ first."
+    exit 1
+fi
+
+# Install Bubblewrap CLI if not already installed
+echo "📦 Installing Bubblewrap CLI..."
+npm install -g @bubblewrap/cli
+
+# Initialize TWA project
+echo "🔧 Initializing TWA project..."
+bubblewrap init --manifest=twa-manifest.json
+
+# Build APK
+echo "🏗️ Building APK..."
+bubblewrap build
+
+echo "✅ TWA build complete! Check the 'app-release-unsigned.apk' file."
+echo "📝 Note: Sign the APK before distributing to users."
+"""
+
+    def _generate_bubblewrap_build_script_windows(self, app_name):
+        """Generate Windows build script for Bubblewrap"""
+        return f"""@echo off
+REM TWA Build Script for {app_name}
+REM Requires Node.js, Java 8+, and Android SDK
+
+echo 🚀 Building TWA for {app_name}...
+
+REM Check if Node.js is installed
+node --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ❌ Node.js is required. Please install Node.js first.
+    pause
+    exit /b 1
+)
+
+REM Check if Java is installed
+java -version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ❌ Java is required. Please install Java 8+ first.
+    pause
+    exit /b 1
+)
+
+REM Install Bubblewrap CLI if not already installed
+echo 📦 Installing Bubblewrap CLI...
+npm install -g @bubblewrap/cli
+
+REM Initialize TWA project
+echo 🔧 Initializing TWA project...
+bubblewrap init --manifest=twa-manifest.json
+
+REM Build APK
+echo 🏗️ Building APK...
+bubblewrap build
+
+echo ✅ TWA build complete! Check the 'app-release-unsigned.apk' file.
+echo 📝 Note: Sign the APK before distributing to users.
+pause
+"""
+
+    def _generate_bubblewrap_setup_script(self):
+        """Generate environment setup script for Linux/Mac"""
+        return """#!/bin/bash
+# Environment Setup Script for TWA Development
+# This script sets up the required tools for TWA development
+
+echo "🔧 Setting up TWA development environment..."
+
+# Install Node.js (if not installed)
+if ! command -v node &> /dev/null; then
+    echo "📦 Installing Node.js..."
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+fi
+
+# Install Java (if not installed)
+if ! command -v java &> /dev/null; then
+    echo "☕ Installing OpenJDK 11..."
+    sudo apt-get update
+    sudo apt-get install -y openjdk-11-jdk
+fi
+
+# Install Android SDK Command Line Tools
+echo "📱 Setting up Android SDK..."
+mkdir -p ~/android-sdk/cmdline-tools
+cd ~/android-sdk/cmdline-tools
+wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+unzip commandlinetools-linux-9477386_latest.zip
+mv cmdline-tools latest
+
+# Set environment variables
+export ANDROID_HOME=~/android-sdk
+export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+
+# Accept licenses and install required components
+yes | sdkmanager --licenses
+sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+# Install Bubblewrap CLI
+echo "🫧 Installing Bubblewrap CLI..."
+npm install -g @bubblewrap/cli
+
+echo "✅ Environment setup complete!"
+echo "📝 Make sure to add these to your ~/.bashrc:"
+echo "export ANDROID_HOME=~/android-sdk"
+echo "export PATH=\\$PATH:\\$ANDROID_HOME/cmdline-tools/latest/bin:\\$ANDROID_HOME/platform-tools"
+"""
+
+    def _generate_bubblewrap_setup_script_windows(self):
+        """Generate environment setup script for Windows"""
+        return """@echo off
+REM Environment Setup Script for TWA Development on Windows
+REM This script guides you through setting up the required tools
+
+echo 🔧 Setting up TWA development environment on Windows...
+
+echo.
+echo 📝 MANUAL SETUP REQUIRED:
+echo.
+echo 1. Install Node.js:
+echo    Download from: https://nodejs.org/
+echo    Choose LTS version
+echo.
+echo 2. Install Java Development Kit:
+echo    Download from: https://adoptium.net/
+echo    Choose OpenJDK 11 or higher
+echo.
+echo 3. Install Android Studio:
+echo    Download from: https://developer.android.com/studio
+echo    This includes Android SDK
+echo.
+echo 4. Set Environment Variables:
+echo    ANDROID_HOME = C:\\Users\\%USERNAME%\\AppData\\Local\\Android\\Sdk
+echo    Add to PATH: %%ANDROID_HOME%%\\cmdline-tools\\latest\\bin
+echo    Add to PATH: %%ANDROID_HOME%%\\platform-tools
+echo.
+
+pause
+
+REM Install Bubblewrap CLI
+echo 🫧 Installing Bubblewrap CLI...
+npm install -g @bubblewrap/cli
+
+if %errorlevel% equ 0 (
+    echo ✅ Bubblewrap CLI installed successfully!
+) else (
+    echo ❌ Failed to install Bubblewrap CLI. Please install Node.js first.
+)
+
+echo.
+echo 🎉 Setup guide complete!
+echo 📝 After completing manual steps above, you can run build-apk.bat
+pause
+"""
+
+    def _generate_bubblewrap_readme(self, metadata, target_url):
+        """Generate comprehensive README for Bubblewrap TWA project"""
+        return f"""# {metadata.title} - Trusted Web Activity (TWA)
+
+This package generates a **Trusted Web Activity (TWA)** for Android using Google's Bubblewrap tool. TWA is the modern, official way to convert PWAs to Android apps.
+
+## 🎯 What is TWA?
+
+**Trusted Web Activity** wraps your PWA in a native Android shell that:
+- Uses Chrome's rendering engine for perfect web compatibility
+- Provides fullscreen experience (no browser UI)
+- Passes Google Play Store requirements for web-based apps
+- Maintains authentic web functionality and performance
+
+## 🚀 Quick Start (Automated)
+
+### Option 1: Linux/Mac
+```bash
+chmod +x setup-environment.sh build-apk.sh
+./setup-environment.sh  # One-time setup
+./build-apk.sh          # Build APK
+```
+
+### Option 2: Windows
+```cmd
+setup-environment.bat   # One-time setup
+build-apk.bat          # Build APK
+```
+
+## 🛠️ Manual Setup
+
+### Prerequisites
+1. **Node.js** (v14+): Download from https://nodejs.org/
+2. **Java** (v8+): Download from https://adoptium.net/
+3. **Android SDK**: Install via Android Studio
+
+### Environment Variables (Required)
+```bash
+export ANDROID_HOME=/path/to/android/sdk
+export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+```
+
+### Build Steps
+```bash
+# Install Bubblewrap CLI
+npm install -g @bubblewrap/cli
+
+# Initialize TWA project
+bubblewrap init --manifest=twa-manifest.json
+
+# Build APK
+bubblewrap build
+```
+
+## 📱 TWA Configuration
+
+The `twa-manifest.json` contains your app configuration:
+
+- **Package ID**: Unique Android package identifier
+- **Host**: Your website's domain (for verification)
+- **Start URL**: {target_url}
+- **Display**: Fullscreen standalone app experience
+- **Icons**: Adaptive and maskable icons for modern Android
+
+## 🔐 Digital Asset Links (Important!)
+
+For production apps, you must verify domain ownership:
+
+1. Host the `digital-asset-links.json` file at:
+   ```
+   {target_url}/.well-known/assetlinks.json
+   ```
+
+2. This proves you own both the website and the Android app
+
+## 📦 Build Output
+
+After successful build:
+- `app-release-unsigned.apk` - Unsigned APK for testing
+- `app-release-signed.apk` - Signed APK (if keystore configured)
+
+## 🏪 Google Play Store Requirements
+
+1. **HTTPS Required**: Your website must use HTTPS
+2. **Web App Manifest**: Must be valid and accessible
+3. **Service Worker**: Recommended for offline functionality
+4. **Quality Standards**: Must meet PWA quality guidelines
+
+## 🧪 Testing Your TWA
+
+1. **Install on Device**: `adb install app-release-unsigned.apk`
+2. **Chrome DevTools**: Use for debugging web content
+3. **Android Studio**: For native Android debugging
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+**Build fails with "Android SDK not found"**
+- Install Android Studio or SDK command-line tools
+- Set ANDROID_HOME environment variable correctly
+
+**"Domain verification failed"**
+- Upload `digital-asset-links.json` to your website
+- Ensure file is accessible at `/.well-known/assetlinks.json`
+
+**APK won't install**
+- Enable "Install from unknown sources" on Android device
+- Use `adb install` command for development builds
+
+### PWA Requirements for TWA
+
+Your website should have:
+- ✅ Valid HTTPS certificate
+- ✅ Web app manifest with required fields
+- ✅ Service worker for offline functionality
+- ✅ Responsive design for mobile devices
+
+## 📚 Additional Resources
+
+- [TWA Documentation](https://developers.google.com/web/android/trusted-web-activity)
+- [Bubblewrap CLI Guide](https://github.com/GoogleChromeLabs/bubblewrap)
+- [PWA Checklist](https://web.dev/pwa-checklist/)
+- [Play Store PWA Guidelines](https://chromeos.dev/en/publish/pwa-in-play)
+
+---
+
+**Website**: {target_url}  
+**Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}  
+**Tool**: DigitalSkeleton TWA Generator
+"""
+    
+    def _generate_twa_build_gradle(self, app_name, package_name):
+        """Generate build.gradle for manual TWA setup"""
+        return f"""plugins {{
+    id 'com.android.application'
+}}
+
+android {{
+    compileSdk 33
+
+    defaultConfig {{
+        applicationId "{package_name}"
+        minSdk 16
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+    }}
+
+    buildTypes {{
+        release {{
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }}
+    }}
+    compileOptions {{
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }}
+}}
+
+dependencies {{
+    implementation 'androidx.browser:browser:1.5.0'
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}}
+"""
+
+    def _generate_twa_android_manifest(self, app_name, package_name, metadata, target_url):
+        """Generate AndroidManifest.xml for manual TWA setup"""
+        return f"""<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="{package_name}">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.TWA">
+        
+        <activity
+            android:name=".LauncherActivity"
+            android:exported="true"
+            android:theme="@style/Theme.TWA.Launcher">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+            android:exported="true">
+            <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL"
+                android:value="{target_url}" />
+            <meta-data android:name="asset_statements"
+                android:resource="@string/asset_statements" />
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                    android:host="{self._extract_host(target_url)}" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+"""
+
+    def _generate_twa_strings(self, metadata, target_url):
+        """Generate strings.xml for TWA"""
+        return f"""<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">{metadata.title}</string>
+    <string name="asset_statements">
+        [{{
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {{
+                "namespace": "web",
+                "site": "{target_url}"
+            }}
+        }}]
+    </string>
+</resources>
+"""
+
+    def _generate_twa_colors(self, manifest_data):
+        """Generate colors.xml for TWA"""
+        theme_color = manifest_data.get("theme_color", "#000000")
+        bg_color = manifest_data.get("background_color", "#ffffff")
+        return f"""<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">{theme_color}</color>
+    <color name="colorPrimaryDark">{theme_color}</color>
+    <color name="colorAccent">{theme_color}</color>
+    <color name="backgroundColor">{bg_color}</color>
+</resources>
+"""
+
+    def _generate_twa_launcher_activity(self, package_name):
+        """Generate LauncherActivity.java for TWA"""
+        return f"""package {package_name};
+
+import android.os.Bundle;
+import com.google.androidbrowserhelper.trusted.TwaLauncherActivity;
+
+public class LauncherActivity extends TwaLauncherActivity {{
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {{
+        super.onCreate(savedInstanceState);
+    }}
+}}
+"""
+
+    def _generate_manual_twa_readme(self, metadata, target_url):
+        """Generate README for manual TWA setup"""
+        return f"""# {metadata.title} - Manual TWA Setup
+
+This folder contains all files needed to manually set up a Trusted Web Activity in Android Studio.
+
+## 🔧 Manual Setup Steps
+
+### 1. Create New Android Project
+1. Open Android Studio
+2. Create new "Empty Activity" project
+3. Set package name: `com.digitalskeleton.{self._sanitize_name(metadata.title).lower()}`
+
+### 2. Add TWA Dependencies
+Add to `app/build.gradle`:
+```gradle
+implementation 'androidx.browser:browser:1.5.0'
+implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+```
+
+### 3. Replace Files
+- Replace `AndroidManifest.xml` with provided version
+- Replace `strings.xml` with provided version
+- Add `colors.xml` to res/values/
+- Replace MainActivity with LauncherActivity.java
+
+### 4. Configure Digital Asset Links
+Upload `digital-asset-links.json` to:
+```
+{target_url}/.well-known/assetlinks.json
+```
+
+### 5. Build APK
+```bash
+./gradlew assembleRelease
+```
+
+## 📱 Testing
+1. Install APK on Android device
+2. Open app - should launch your website in fullscreen
+3. No browser UI should be visible
+
+## 🔍 Troubleshooting
+- Ensure website is HTTPS
+- Verify digital asset links are accessible
+- Check package name matches in all files
+
+Website: {target_url}
+Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+"""
+
+    def _generate_digital_asset_links(self, package_name):
+        """Generate digital asset links JSON"""
+        return json.dumps([{
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+                "namespace": "android_app",
+                "package_name": package_name,
+                "sha256_cert_fingerprints": [
+                    "14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5"
+                ]
+            }
+        }], indent=2)
+
+    def _generate_pwa_builder_config(self, metadata, target_url):
+        """Generate PWA Builder configuration"""
+        return json.dumps({
+            "url": target_url,
+            "name": metadata.title,
+            "package": {
+                "packageId": f"com.digitalskeleton.{self._sanitize_name(metadata.title).lower()}",
+                "name": metadata.title,
+                "displayName": metadata.title
+            },
+            "android": {
+                "packageId": f"com.digitalskeleton.{self._sanitize_name(metadata.title).lower()}",
+                "name": metadata.title,
+                "themeColor": "#000000",
+                "backgroundColor": "#ffffff"
+            }
+        }, indent=2)
+
+    def _generate_twa_generator_config(self, metadata, target_url):
+        """Generate TWA Generator configuration"""
+        return json.dumps({
+            "packageId": f"com.digitalskeleton.{self._sanitize_name(metadata.title).lower()}",
+            "host": self._extract_host(target_url),
+            "name": metadata.title,
+            "launcherName": self._sanitize_name(metadata.title),
+            "display": "standalone",
+            "orientation": "default",
+            "startUrl": target_url,
+            "webManifestUrl": f"{target_url}/manifest.json"
+        }, indent=2)
+
+    def _generate_online_builders_guide(self, metadata, target_url):
+        """Generate guide for online TWA builders"""
+        return f"""# Online TWA Builders Guide
+
+Build your TWA using online tools - no local setup required!
+
+## 🌐 Recommended Online Builders
+
+### 1. PWA Builder (Microsoft) ⭐ RECOMMENDED
+**URL**: https://www.pwabuilder.com/
+
+**Steps**:
+1. Enter your website URL: `{target_url}`
+2. Click "Analyze" to check PWA readiness
+3. Click "Package For Stores" → "Android"
+4. Download TWA package
+
+**Features**:
+- Official Microsoft tool
+- High-quality TWA generation
+- Google Play Store ready
+- Free to use
+
+### 2. Bubblewrap Online
+**URL**: https://github.com/GoogleChromeLabs/bubblewrap
+
+**Steps**:
+1. Use the provided `twa-manifest.json`
+2. Upload to online Bubblewrap service
+3. Generate and download APK
+
+### 3. TWA Generator
+**URL**: https://appmaker.xyz/twa-generator
+
+**Steps**:
+1. Upload `twa-generator-config.json`
+2. Customize settings if needed
+3. Generate APK
+
+## 📋 Required Information
+
+All builders will ask for:
+- **Website URL**: {target_url}
+- **App Name**: {metadata.title}
+- **Package ID**: com.digitalskeleton.{self._sanitize_name(metadata.title).lower()}
+
+## ✅ Pre-Build Checklist
+
+Before using any builder:
+- [ ] Website is accessible via HTTPS
+- [ ] Web app manifest exists at `{target_url}/manifest.json`
+- [ ] Icons are accessible and properly sized
+- [ ] Service worker is registered (recommended)
+
+## 🔐 Digital Asset Links
+
+Upload the provided `digital-asset-links.json` to:
+```
+{target_url}/.well-known/assetlinks.json
+```
+
+This verifies you own both the website and Android app.
+
+Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+"""
+
+    def _generate_quick_links_html(self, metadata, target_url):
+        """Generate quick links HTML for online builders"""
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick TWA Builders for {metadata.title}</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }}
+        .container {{
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }}
+        h1 {{
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 40px;
+        }}
+        .builder {{
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #667eea;
+        }}
+        .builder-title {{
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+        }}
+        .builder-btn {{
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin: 10px 5px 10px 0;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }}
+        .builder-btn:hover {{
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }}
+        .info-box {{
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }}
+        .url-display {{
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Quick TWA Builders</h1>
+        <h2>Build Android APK for {metadata.title}</h2>
+        
+        <div class="info-box">
+            <strong>🌐 Your Website:</strong>
+            <div class="url-display">{target_url}</div>
+        </div>
+        
+        <div class="builder">
+            <div class="builder-title">⭐ PWA Builder (Recommended)</div>
+            <p>Microsoft's official tool for high-quality TWA generation</p>
+            <a href="https://www.pwabuilder.com/" target="_blank" class="builder-btn">Open PWA Builder</a>
+            <p><strong>Steps:</strong> Enter URL → Analyze → Package for Android</p>
+        </div>
+        
+        <div class="builder">
+            <div class="builder-title">🫧 Bubblewrap CLI (Advanced)</div>
+            <p>Google's official TWA generator - requires technical setup</p>
+            <a href="https://github.com/GoogleChromeLabs/bubblewrap" target="_blank" class="builder-btn">View Bubblewrap</a>
+            <p><strong>Best for:</strong> Developers who want full control</p>
+        </div>
+        
+        <div class="builder">
+            <div class="builder-title">⚡ TWA Generator</div>
+            <p>Simple online TWA generator with easy configuration</p>
+            <a href="https://appmaker.xyz/twa-generator" target="_blank" class="builder-btn">Open TWA Generator</a>
+            <p><strong>Steps:</strong> Upload config → Generate → Download APK</p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px; color: #666;">
+            <p><strong>Generated:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+            <p>🔧 Powered by DigitalSkeleton</p>
         </div>
     </div>
 </body>
