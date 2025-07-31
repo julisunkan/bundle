@@ -118,7 +118,7 @@ class PackageBuilder:
         # Create PWA files
         self._create_file(pwa_dir, 'index.html', self._generate_pwa_converter_html(metadata, target_url))
         self._create_file(pwa_dir, 'manifest.json', json.dumps(manifest_data, indent=2))
-        self._create_file(pwa_dir, 'sw.js', self._generate_pwa_service_worker())
+        self._create_file(pwa_dir, 'sw.js', self._generate_simple_service_worker())
         self._create_file(pwa_dir, 'twa-manifest.json', self._generate_twa_manifest(app_name, metadata, target_url))
         self._create_file(pwa_dir, 'README.md', self._generate_pwa_converter_readme(metadata, target_url))
         self._create_file(pwa_dir, 'convert-to-apk.html', self._generate_conversion_tool_html(metadata, target_url))
