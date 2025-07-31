@@ -1,0 +1,635 @@
+import os
+import json
+import shutil
+import subprocess
+import tempfile
+import zipfile
+from datetime import datetime
+from app import app
+from .icon_generator import IconGenerator
+
+class APKBuilder:
+    """Service to build actual APK files using Cordova and Android tools"""
+    
+    def __init__(self):
+        self.output_dir = app.config['UPLOAD_FOLDER']
+        self.icon_generator = IconGenerator()
+        self.temp_dir = None
+    
+    def build_android_apk(self, metadata, manifest_data, job_id, target_url):
+        """Build Android APK using available tools or create APK-ready project"""
+        try:
+            app.logger.info(f"Starting APK build for {metadata.title}")
+            
+            # First, try to build with Cordova if environment supports it
+            try:
+                return self._build_with_cordova(metadata, manifest_data, job_id, target_url)
+            except Exception as cordova_error:
+                app.logger.warning(f"Cordova build failed: {cordova_error}")
+                # Fall back to creating APK-ready project structure
+                return self._create_apk_ready_project(metadata, manifest_data, job_id, target_url)
+                
+        except Exception as e:
+            app.logger.error(f"APK build failed: {str(e)}")
+            raise Exception(f"APK build failed: {str(e)}")
+    
+    def _build_with_cordova(self, metadata, manifest_data, job_id, target_url):
+        """Attempt to build APK with Cordova"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            self.temp_dir = temp_dir
+            project_dir = os.path.join(temp_dir, 'cordova_project')
+            
+            # Create Cordova project
+            self._create_cordova_project(project_dir, metadata, target_url)
+            
+            # Configure project for APK build
+            self._configure_cordova_project(project_dir, metadata, manifest_data, target_url)
+            
+            # Generate icons
+            self._generate_and_copy_icons(project_dir, metadata)
+            
+            # Build APK
+            apk_path = self._build_cordova_apk(project_dir, metadata, job_id)
+            
+            return apk_path
+    
+    def _create_apk_ready_project(self, metadata, manifest_data, job_id, target_url):
+        """Create APK-ready project structure with build instructions"""
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                project_dir = os.path.join(temp_dir, 'apk_ready_project')
+                os.makedirs(project_dir, exist_ok=True)
+                
+                app_name = self._sanitize_name(metadata.title)
+                
+                # Create ready-to-build Cordova project structure
+                self._create_complete_cordova_structure(project_dir, metadata, manifest_data, target_url)
+                
+                # Create build scripts for different environments
+                self._create_build_scripts(project_dir, app_name)
+                
+                # Create comprehensive README with build instructions
+                self._create_build_readme(project_dir, metadata, target_url)
+                
+                # Package as ZIP (since we can't build APK directly)
+                zip_filename = f"{app_name}_APK_Ready_{job_id}.zip"
+                zip_path = os.path.join(self.output_dir, zip_filename)
+                
+                self._create_project_zip(project_dir, zip_path)
+                
+                app.logger.info(f"APK-ready project created: {zip_filename}")
+                return zip_path
+                
+        except Exception as e:
+            app.logger.error(f"APK-ready project creation failed: {str(e)}")
+            raise Exception(f"APK-ready project creation failed: {str(e)}")
+    
+    def _create_complete_cordova_structure(self, project_dir, metadata, manifest_data, target_url):
+        """Create complete Cordova project structure ready for building"""
+        app_name = self._sanitize_name(metadata.title)
+        package_name = f"com.digitalskeleton.{app_name.lower()}"
+        
+        # Create directory structure
+        www_dir = os.path.join(project_dir, 'www')
+        os.makedirs(www_dir, exist_ok=True)
+        
+        # Create package.json
+        package_json = {
+            "name": app_name.lower(),
+            "displayName": metadata.title,
+            "version": "1.0.0",
+            "description": f"Mobile app for {metadata.title}",
+            "main": "index.js",
+            "scripts": {
+                "build": "cordova build android",
+                "build-debug": "cordova build android --debug",
+                "run": "cordova run android",
+                "prepare": "cordova prepare android"
+            },
+            "dependencies": {
+                "cordova": "^12.0.0",
+                "cordova-android": "^12.0.0"
+            },
+            "cordova": {
+                "platforms": ["android"],
+                "plugins": {
+                    "cordova-plugin-whitelist": {},
+                    "cordova-plugin-inappbrowser": {},
+                    "cordova-plugin-network-information": {}
+                }
+            }
+        }
+        
+        with open(os.path.join(project_dir, 'package.json'), 'w', encoding='utf-8') as f:
+            json.dump(package_json, f, indent=2)
+        
+        # Create config.xml
+        config_xml = self._generate_cordova_config_xml(metadata, target_url)
+        with open(os.path.join(project_dir, 'config.xml'), 'w', encoding='utf-8') as f:
+            f.write(config_xml)
+        
+        # Create index.html
+        index_html = self._generate_cordova_index_html(metadata, target_url)
+        with open(os.path.join(www_dir, 'index.html'), 'w', encoding='utf-8') as f:
+            f.write(index_html)
+        
+        # Create manifest.json
+        with open(os.path.join(www_dir, 'manifest.json'), 'w', encoding='utf-8') as f:
+            json.dump(manifest_data, f, indent=2)
+        
+        # Generate and save icons
+        self._generate_project_icons(project_dir, metadata)
+    
+    def _create_build_scripts(self, project_dir, app_name):
+        """Create build scripts for different environments"""
+        
+        # Windows build script
+        windows_script = f'''@echo off
+echo Building {app_name} APK...
+echo.
+echo Installing dependencies...
+call npm install
+echo.
+echo Adding Android platform...
+call npx cordova platform add android
+echo.
+echo Building APK...
+call npx cordova build android --debug
+echo.
+echo APK build complete!
+echo Look for APK files in: platforms\\android\\app\\build\\outputs\\apk\\debug\\
+pause
+'''
+        
+        # Linux/Mac build script
+        unix_script = f'''#!/bin/bash
+echo "Building {app_name} APK..."
+echo
+echo "Installing dependencies..."
+npm install
+echo
+echo "Adding Android platform..."
+npx cordova platform add android
+echo
+echo "Building APK..."
+npx cordova build android --debug
+echo
+echo "APK build complete!"
+echo "Look for APK files in: platforms/android/app/build/outputs/apk/debug/"
+'''
+        
+        with open(os.path.join(project_dir, 'build-apk.bat'), 'w', encoding='utf-8') as f:
+            f.write(windows_script)
+        
+        with open(os.path.join(project_dir, 'build-apk.sh'), 'w', encoding='utf-8') as f:
+            f.write(unix_script)
+        
+        # Make shell script executable
+        import stat
+        os.chmod(os.path.join(project_dir, 'build-apk.sh'), stat.S_IRWXU | stat.S_IRGRP | stat.S_IROTH)
+    
+    def _create_build_readme(self, project_dir, metadata, target_url):
+        """Create comprehensive README with build instructions"""
+        readme_content = f'''# {metadata.title} - Android APK Builder
+
+This project contains everything needed to build an Android APK for **{metadata.title}**.
+
+## Quick Start
+
+### Method 1: Automatic Build (Recommended)
+
+**Windows:**
+1. Double-click `build-apk.bat`
+2. Wait for the build to complete
+3. Find your APK in `platforms/android/app/build/outputs/apk/debug/`
+
+**Linux/Mac:**
+1. Open terminal in this folder
+2. Run `./build-apk.sh`
+3. Find your APK in `platforms/android/app/build/outputs/apk/debug/`
+
+### Method 2: Manual Build
+
+1. Install Node.js (https://nodejs.org)
+2. Install dependencies: `npm install`
+3. Add Android platform: `npx cordova platform add android`
+4. Build APK: `npx cordova build android --debug`
+
+## Requirements
+
+- Node.js 16 or later
+- Android SDK (automatically downloaded by Cordova)
+- Java 8 or later
+
+## About This App
+
+- **Website**: {target_url}
+- **Package Name**: com.digitalskeleton.{self._sanitize_name(metadata.title).lower()}
+- **App Name**: {metadata.title}
+
+## Build Output
+
+After building, you'll find:
+- **Debug APK**: `platforms/android/app/build/outputs/apk/debug/app-debug.apk`
+- **Release APK**: `platforms/android/app/build/outputs/apk/release/app-release.apk` (requires signing)
+
+## Installation
+
+1. Enable "Unknown Sources" on your Android device
+2. Transfer the APK file to your device
+3. Open the APK file to install
+
+## Troubleshooting
+
+**Build fails?**
+- Make sure Node.js is installed
+- Try deleting `node_modules` and running `npm install` again
+- Check that you have internet connection for downloading Android SDK
+
+**APK won't install?**
+- Make sure "Unknown Sources" is enabled
+- Try the debug APK first
+
+## Generated by DigitalSkeleton
+Created: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+'''
+        
+        with open(os.path.join(project_dir, 'README.md'), 'w', encoding='utf-8') as f:
+            f.write(readme_content)
+    
+    def _generate_project_icons(self, project_dir, metadata):
+        """Generate icons for the project"""
+        try:
+            # Generate Android icons
+            app_metadata = {
+                'icon_url': metadata.icon_url,
+                'url': metadata.title
+            }
+            all_icons = self.icon_generator.generate_all_icons(app_metadata, metadata.title)
+            android_icons = all_icons.get('android', {})
+            
+            if android_icons:
+                # Save icons to res directory structure
+                res_dir = os.path.join(project_dir, 'res')
+                os.makedirs(res_dir, exist_ok=True)
+                
+                for filename, icon_data in android_icons.items():
+                    # Determine the appropriate drawable directory
+                    size = filename.split('-')[1].split('x')[0] if '-' in filename else '48'
+                    if int(size) <= 36:
+                        drawable_dir = 'drawable-ldpi'
+                    elif int(size) <= 48:
+                        drawable_dir = 'drawable-mdpi'
+                    elif int(size) <= 72:
+                        drawable_dir = 'drawable-hdpi'
+                    elif int(size) <= 96:
+                        drawable_dir = 'drawable-xhdpi'
+                    elif int(size) <= 144:
+                        drawable_dir = 'drawable-xxhdpi'
+                    else:
+                        drawable_dir = 'drawable-xxxhdpi'
+                    
+                    drawable_path = os.path.join(res_dir, drawable_dir)
+                    os.makedirs(drawable_path, exist_ok=True)
+                    
+                    with open(os.path.join(drawable_path, 'icon.png'), 'wb') as f:
+                        f.write(icon_data)
+                
+                app.logger.info(f"Generated {len(android_icons)} Android icons")
+                
+        except Exception as e:
+            app.logger.warning(f"Icon generation failed: {str(e)}")
+    
+    def _create_project_zip(self, project_dir, zip_path):
+        """Create a ZIP file from the project directory"""
+        import zipfile
+        
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(project_dir):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    arcname = os.path.relpath(file_path, project_dir)
+                    zipf.write(file_path, arcname)
+    
+    def _create_cordova_project(self, project_dir, metadata, target_url):
+        """Create a new Cordova project"""
+        app_name = self._sanitize_name(metadata.title)
+        package_name = f"com.digitalskeleton.{app_name.lower()}"
+        
+        # Set up Cordova path
+        cordova_path = '/home/runner/workspace/node_modules/.bin/cordova'
+        if not os.path.exists(cordova_path):
+            cordova_path = 'cordova'  # fallback to system PATH
+        
+        # Create Cordova project
+        cmd = [
+            cordova_path, 'create', project_dir, package_name, app_name
+        ]
+        
+        # Set environment for non-interactive mode
+        env = os.environ.copy()
+        env['CI'] = 'true'  # This disables interactive prompts
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.temp_dir, env=env)
+        if result.returncode != 0:
+            raise Exception(f"Failed to create Cordova project: {result.stderr}")
+        
+        app.logger.info(f"Created Cordova project: {app_name}")
+    
+    def _configure_cordova_project(self, project_dir, metadata, manifest_data, target_url):
+        """Configure the Cordova project for the website"""
+        
+        # Set up Cordova path
+        cordova_path = '/home/runner/workspace/node_modules/.bin/cordova'
+        if not os.path.exists(cordova_path):
+            cordova_path = 'cordova'
+        
+        # Set environment for non-interactive mode
+        env = os.environ.copy()
+        env['CI'] = 'true'
+        
+        # Add Android platform
+        result = subprocess.run([cordova_path, 'platform', 'add', 'android'], 
+                              capture_output=True, text=True, cwd=project_dir, env=env)
+        if result.returncode != 0:
+            app.logger.warning(f"Platform add warning: {result.stderr}")
+        
+        # Create main HTML file that loads the website
+        www_dir = os.path.join(project_dir, 'www')
+        
+        # Create index.html that loads the target website
+        index_html = self._generate_cordova_index_html(metadata, target_url)
+        with open(os.path.join(www_dir, 'index.html'), 'w', encoding='utf-8') as f:
+            f.write(index_html)
+        
+        # Create config.xml with proper settings
+        config_xml = self._generate_cordova_config_xml(metadata, target_url)
+        with open(os.path.join(project_dir, 'config.xml'), 'w', encoding='utf-8') as f:
+            f.write(config_xml)
+        
+        # Create manifest.json
+        with open(os.path.join(www_dir, 'manifest.json'), 'w', encoding='utf-8') as f:
+            json.dump(manifest_data, f, indent=2)
+        
+        app.logger.info("Configured Cordova project")
+    
+    def _generate_and_copy_icons(self, project_dir, metadata):
+        """Generate and copy icons for the APK"""
+        try:
+            # Generate Android icons
+            app_metadata = {
+                'icon_url': metadata.icon_url,
+                'url': metadata.title
+            }
+            all_icons = self.icon_generator.generate_all_icons(app_metadata, metadata.title)
+            android_icons = all_icons.get('android', {})
+            
+            if android_icons:
+                # Copy icons to Cordova project
+                res_dir = os.path.join(project_dir, 'platforms', 'android', 'app', 'src', 'main', 'res')
+                if os.path.exists(res_dir):
+                    self.icon_generator.save_icons_to_package(android_icons, project_dir, 'android')
+                    app.logger.info(f"Generated {len(android_icons)} Android icons")
+            else:
+                app.logger.warning("No icons generated, using default")
+                
+        except Exception as e:
+            app.logger.warning(f"Icon generation failed: {str(e)}")
+    
+    def _build_cordova_apk(self, project_dir, metadata, job_id):
+        """Build the actual APK file"""
+        app.logger.info("Building APK...")
+        
+        # Set up Cordova path
+        cordova_path = '/home/runner/workspace/node_modules/.bin/cordova'
+        if not os.path.exists(cordova_path):
+            cordova_path = 'cordova'
+        
+        # Set environment for non-interactive mode
+        env = os.environ.copy()
+        env['CI'] = 'true'
+        
+        # Build APK using Cordova (try debug first as it's more likely to work without signing)
+        result = subprocess.run([cordova_path, 'build', 'android', '--debug'], 
+                              capture_output=True, text=True, cwd=project_dir, env=env)
+        
+        if result.returncode != 0:
+            app.logger.error(f"APK debug build failed: {result.stderr}")
+            # Try without debug flag
+            result = subprocess.run([cordova_path, 'build', 'android'], 
+                                  capture_output=True, text=True, cwd=project_dir, env=env)
+            
+            if result.returncode != 0:
+                raise Exception(f"APK build failed: {result.stderr}")
+        
+        # Find the generated APK
+        apk_path = self._find_generated_apk(project_dir)
+        if not apk_path:
+            raise Exception("APK file not found after build")
+        
+        # Copy APK to output directory
+        app_name = self._sanitize_name(metadata.title)
+        final_apk_name = f"{app_name}_{job_id}.apk"
+        final_apk_path = os.path.join(self.output_dir, final_apk_name)
+        
+        shutil.copy2(apk_path, final_apk_path)
+        
+        app.logger.info(f"APK built successfully: {final_apk_name}")
+        return final_apk_path
+    
+    def _find_generated_apk(self, project_dir):
+        """Find the generated APK file"""
+        # Common APK locations in Cordova Android projects
+        apk_locations = [
+            os.path.join(project_dir, 'platforms', 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk'),
+            os.path.join(project_dir, 'platforms', 'android', 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk'),
+            os.path.join(project_dir, 'platforms', 'android', 'build', 'outputs', 'apk', 'android-debug.apk'),
+            os.path.join(project_dir, 'platforms', 'android', 'build', 'outputs', 'apk', 'android-release.apk')
+        ]
+        
+        for apk_path in apk_locations:
+            if os.path.exists(apk_path):
+                return apk_path
+        
+        # Search for any APK file in the project
+        for root, dirs, files in os.walk(project_dir):
+            for file in files:
+                if file.endswith('.apk'):
+                    return os.path.join(root, file)
+        
+        return None
+    
+    def _generate_cordova_index_html(self, metadata, target_url):
+        """Generate the main HTML file for the Cordova app"""
+        return f'''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{metadata.title}</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body, html {{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }}
+        
+        #webview {{
+            width: 100%;
+            height: 100%;
+            border: none;
+        }}
+        
+        .loading {{
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            color: #333;
+        }}
+        
+        .error {{
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }}
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">Loading {metadata.title}...</div>
+    <div id="error" class="error" style="display: none;">
+        <h3>Connection Error</h3>
+        <p>Unable to load the website. Please check your internet connection.</p>
+        <button onclick="location.reload()">Retry</button>
+    </div>
+    <iframe id="webview" style="display: none;"></iframe>
+    
+    <script>
+        document.addEventListener('deviceready', function() {{
+            loadWebsite();
+        }}, false);
+        
+        // Fallback for web browser testing
+        if (typeof cordova === 'undefined') {{
+            loadWebsite();
+        }}
+        
+        function loadWebsite() {{
+            const webview = document.getElementById('webview');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            
+            webview.onload = function() {{
+                loading.style.display = 'none';
+                webview.style.display = 'block';
+            }};
+            
+            webview.onerror = function() {{
+                loading.style.display = 'none';
+                error.style.display = 'block';
+            }};
+            
+            webview.src = '{target_url}';
+        }}
+        
+        // Handle external links
+        document.addEventListener('click', function(e) {{
+            if (e.target.tagName === 'A' && e.target.href) {{
+                e.preventDefault();
+                if (typeof cordova !== 'undefined' && cordova.InAppBrowser) {{
+                    cordova.InAppBrowser.open(e.target.href, '_system');
+                }} else {{
+                    window.open(e.target.href, '_blank');
+                }}
+            }}
+        }});
+    </script>
+    
+    <script src="cordova.js"></script>
+</body>
+</html>'''
+    
+    def _generate_cordova_config_xml(self, metadata, target_url):
+        """Generate the config.xml file for Cordova"""
+        app_name = self._sanitize_name(metadata.title)
+        package_name = f"com.digitalskeleton.{app_name.lower()}"
+        
+        return f'''<?xml version='1.0' encoding='utf-8'?>
+<widget id="{package_name}" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>{metadata.title}</name>
+    <description>
+        {metadata.description or f"Mobile app for {metadata.title}"}
+    </description>
+    <author email="info@digitalskeleton.com" href="https://digitalskeleton.com">
+        DigitalSkeleton Team
+    </author>
+    <content src="index.html" />
+    
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    
+    <platform name="android">
+        <allow-intent href="market:*" />
+        <preference name="AndroidLaunchMode" value="singleTop" />
+        <preference name="AndroidPersistentFileLocation" value="Compatibility" />
+        <preference name="SplashMaintainAspectRatio" value="true" />
+        <preference name="SplashShowOnlyFirstTime" value="false" />
+        <preference name="SplashScreen" value="screen" />
+        <preference name="SplashScreenDelay" value="3000" />
+        <preference name="AutoHideSplashScreen" value="true" />
+        <preference name="ShowSplashScreenSpinner" value="false" />
+        <preference name="loadUrlTimeoutValue" value="700000" />
+        
+        <!-- Target Android API level -->
+        <preference name="android-targetSdkVersion" value="33" />
+        <preference name="android-minSdkVersion" value="21" />
+        
+        <!-- Permissions -->
+        <uses-permission android:name="android.permission.INTERNET" />
+        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+        <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    </platform>
+    
+    <!-- Plugins -->
+    <plugin name="cordova-plugin-whitelist" version="1" />
+    <plugin name="cordova-plugin-inappbrowser" version="3" />
+    <plugin name="cordova-plugin-network-information" version="2" />
+    <plugin name="cordova-plugin-splashscreen" version="5" />
+    
+    <!-- Universal Links -->
+    <plugin name="cordova-plugin-customurlscheme" version="4.3.0">
+        <variable name="URL_SCHEME" value="{app_name.lower()}" />
+    </plugin>
+</widget>'''
+    
+    def _sanitize_name(self, name):
+        """Sanitize name for use in file paths and package names"""
+        import re
+        # Remove special characters and replace with underscore
+        sanitized = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+        # Remove multiple underscores
+        sanitized = re.sub(r'_+', '_', sanitized)
+        # Remove leading/trailing underscores
+        sanitized = sanitized.strip('_')
+        # Ensure it doesn't start with a number
+        if sanitized and sanitized[0].isdigit():
+            sanitized = 'app_' + sanitized
+        return sanitized or 'app'

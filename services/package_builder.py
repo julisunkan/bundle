@@ -6,36 +6,54 @@ import tempfile
 from datetime import datetime
 from app import app
 from .icon_generator import IconGenerator
+# APKBuilder import moved to method level to avoid circular import
 
 class PackageBuilder:
     def __init__(self):
         self.output_dir = app.config['UPLOAD_FOLDER']
         self.icon_generator = IconGenerator()
+        self._apk_builder = None
     
     def build_apk(self, metadata, manifest_data, job_id, target_url):
-        """Build Android TWA (Trusted Web Activity) package using bubblewrap"""
+        """Build actual Android APK file using Cordova"""
+        try:
+            app.logger.info(f"Building APK-ready project for {metadata.title}")
+            
+            # Import APKBuilder here to avoid circular import
+            from .apk_builder import APKBuilder
+            if self._apk_builder is None:
+                self._apk_builder = APKBuilder()
+            
+            # Use the APK builder to generate APK-ready project
+            apk_path = self._apk_builder.build_android_apk(metadata, manifest_data, job_id, target_url)
+            
+            app.logger.info(f"APK project built successfully: {apk_path}")
+            return apk_path
+                
+        except Exception as e:
+            app.logger.error(f"APK build failed: {str(e)}")
+            # Fallback to project files if APK build fails
+            app.logger.info("Falling back to project file generation")
+            return self._build_apk_fallback(metadata, manifest_data, job_id, target_url)
+    
+    def _build_apk_fallback(self, metadata, manifest_data, job_id, target_url):
+        """Fallback method to create project files if APK build fails"""
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
-                project_dir = os.path.join(temp_dir, 'android_twa')
+                project_dir = os.path.join(temp_dir, 'android_project')
                 
-                # Method 1: TWA using Bubblewrap (Primary Method)
-                self._create_twa_bubblewrap_project(project_dir, metadata, manifest_data, target_url)
+                # Create Cordova project structure as files
+                self._create_cordova_android_project(project_dir, metadata, manifest_data, target_url)
                 
-                # Method 2: Manual TWA Setup Instructions (Fallback)
-                self._create_manual_twa_setup(project_dir, metadata, manifest_data, target_url)
-                
-                # Method 3: Online TWA Builders (Alternative)
-                self._create_online_twa_builders(project_dir, metadata, manifest_data, target_url)
-                
-                zip_filename = f"{metadata.title.replace(' ', '_')}_android_twa_{job_id}.zip"
+                zip_filename = f"{metadata.title.replace(' ', '_')}_android_project_{job_id}.zip"
                 zip_path = os.path.join(self.output_dir, zip_filename)
                 
                 self._create_project_zip(project_dir, zip_path)
                 return zip_path
                 
         except Exception as e:
-            app.logger.error(f"Android TWA build failed: {str(e)}")
-            raise Exception(f"Android TWA build failed: {str(e)}")
+            app.logger.error(f"APK fallback build failed: {str(e)}")
+            raise Exception(f"APK fallback build failed: {str(e)}")
     
     def build_ipa(self, metadata, manifest_data, job_id, target_url):
         """Build iOS app using simple, reliable methods"""
