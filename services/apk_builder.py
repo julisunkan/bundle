@@ -601,11 +601,6 @@ Created: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
         <!-- Target Android API level -->
         <preference name="android-targetSdkVersion" value="33" />
         <preference name="android-minSdkVersion" value="21" />
-        
-        <!-- Permissions -->
-        <uses-permission android:name="android.permission.INTERNET" />
-        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-        <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     </platform>
     
     <!-- Plugins -->

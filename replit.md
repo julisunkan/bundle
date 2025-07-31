@@ -78,6 +78,9 @@ Preferred communication style: Simple, everyday language.
 - ✓ **Fixed build progress page to handle fast-completing builds**
 - ✓ **Enhanced UI messages to reflect APK-ready project generation**
 - ✓ **Confirmed build process creates working APK-ready projects with complete Cordova structure**
+- ✓ **Fixed XML parsing error in config.xml generation (July 31, 2025)**
+- ✓ **Resolved malformed XML tag `<n>` to proper `<name>` tag in Cordova config**
+- ✓ **Removed invalid `<uses-permission>` tags from config.xml (belong in AndroidManifest.xml)**
 - ✅ **Application fully operational with enhanced APK generation in Replit environment**
 
 ### TWA (Trusted Web Activity) Implementation (July 31, 2025)
