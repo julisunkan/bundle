@@ -62,7 +62,7 @@
                             <h6 class="text-light">Package Type</h6>
                             <p>
                                 {% if job.package_type == 'apk' %}
-                                    TWA Android Project - <span class="text-success">Google-Approved Technology</span>
+                                    APK-Ready Project - <span class="text-success">Complete Build System</span>
                                 {% elif job.package_type == 'ipa' %}
                                     iOS PWA Project - <span class="text-info">Ready for App Store</span>
                                 {% elif job.package_type == 'msix' %}
@@ -81,7 +81,7 @@
                         <a href="{{ url_for('download_file', job_id=job.id) }}" class="btn btn-success btn-lg">
                             <i class="fas fa-download me-2"></i>
                             {% if job.package_type == 'apk' %}
-                                Download {{ job.app_name.replace(' ', '_') }}_TWA_android.zip
+                                Download {{ job.app_name.replace(' ', '_') }}_APK_Ready.zip
                             {% elif job.package_type == 'ipa' %}
                                 Download {{ job.app_name.replace(' ', '_') }}_ios_pwa.zip
                             {% elif job.package_type in ['msix', 'appx'] %}
@@ -102,63 +102,49 @@
                             
                             {% if job.package_type == 'apk' %}
                                 <div class="installation-steps">
-                                    <h6 style="color: #0d6efd; font-weight: 600;">TWA (Trusted Web Activity) Build Options:</h6>
+                                    <h6 style="color: #0d6efd; font-weight: 600;">APK Build Instructions:</h6>
                                     
                                     <div class="mb-3">
-                                        <h6 style="color: #198754; font-weight: 600;">🌟 PWA Builder (Recommended - No SDK Required):</h6>
+                                        <h6 style="color: #198754; font-weight: 600;">Quick Build (Recommended):</h6>
                                         <ol class="mb-2" style="color: #333;">
-                                            <li>Visit <a href="https://www.pwabuilder.com/" target="_blank" style="color: #0d6efd;">pwabuilder.com</a></li>
-                                            <li>Enter your website URL in the analyzer</li>
-                                            <li>Click "Package For Stores" → "Android"</li>
-                                            <li>Download professional TWA package</li>
+                                            <li>Extract the downloaded ZIP file</li>
+                                            <li>Double-click <code style="background: #e9ecef; color: #495057; padding: 2px 4px; border-radius: 3px;">build-apk.bat</code> (Windows) or run <code style="background: #e9ecef; color: #495057; padding: 2px 4px; border-radius: 3px;">./build-apk.sh</code> (Mac/Linux)</li>
+                                            <li>Wait for the build to complete (downloads Android SDK automatically)</li>
+                                            <li>Find your APK in <code style="background: #e9ecef; color: #495057; padding: 2px 4px; border-radius: 3px;">platforms/android/app/build/outputs/apk/debug/</code></li>
                                         </ol>
-                                        <small style="color: #198754;">✨ <strong>Microsoft's official tool:</strong> Creates Google Play Store ready APKs with TWA technology</small>
+                                        <small style="color: #198754;"><strong>One-click solution:</strong> Everything downloads and builds automatically</small>
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <h6 style="color: #fd7e14; font-weight: 600;">🐧 Linux/WSL TWA Build (Recommended):</h6>
+                                        <h6 style="color: #fd7e14; font-weight: 600;">Manual Build:</h6>
                                         <ol class="mb-2" style="color: #333;">
-                                            <li>Install Node.js: <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">sudo apt update && sudo apt install nodejs npm</code></li>
-                                            <li>Install Android SDK: <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">sudo apt install android-sdk</code></li>
-                                            <li>Set ANDROID_HOME: <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">export ANDROID_HOME=/usr/lib/android-sdk</code></li>
-                                            <li>Use PWA Builder or online tools for reliable APK generation</li>
+                                            <li>Install <a href="https://nodejs.org/" target="_blank" style="color: #0d6efd;">Node.js</a> (version 16 or later)</li>
+                                            <li>Open terminal in the extracted project folder</li>
+                                            <li>Run <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">npm install</code></li>
+                                            <li>Run <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">npx cordova platform add android</code></li>
+                                            <li>Run <code style="background: #2d3748; color: #ffd700; padding: 4px 8px; border-radius: 4px;">npx cordova build android --debug</code></li>
                                         </ol>
-                                        <small style="color: #fd7e14;">🛠️ <strong>Linux optimized:</strong> Works perfectly in Ubuntu, WSL, and other Linux distributions</small>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <h6 style="color: #0dcaf0; font-weight: 600;">📱 Instant APK Builders (Most Reliable):</h6>
-                                        <ol class="mb-2" style="color: #333;">
-                                            <li><strong>AppsGeyser:</strong> Upload web wrapper → <a href="https://appsgeyser.com/" target="_blank" style="color: #0d6efd;">Create App</a> → Download APK</li>
-                                            <li><strong>Appy Pie:</strong> Use <a href="https://www.appypie.com/" target="_blank" style="color: #0d6efd;">Website to App</a> converter</li>
-                                            <li><strong>App Inventor:</strong> Import web wrapper via <a href="https://ai2.appinventor.mit.edu/" target="_blank" style="color: #0d6efd;">MIT App Inventor</a></li>
-                                        </ol>
-                                        <small style="color: #0dcaf0;">🚀 <strong>100% Working:</strong> These builders actively generate working APKs</small>
-                                    </div>
-                                    
-                                    <div style="background: rgba(25, 135, 84, 0.1); border: 1px solid #198754; border-radius: 8px; padding: 15px; margin-top: 15px;">
-                                        <small style="color: #333;"><strong style="color: #198754;">Proven Methods:</strong> PWA Builder and online builders are currently the most reliable ways to generate working APKs. The CLI method has deprecated dependencies but the web-based alternatives work perfectly.</small>
+                                        <small style="color: #fd7e14;"><strong>Full control:</strong> Manual steps for customization</small>
                                     </div>
                                     
                                     <div style="background: rgba(13, 110, 253, 0.1); border: 1px solid #0d6efd; border-radius: 8px; padding: 15px; margin-top: 15px;">
-                                        <h6 style="color: #0d6efd; margin-bottom: 8px; font-weight: 600;">📋 What's Included in Your Package:</h6>
+                                        <h6 style="color: #0d6efd; margin-bottom: 8px; font-weight: 600;">What's Included:</h6>
                                         <ul style="margin-bottom: 0; font-size: 0.9em; color: #333;">
-                                            <li><strong>Web Wrapper:</strong> Ready-to-use HTML files for online builders</li>
-                                            <li><strong>PWA Files:</strong> Complete Progressive Web App structure</li>
-                                            <li><strong>Builder Configs:</strong> Pre-configured settings for each platform</li>
-                                            <li><strong>Step-by-Step Guides:</strong> Working methods with current tools</li>
-                                            <li><strong>Icon Package:</strong> All sizes needed for app stores</li>
+                                            <li><strong>Complete Cordova Project:</strong> Ready-to-build Android app structure</li>
+                                            <li><strong>Build Scripts:</strong> Windows (.bat) and Unix (.sh) build automation</li>
+                                            <li><strong>App Icons:</strong> All Android icon sizes automatically generated</li>
+                                            <li><strong>Configuration Files:</strong> Pre-configured for your website</li>
+                                            <li><strong>Installation Guide:</strong> Step-by-step README.md file</li>
                                         </ul>
                                     </div>
                                     
-                                    <div style="background: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; border-radius: 8px; padding: 15px; margin-top: 15px;">
-                                        <h6 style="color: #dc3545; margin-bottom: 8px; font-weight: 600;">🐧 Linux/WSL Troubleshooting:</h6>
+                                    <div style="background: rgba(25, 135, 84, 0.1); border: 1px solid #198754; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                                        <h6 style="color: #198754; margin-bottom: 8px; font-weight: 600;">Requirements:</h6>
                                         <ul style="margin-bottom: 0; font-size: 0.9em; color: #333;">
-                                            <li><strong>CLI Not Installing:</strong> Use PWA Builder or online tools instead</li>
-                                            <li><strong>WSL Environment:</strong> Included scripts handle Java, Node.js, and Android SDK setup</li>
-                                            <li><strong>Permission Issues:</strong> Run <code style="background: #e9ecef; color: #495057; padding: 2px 4px; border-radius: 3px;">chmod +x *.sh</code> in project folder</li>
-                                            <li><strong>SDK Missing:</strong> Scripts automatically install Android SDK to ~/Android/Sdk</li>
-                                            <li><strong>Build Failures:</strong> Try AppsGeyser or Appy Pie as reliable alternatives</li>
+                                            <li><strong>Node.js 16+:</strong> Required for Cordova CLI</li>
+                                            <li><strong>Java 8+:</strong> Automatically downloaded if missing</li>
+                                            <li><strong>Android SDK:</strong> Downloaded automatically during build</li>
+                                            <li><strong>Internet Connection:</strong> For downloading dependencies</li>
                                         </ul>
                                     </div>
                                 </div>
