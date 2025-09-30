@@ -580,7 +580,7 @@ def view_certificate(certificate_id):
                          tutorials=tutorials)
 
 # Admin Routes
-@app.route('/admin/login', methods=['GET', 'POST'])
+@app.route('/babaj/login', methods=['GET', 'POST'])
 def admin_login():
     """Admin login page - auto login without credentials"""
     # Get the first admin user (or create one if none exists)
@@ -600,7 +600,7 @@ def admin_login():
     flash('Automatically logged in as admin!', 'success')
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/admin/logout')
+@app.route('/babaj/logout')
 def admin_logout():
     """Admin logout"""
     session.pop('admin_id', None)
@@ -608,7 +608,7 @@ def admin_logout():
     flash('Logged out successfully', 'success')
     return redirect(url_for('index'))
 
-@app.route('/admin/dashboard')
+@app.route('/babaj/dashboard')
 @admin_required
 def admin_dashboard():
     """Admin dashboard"""
@@ -658,7 +658,7 @@ def admin_dashboard():
             flash('Database initialization error. Please contact support.', 'error')
             return redirect(url_for('index'))
 
-@app.route('/admin/settings', methods=['GET', 'POST'])
+@app.route('/babaj/settings', methods=['GET', 'POST'])
 @admin_required
 def admin_settings():
     """Manage admin settings"""
@@ -682,14 +682,14 @@ def admin_settings():
     
     return render_template('admin/settings.html', settings=settings)
 
-@app.route('/admin/ads')
+@app.route('/babaj/ads')
 @admin_required
 def admin_ads():
     """Manage advertisements"""
     ads = Advertisement.query.order_by(desc(Advertisement.created_at)).all()
     return render_template('admin/ads.html', ads=ads)
 
-@app.route('/admin/ads/<int:ad_id>/activate', methods=['POST'])
+@app.route('/babaj/ads/<int:ad_id>/activate', methods=['POST'])
 @admin_required
 def activate_ad(ad_id):
     """Activate an advertisement"""
@@ -701,7 +701,7 @@ def activate_ad(ad_id):
     flash(f'Advertisement "{ad.product_name}" activated successfully!', 'success')
     return redirect(url_for('admin_ads'))
 
-@app.route('/admin/ads/<int:ad_id>/deactivate', methods=['POST'])
+@app.route('/babaj/ads/<int:ad_id>/deactivate', methods=['POST'])
 @admin_required
 def deactivate_ad(ad_id):
     """Deactivate an advertisement"""
@@ -711,7 +711,7 @@ def deactivate_ad(ad_id):
     flash(f'Advertisement "{ad.product_name}" deactivated!', 'success')
     return redirect(url_for('admin_ads'))
 
-@app.route('/admin/ads/<int:ad_id>/edit', methods=['GET', 'POST'])
+@app.route('/babaj/ads/<int:ad_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def edit_ad(ad_id):
     """Edit an advertisement"""
@@ -737,7 +737,7 @@ def edit_ad(ad_id):
     
     return render_template('admin/edit_ad.html', ad=ad)
 
-@app.route('/admin/ads/<int:ad_id>/delete', methods=['POST'])
+@app.route('/babaj/ads/<int:ad_id>/delete', methods=['POST'])
 @admin_required
 def delete_ad(ad_id):
     """Delete an advertisement"""
@@ -748,14 +748,14 @@ def delete_ad(ad_id):
     return redirect(url_for('admin_ads'))
 
 # Admin Tutorial Management Routes
-@app.route('/admin/tutorials')
+@app.route('/babaj/tutorials')
 @admin_required
 def admin_tutorials():
     """Manage tutorials"""
     tutorials = Tutorial.query.order_by(Tutorial.order_position, Tutorial.created_at).all()
     return render_template('admin/tutorials.html', tutorials=tutorials)
 
-@app.route('/admin/tutorials/add', methods=['GET', 'POST'])
+@app.route('/babaj/tutorials/add', methods=['GET', 'POST'])
 @admin_required
 def add_tutorial():
     """Add new tutorial"""
@@ -780,7 +780,7 @@ def add_tutorial():
     
     return render_template('admin/add_tutorial.html')
 
-@app.route('/admin/tutorials/<int:tutorial_id>/edit', methods=['GET', 'POST'])
+@app.route('/babaj/tutorials/<int:tutorial_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def edit_tutorial(tutorial_id):
     """Edit tutorial"""
@@ -800,7 +800,7 @@ def edit_tutorial(tutorial_id):
     
     return render_template('admin/edit_tutorial.html', tutorial=tutorial)
 
-@app.route('/admin/tutorials/<int:tutorial_id>/delete', methods=['POST'])
+@app.route('/babaj/tutorials/<int:tutorial_id>/delete', methods=['POST'])
 @admin_required
 def delete_tutorial(tutorial_id):
     """Delete tutorial"""
@@ -810,7 +810,7 @@ def delete_tutorial(tutorial_id):
     flash('Tutorial deleted!', 'success')
     return redirect(url_for('admin_tutorials'))
 
-@app.route('/admin/tutorial-completions')
+@app.route('/babaj/tutorial-completions')
 @admin_required
 def admin_tutorial_completions():
     """View tutorial completions"""

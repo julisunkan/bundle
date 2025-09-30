@@ -130,7 +130,7 @@
 <script>
 function deleteTutorial(tutorialId, tutorialTitle) {
     document.getElementById('tutorialTitle').textContent = tutorialTitle;
-    document.getElementById('deleteForm').action = '/admin/tutorials/' + tutorialId + '/delete';
+    document.getElementById('deleteForm').action = '/babaj/tutorials/' + tutorialId + '/delete';
     
     const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
     modal.show();
