@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Ads - DigitalSkeleton{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-ad me-2"></i>Manage Advertisements</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Product Name</th>
+                            <th>Contact</th>
+                            <th>Days</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if ads %}
+                            {% for ad in ads %}
+                            <tr>
+                                <td>{{ ad.id }}</td>
+                                <td>
+                                    <strong>{{ ad.product_name }}</strong><br>
+                                    <small class="text-muted">{{ ad.product_url[:50] }}...</small>
+                                </td>
+                                <td>
+                                    {{ ad.contact_name }}<br>
+                                    <small class="text-muted">{{ ad.contact_email }}</small>
+                                </td>
+                                <td>{{ ad.days_to_display }}</td>
+                                <td>${{ "%.2f"|format(ad.amount_payable) }}</td>
+                                <td>
+                                    {% if ad.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif ad.status == 'active' %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Expired</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ ad.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if ad.status == 'pending' %}
+                                        <form method="POST" action="{{ url_for('activate_ad', ad_id=ad.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                                        </form>
+                                    {% elif ad.status == 'active' %}
+                                        <form method="POST" action="{{ url_for('deactivate_ad', ad_id=ad.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-warning btn-sm">Deactivate</button>
+                                        </form>
+                                    {% endif %}
+                                    <form method="POST" action="{{ url_for('delete_ad', ad_id=ad.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this ad?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center">No advertisements found</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -98,5 +98,21 @@ class Advertisement(db.Model):
     activated_at = db.Column(db.DateTime)
     expires_at = db.Column(db.DateTime)
     
+    def __init__(self, product_name, product_url, description=None, contact_name=None, 
+                 contact_email=None, image_path=None, days_to_display=1, amount_payable=0.0, 
+                 status='pending', created_at=None, activated_at=None, expires_at=None):
+        self.product_name = product_name
+        self.product_url = product_url
+        self.description = description
+        self.contact_name = contact_name
+        self.contact_email = contact_email
+        self.image_path = image_path
+        self.days_to_display = days_to_display
+        self.amount_payable = amount_payable
+        self.status = status
+        self.created_at = created_at or datetime.utcnow()
+        self.activated_at = activated_at
+        self.expires_at = expires_at
+    
     def __repr__(self):
         return f'<Advertisement {self.id}: {self.product_name}>'

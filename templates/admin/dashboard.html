@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - DigitalSkeleton{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h2>
+        <div>
+            <span class="me-3">Welcome, {{ session.admin_username }}</span>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
+        </div>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-clock me-2"></i>Pending Ads</h5>
+                    <h2>{{ pending_ads }}</h2>
+                    <p class="mb-0">Awaiting activation</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-check-circle me-2"></i>Active Ads</h5>
+                    <h2>{{ active_ads }}</h2>
+                    <p class="mb-0">Currently displaying</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-ad me-2"></i>Total Ads</h5>
+                    <h2>{{ total_ads }}</h2>
+                    <p class="mb-0">All time</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-cog me-2"></i>Settings</h5>
+                    <p class="card-text">Manage Google AdSense code, payment details, and pricing.</p>
+                    <a href="{{ url_for('admin_settings') }}" class="btn btn-primary">Manage Settings</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-ad me-2"></i>Advertisements</h5>
+                    <p class="card-text">View and manage banner advertisements.</p>
+                    <a href="{{ url_for('admin_ads') }}" class="btn btn-primary">Manage Ads</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

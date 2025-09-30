@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Place Advertisement - DigitalSkeleton{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-bullhorn me-2"></i>Place Your Advertisement</h3>
+                </div>
+                <div class="card-body p-4">
+                    <p class="lead">Advertise your product or service on DigitalSkeleton!</p>
+                    <p><strong>Price:</strong> ${{ "%.2f"|format(settings.banner_price_per_day) }} per day</p>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        <h5 class="mt-4 mb-3">Product Details</h5>
+                        
+                        <div class="mb-3">
+                            <label for="product_name" class="form-label">Product/Service Name *</label>
+                            <input type="text" class="form-control" id="product_name" name="product_name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="product_url" class="form-label">Product URL *</label>
+                            <input type="url" class="form-control" id="product_url" name="product_url" placeholder="https://yourwebsite.com" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Brief description of your product or service"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="ad_file" class="form-label">Ad Image/Video *</label>
+                            <input type="file" class="form-control" id="ad_file" name="ad_file" accept=".png,.jpg,.jpeg,.gif,.mp4,.webm" required>
+                            <small class="text-muted">Accepted formats: PNG, JPG, GIF, MP4, WEBM. Recommended size: 728x90px or 300x250px</small>
+                        </div>
+                        
+                        <h5 class="mt-4 mb-3">Contact Information</h5>
+                        
+                        <div class="mb-3">
+                            <label for="contact_name" class="form-label">Your Name *</label>
+                            <input type="text" class="form-control" id="contact_name" name="contact_name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="contact_email" class="form-label">Your Email *</label>
+                            <input type="email" class="form-control" id="contact_email" name="contact_email" required>
+                            <small class="text-muted">We'll use this to confirm your ad activation</small>
+                        </div>
+                        
+                        <h5 class="mt-4 mb-3">Ad Duration</h5>
+                        
+                        <div class="mb-3">
+                            <label for="days_to_display" class="form-label">Number of Days *</label>
+                            <input type="number" class="form-control" id="days_to_display" name="days_to_display" min="1" max="365" value="1" required onchange="calculateAmount()">
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <h6>Amount Payable</h6>
+                            <h3 id="amount_display">$<span id="calculated_amount">{{ "%.2f"|format(settings.banner_price_per_day) }}</span></h3>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100">Continue to Payment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateAmount() {
+    var days = document.getElementById('days_to_display').value;
+    var pricePerDay = {{ settings.banner_price_per_day }};
+    var total = days * pricePerDay;
+    document.getElementById('calculated_amount').textContent = total.toFixed(2);
+}
+</script>
+{% endblock %}
