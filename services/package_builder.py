@@ -5568,7 +5568,7 @@ Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 <widget id="com.yourcompany.{app_name.lower()}" version="1.0.0" xmlns="http://www.w3.org/ns/widgets">
     <name>{metadata.title}</name>
     <description>iOS app for {metadata.title}</description>
-    <author email="your@email.com" href="{target_url}">Your Company</author>
+    <author email="support@digitalskeleton.com.ng" href="{target_url}">Your Company</author>
     <content src="{target_url}" />
     <preference name="orientation" value="default" />
     <preference name="fullscreen" value="true" />

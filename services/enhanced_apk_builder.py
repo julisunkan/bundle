@@ -141,7 +141,7 @@ class EnhancedAPKBuilder:
 <widget id="{package_name}" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>{title}</name>
     <description>{description}</description>
-    <author email="info@digitalskeleton.com" href="https://digitalskeleton.com">
+    <author email="support@digitalskeleton.com.ng" href="https://digitalskeleton.com">
         DigitalSkeleton Team
     </author>
     <content src="index.html" />

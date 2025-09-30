@@ -574,7 +574,7 @@ Created: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
     <description>
         {metadata.description or f"Mobile app for {metadata.title}"}
     </description>
-    <author email="info@digitalskeleton.com" href="https://digitalskeleton.com">
+    <author email="support@digitalskeleton.com.ng" href="https://digitalskeleton.com">
         DigitalSkeleton Team
     </author>
     <content src="index.html" />

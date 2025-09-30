@@ -16,7 +16,7 @@ corrected_function = '''    def _generate_cordova_config_xml(self, metadata, tar
     <description>
         %s
     </description>
-    <author email="info@digitalskeleton.com" href="https://digitalskeleton.com">
+    <author email="support@digitalskeleton.com.ng" href="https://digitalskeleton.com">
         DigitalSkeleton Team
     </author>
     <content src="index.html" />
