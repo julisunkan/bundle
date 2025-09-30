@@ -606,8 +606,17 @@ def place_advert():
     """Guest ad placement page"""
     settings = AdminSettings.query.first()
     if not settings:
-        flash('Ad placement is currently unavailable', 'error')
-        return redirect(url_for('index'))
+        # Create default settings if none exist
+        settings = AdminSettings(
+            google_adsense_code='',
+            payment_account_name='Digital Skeleton',
+            payment_bank_name='Default Bank',
+            payment_account_number='1234567890',
+            admin_email='admin@digitalskeleton.com',
+            banner_price_per_day=10.0
+        )
+        db.session.add(settings)
+        db.session.commit()
     
     if request.method == 'POST':
         product_name = request.form.get('product_name')
