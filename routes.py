@@ -638,8 +638,6 @@ def deactivate_ad(ad_id):
 def delete_ad(ad_id):
     """Delete an advertisement"""
     ad = Advertisement.query.get_or_404(ad_id)
-    if ad.image_path and os.path.exists(ad.image_path):
-        os.remove(ad.image_path)
     db.session.delete(ad)
     db.session.commit()
     flash('Advertisement deleted!', 'success')
@@ -671,21 +669,11 @@ def place_advert():
         contact_email = request.form.get('contact_email')
         days_to_display = int(request.form.get('days_to_display', 1))
         
+        # Get ad image URL
+        ad_image_url = request.form.get('ad_image_url')
+        
         # Calculate amount
         amount_payable = settings.banner_price_per_day * days_to_display
-        
-        # Handle file upload
-        image_path = None
-        if 'ad_file' in request.files:
-            file = request.files['ad_file']
-            if file and file.filename and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                filename = f"{uuid.uuid4()}_{filename}"
-                upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'ads')
-                os.makedirs(upload_folder, exist_ok=True)
-                file_path = os.path.join(upload_folder, filename)
-                file.save(file_path)
-                image_path = file_path
         
         # Create advertisement
         ad = Advertisement(
@@ -694,7 +682,7 @@ def place_advert():
             description=description,
             contact_name=contact_name,
             contact_email=contact_email,
-            image_path=image_path,
+            image_path=ad_image_url,  # Store the external URL in image_path field
             days_to_display=days_to_display,
             amount_payable=amount_payable,
             status='pending'
