@@ -20,10 +20,24 @@ from datetime import timedelta
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'admin_id' not in session:
-            flash('Please login to access admin panel', 'error')
+        try:
+            if 'admin_id' not in session:
+                flash('Please login to access admin panel', 'error')
+                return redirect(url_for('admin_login'))
+            
+            # Verify admin user still exists
+            admin = AdminUser.query.get(session['admin_id'])
+            if not admin:
+                session.pop('admin_id', None)
+                session.pop('admin_username', None)
+                flash('Admin session expired. Please login again.', 'error')
+                return redirect(url_for('admin_login'))
+                
+            return f(*args, **kwargs)
+        except Exception as e:
+            app.logger.error(f"Admin authentication error: {str(e)}")
+            flash('Authentication error. Please login again.', 'error')
             return redirect(url_for('admin_login'))
-        return f(*args, **kwargs)
     return decorated_function
 
 # Allowed file extensions for ad uploads
@@ -526,16 +540,45 @@ def admin_logout():
 @admin_required
 def admin_dashboard():
     """Admin dashboard"""
-    settings = AdminSettings.query.first()
-    pending_ads = Advertisement.query.filter_by(status='pending').count()
-    active_ads = Advertisement.query.filter_by(status='active').count()
-    total_ads = Advertisement.query.count()
-    
-    return render_template('admin/dashboard.html', 
-                         settings=settings,
-                         pending_ads=pending_ads,
-                         active_ads=active_ads,
-                         total_ads=total_ads)
+    try:
+        settings = AdminSettings.query.first()
+        pending_ads = Advertisement.query.filter_by(status='pending').count()
+        active_ads = Advertisement.query.filter_by(status='active').count()
+        total_ads = Advertisement.query.count()
+        
+        return render_template('admin/dashboard.html', 
+                             settings=settings,
+                             pending_ads=pending_ads,
+                             active_ads=active_ads,
+                             total_ads=total_ads)
+    except Exception as e:
+        app.logger.error(f"Admin dashboard error: {str(e)}")
+        # Initialize database tables if they don't exist
+        try:
+            db.create_all()
+            # Create default settings if missing
+            settings = AdminSettings.query.first()
+            if not settings:
+                settings = AdminSettings(
+                    google_adsense_code='',
+                    payment_account_name='Digital Skeleton',
+                    payment_bank_name='Default Bank',
+                    payment_account_number='1234567890',
+                    admin_email='admin@digitalskeleton.com',
+                    banner_price_per_day=10.0
+                )
+                db.session.add(settings)
+                db.session.commit()
+            
+            return render_template('admin/dashboard.html', 
+                                 settings=settings,
+                                 pending_ads=0,
+                                 active_ads=0,
+                                 total_ads=0)
+        except Exception as init_error:
+            app.logger.error(f"Failed to initialize admin dashboard: {str(init_error)}")
+            flash('Database initialization error. Please contact support.', 'error')
+            return redirect(url_for('index'))
 
 @app.route('/admin/settings', methods=['GET', 'POST'])
 @admin_required
