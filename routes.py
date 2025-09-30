@@ -790,6 +790,398 @@ def admin_tutorial_completions():
     completions = TutorialCompletion.query.order_by(desc(TutorialCompletion.completion_date)).all()
     return render_template('admin/tutorial_completions.html', completions=completions)
 
+@app.route('/babaj/backup-restore')
+@admin_required
+def admin_backup_restore():
+    """Admin backup and restore page"""
+    return render_template('admin/backup_restore.html')
+
+@app.route('/babaj/create-backup', methods=['POST'])
+@admin_required
+def create_backup():
+    """Create a full system backup"""
+    try:
+        import zipfile
+        import shutil
+        from datetime import datetime
+        
+        # Create backup filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_filename = f'digitalskeleton_backup_{timestamp}.zip'
+        backup_path = os.path.join(app.config['UPLOAD_FOLDER'], backup_filename)
+        
+        # Create backup data directory
+        backup_data = {
+            'admin_users': [],
+            'admin_settings': [],
+            'advertisements': [],
+            'tutorials': [],
+            'tutorial_completions': [],
+            'app_metadata': [],
+            'build_jobs': []
+        }
+        
+        # Export database records
+        admin_users = AdminUser.query.all()
+        for user in admin_users:
+            backup_data['admin_users'].append({
+                'id': user.id,
+                'username': user.username,
+                'password_hash': user.password_hash,
+                'email': user.email,
+                'created_at': user.created_at.isoformat() if user.created_at else None
+            })
+        
+        settings = AdminSettings.query.all()
+        for setting in settings:
+            backup_data['admin_settings'].append({
+                'id': setting.id,
+                'google_adsense_code': setting.google_adsense_code,
+                'payment_account_name': setting.payment_account_name,
+                'payment_bank_name': setting.payment_bank_name,
+                'payment_account_number': setting.payment_account_number,
+                'admin_email': setting.admin_email,
+                'banner_price_per_day': setting.banner_price_per_day,
+                'updated_at': setting.updated_at.isoformat() if setting.updated_at else None
+            })
+        
+        ads = Advertisement.query.all()
+        for ad in ads:
+            backup_data['advertisements'].append({
+                'id': ad.id,
+                'product_name': ad.product_name,
+                'product_url': ad.product_url,
+                'description': ad.description,
+                'contact_name': ad.contact_name,
+                'contact_email': ad.contact_email,
+                'image_path': ad.image_path,
+                'days_to_display': ad.days_to_display,
+                'amount_payable': ad.amount_payable,
+                'status': ad.status,
+                'created_at': ad.created_at.isoformat() if ad.created_at else None,
+                'activated_at': ad.activated_at.isoformat() if ad.activated_at else None,
+                'expires_at': ad.expires_at.isoformat() if ad.expires_at else None
+            })
+        
+        tutorials = Tutorial.query.all()
+        for tutorial in tutorials:
+            backup_data['tutorials'].append({
+                'id': tutorial.id,
+                'title': tutorial.title,
+                'description': tutorial.description,
+                'content': tutorial.content,
+                'order_position': tutorial.order_position,
+                'is_active': tutorial.is_active,
+                'created_at': tutorial.created_at.isoformat() if tutorial.created_at else None,
+                'updated_at': tutorial.updated_at.isoformat() if tutorial.updated_at else None
+            })
+        
+        completions = TutorialCompletion.query.all()
+        for completion in completions:
+            backup_data['tutorial_completions'].append({
+                'id': completion.id,
+                'learner_name': completion.learner_name,
+                'tutorial_ids': completion.tutorial_ids,
+                'completion_date': completion.completion_date.isoformat() if completion.completion_date else None,
+                'certificate_id': completion.certificate_id
+            })
+        
+        metadata_records = AppMetadata.query.all()
+        for metadata in metadata_records:
+            backup_data['app_metadata'].append({
+                'id': metadata.id,
+                'url': metadata.url,
+                'title': metadata.title,
+                'description': metadata.description,
+                'icon_url': metadata.icon_url,
+                'theme_color': metadata.theme_color,
+                'background_color': metadata.background_color,
+                'last_scraped': metadata.last_scraped.isoformat() if metadata.last_scraped else None,
+                'metadata_json': metadata.metadata_json
+            })
+        
+        jobs = BuildJob.query.all()
+        for job in jobs:
+            backup_data['build_jobs'].append({
+                'id': job.id,
+                'url': job.url,
+                'app_name': job.app_name,
+                'package_type': job.package_type,
+                'status': job.status,
+                'created_at': job.created_at.isoformat() if job.created_at else None,
+                'completed_at': job.completed_at.isoformat() if job.completed_at else None,
+                'error_message': job.error_message,
+                'download_path': job.download_path,
+                'manifest_data': job.manifest_data
+            })
+        
+        # Create zip file with backup
+        with zipfile.ZipFile(backup_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            # Add database backup as JSON
+            backup_json = json.dumps(backup_data, indent=2)
+            zipf.writestr('database_backup.json', backup_json)
+            
+            # Add generated packages directory if it exists
+            if os.path.exists(app.config['UPLOAD_FOLDER']):
+                for root, dirs, files in os.walk(app.config['UPLOAD_FOLDER']):
+                    for file in files:
+                        if file != backup_filename:  # Don't include the backup file itself
+                            file_path = os.path.join(root, file)
+                            arcname = os.path.relpath(file_path, app.config['UPLOAD_FOLDER'])
+                            zipf.write(file_path, f'generated_packages/{arcname}')
+            
+            # Add static files directory
+            static_dir = os.path.join(os.getcwd(), 'static')
+            if os.path.exists(static_dir):
+                for root, dirs, files in os.walk(static_dir):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, static_dir)
+                        zipf.write(file_path, f'static/{arcname}')
+            
+            # Add templates directory
+            templates_dir = os.path.join(os.getcwd(), 'templates')
+            if os.path.exists(templates_dir):
+                for root, dirs, files in os.walk(templates_dir):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, templates_dir)
+                        zipf.write(file_path, f'templates/{arcname}')
+        
+        flash(f'Backup created successfully: {backup_filename}', 'success')
+        return redirect(url_for('download_backup', filename=backup_filename))
+        
+    except Exception as e:
+        app.logger.error(f"Backup creation failed: {str(e)}")
+        flash(f'Backup creation failed: {str(e)}', 'error')
+        return redirect(url_for('admin_backup_restore'))
+
+@app.route('/babaj/download-backup/<filename>')
+@admin_required
+def download_backup(filename):
+    """Download backup file"""
+    backup_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.exists(backup_path):
+        flash('Backup file not found', 'error')
+        return redirect(url_for('admin_backup_restore'))
+    
+    return send_file(backup_path, as_attachment=True, download_name=filename)
+
+@app.route('/babaj/restore-backup', methods=['POST'])
+@admin_required
+def restore_backup():
+    """Restore system from backup"""
+    try:
+        if 'backup_file' not in request.files:
+            flash('No backup file selected', 'error')
+            return redirect(url_for('admin_backup_restore'))
+        
+        backup_file = request.files['backup_file']
+        if backup_file.filename == '':
+            flash('No backup file selected', 'error')
+            return redirect(url_for('admin_backup_restore'))
+        
+        if not backup_file.filename.endswith('.zip'):
+            flash('Invalid backup file format. Please upload a .zip file', 'error')
+            return redirect(url_for('admin_backup_restore'))
+        
+        import zipfile
+        import tempfile
+        from datetime import datetime
+        
+        # Save uploaded file temporarily
+        temp_dir = tempfile.mkdtemp()
+        backup_path = os.path.join(temp_dir, backup_file.filename)
+        backup_file.save(backup_path)
+        
+        # Extract and process backup
+        with zipfile.ZipFile(backup_path, 'r') as zipf:
+            # Extract all files to temp directory
+            extract_dir = os.path.join(temp_dir, 'extracted')
+            zipf.extractall(extract_dir)
+            
+            # Read database backup
+            db_backup_path = os.path.join(extract_dir, 'database_backup.json')
+            if not os.path.exists(db_backup_path):
+                flash('Invalid backup file: database backup not found', 'error')
+                return redirect(url_for('admin_backup_restore'))
+            
+            with open(db_backup_path, 'r') as f:
+                backup_data = json.load(f)
+            
+            # Clear existing data (WARNING: This removes all current data!)
+            db.session.execute(db.text('DELETE FROM tutorial_completion'))
+            db.session.execute(db.text('DELETE FROM build_job'))
+            db.session.execute(db.text('DELETE FROM app_metadata'))
+            db.session.execute(db.text('DELETE FROM tutorial'))
+            db.session.execute(db.text('DELETE FROM advertisement'))
+            db.session.execute(db.text('DELETE FROM admin_settings'))
+            db.session.execute(db.text('DELETE FROM admin_user'))
+            db.session.commit()
+            
+            # Restore admin users
+            for user_data in backup_data.get('admin_users', []):
+                user = AdminUser()
+                user.username = user_data['username']
+                user.password_hash = user_data['password_hash']
+                user.email = user_data['email']
+                if user_data.get('created_at'):
+                    user.created_at = datetime.fromisoformat(user_data['created_at'])
+                db.session.add(user)
+            
+            # Restore admin settings
+            for settings_data in backup_data.get('admin_settings', []):
+                settings = AdminSettings()
+                settings.google_adsense_code = settings_data.get('google_adsense_code')
+                settings.payment_account_name = settings_data.get('payment_account_name')
+                settings.payment_bank_name = settings_data.get('payment_bank_name')
+                settings.payment_account_number = settings_data.get('payment_account_number')
+                settings.admin_email = settings_data.get('admin_email')
+                settings.banner_price_per_day = settings_data.get('banner_price_per_day', 10.0)
+                if settings_data.get('updated_at'):
+                    settings.updated_at = datetime.fromisoformat(settings_data['updated_at'])
+                db.session.add(settings)
+            
+            # Restore advertisements
+            for ad_data in backup_data.get('advertisements', []):
+                ad = Advertisement(
+                    product_name=ad_data['product_name'],
+                    product_url=ad_data['product_url'],
+                    description=ad_data.get('description'),
+                    contact_name=ad_data.get('contact_name'),
+                    contact_email=ad_data.get('contact_email'),
+                    image_path=ad_data.get('image_path'),
+                    days_to_display=ad_data.get('days_to_display', 1),
+                    amount_payable=ad_data.get('amount_payable', 0.0),
+                    status=ad_data.get('status', 'pending')
+                )
+                if ad_data.get('created_at'):
+                    ad.created_at = datetime.fromisoformat(ad_data['created_at'])
+                if ad_data.get('activated_at'):
+                    ad.activated_at = datetime.fromisoformat(ad_data['activated_at'])
+                if ad_data.get('expires_at'):
+                    ad.expires_at = datetime.fromisoformat(ad_data['expires_at'])
+                db.session.add(ad)
+            
+            # Restore tutorials
+            for tutorial_data in backup_data.get('tutorials', []):
+                tutorial = Tutorial(
+                    title=tutorial_data['title'],
+                    content=tutorial_data['content'],
+                    description=tutorial_data.get('description'),
+                    order_position=tutorial_data.get('order_position', 0),
+                    is_active=tutorial_data.get('is_active', True)
+                )
+                if tutorial_data.get('created_at'):
+                    tutorial.created_at = datetime.fromisoformat(tutorial_data['created_at'])
+                if tutorial_data.get('updated_at'):
+                    tutorial.updated_at = datetime.fromisoformat(tutorial_data['updated_at'])
+                db.session.add(tutorial)
+            
+            # Restore tutorial completions
+            for completion_data in backup_data.get('tutorial_completions', []):
+                completion = TutorialCompletion(
+                    learner_name=completion_data['learner_name'],
+                    tutorial_ids=completion_data['tutorial_ids'],
+                    certificate_id=completion_data['certificate_id']
+                )
+                if completion_data.get('completion_date'):
+                    completion.completion_date = datetime.fromisoformat(completion_data['completion_date'])
+                db.session.add(completion)
+            
+            # Restore app metadata
+            for metadata_data in backup_data.get('app_metadata', []):
+                metadata = AppMetadata(
+                    url=metadata_data['url'],
+                    title=metadata_data.get('title'),
+                    description=metadata_data.get('description'),
+                    icon_url=metadata_data.get('icon_url'),
+                    theme_color=metadata_data.get('theme_color'),
+                    background_color=metadata_data.get('background_color'),
+                    metadata_json=metadata_data.get('metadata_json')
+                )
+                if metadata_data.get('last_scraped'):
+                    metadata.last_scraped = datetime.fromisoformat(metadata_data['last_scraped'])
+                db.session.add(metadata)
+            
+            # Restore build jobs
+            for job_data in backup_data.get('build_jobs', []):
+                job = BuildJob(
+                    id=job_data['id'],
+                    url=job_data['url'],
+                    package_type=job_data['package_type'],
+                    app_name=job_data['app_name'],
+                    status=job_data.get('status', 'pending'),
+                    error_message=job_data.get('error_message'),
+                    download_path=job_data.get('download_path'),
+                    manifest_data=job_data.get('manifest_data')
+                )
+                if job_data.get('created_at'):
+                    job.created_at = datetime.fromisoformat(job_data['created_at'])
+                if job_data.get('completed_at'):
+                    job.completed_at = datetime.fromisoformat(job_data['completed_at'])
+                db.session.add(job)
+            
+            db.session.commit()
+            
+            # Restore files
+            files_restored = 0
+            
+            # Restore generated packages
+            generated_packages_src = os.path.join(extract_dir, 'generated_packages')
+            if os.path.exists(generated_packages_src):
+                for root, dirs, files in os.walk(generated_packages_src):
+                    for file in files:
+                        src_path = os.path.join(root, file)
+                        rel_path = os.path.relpath(src_path, generated_packages_src)
+                        dst_path = os.path.join(app.config['UPLOAD_FOLDER'], rel_path)
+                        
+                        # Create directory if it doesn't exist
+                        os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+                        shutil.copy2(src_path, dst_path)
+                        files_restored += 1
+            
+            # Restore static files
+            static_src = os.path.join(extract_dir, 'static')
+            static_dst = os.path.join(os.getcwd(), 'static')
+            if os.path.exists(static_src):
+                for root, dirs, files in os.walk(static_src):
+                    for file in files:
+                        src_path = os.path.join(root, file)
+                        rel_path = os.path.relpath(src_path, static_src)
+                        dst_path = os.path.join(static_dst, rel_path)
+                        
+                        # Create directory if it doesn't exist
+                        os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+                        shutil.copy2(src_path, dst_path)
+                        files_restored += 1
+            
+            # Restore templates
+            templates_src = os.path.join(extract_dir, 'templates')
+            templates_dst = os.path.join(os.getcwd(), 'templates')
+            if os.path.exists(templates_src):
+                for root, dirs, files in os.walk(templates_src):
+                    for file in files:
+                        src_path = os.path.join(root, file)
+                        rel_path = os.path.relpath(src_path, templates_src)
+                        dst_path = os.path.join(templates_dst, rel_path)
+                        
+                        # Create directory if it doesn't exist
+                        os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+                        shutil.copy2(src_path, dst_path)
+                        files_restored += 1
+        
+        # Clean up temp files
+        shutil.rmtree(temp_dir)
+        
+        flash(f'Backup restored successfully! Restored {files_restored} files. Please restart the application.', 'success')
+        return redirect(url_for('admin_backup_restore'))
+        
+    except Exception as e:
+        app.logger.error(f"Backup restoration failed: {str(e)}")
+        flash(f'Backup restoration failed: {str(e)}', 'error')
+        return redirect(url_for('admin_backup_restore'))
+
 # Guest Ad Placement Routes
 @app.route('/place-advert', methods=['GET', 'POST'])
 def place_advert():
