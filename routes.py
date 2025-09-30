@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 from flask import render_template, request, redirect, url_for, flash, jsonify, send_file, session
 from functools import wraps
+from sqlalchemy import desc
 from app import app, db
 from models import BuildJob, AppMetadata, AdminUser, AdminSettings, Advertisement, Tutorial, TutorialCompletion
 from services.web_scraper import scrape_website_metadata
@@ -685,7 +686,7 @@ def admin_settings():
 @admin_required
 def admin_ads():
     """Manage advertisements"""
-    ads = Advertisement.query.order_by(Advertisement.created_at.desc()).all()
+    ads = Advertisement.query.order_by(desc(Advertisement.created_at)).all()
     return render_template('admin/ads.html', ads=ads)
 
 @app.route('/admin/ads/<int:ad_id>/activate', methods=['POST'])
@@ -813,7 +814,7 @@ def delete_tutorial(tutorial_id):
 @admin_required
 def admin_tutorial_completions():
     """View tutorial completions"""
-    completions = TutorialCompletion.query.order_by(TutorialCompletion.completion_date.desc()).all()
+    completions = TutorialCompletion.query.order_by(desc(TutorialCompletion.completion_date)).all()
     return render_template('admin/tutorial_completions.html', completions=completions)
 
 # Guest Ad Placement Routes
