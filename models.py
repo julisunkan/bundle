@@ -1,6 +1,7 @@
 from app import db
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, Float
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class BuildJob(db.Model):
     id = db.Column(db.String(36), primary_key=True)
@@ -52,3 +53,50 @@ class AppMetadata(db.Model):
     
     def __repr__(self):
         return f'<AppMetadata {self.id}: {self.title}>'
+
+class AdminUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def __repr__(self):
+        return f'<AdminUser {self.username}>'
+
+class AdminSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    google_adsense_code = db.Column(db.Text)
+    payment_account_name = db.Column(db.String(200))
+    payment_bank_name = db.Column(db.String(200))
+    payment_account_number = db.Column(db.String(100))
+    admin_email = db.Column(db.String(120))
+    banner_price_per_day = db.Column(db.Float, default=10.0)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<AdminSettings {self.id}>'
+
+class Advertisement(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(200), nullable=False)
+    product_url = db.Column(db.String(500), nullable=False)
+    description = db.Column(db.Text)
+    contact_name = db.Column(db.String(200))
+    contact_email = db.Column(db.String(120))
+    image_path = db.Column(db.String(500))
+    days_to_display = db.Column(db.Integer, nullable=False)
+    amount_payable = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, active, expired
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    activated_at = db.Column(db.DateTime)
+    expires_at = db.Column(db.DateTime)
+    
+    def __repr__(self):
+        return f'<Advertisement {self.id}: {self.product_name}>'
