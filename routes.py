@@ -4,14 +4,33 @@ import uuid
 from datetime import datetime
 from urllib.parse import urlparse
 
-from flask import render_template, request, redirect, url_for, flash, jsonify, send_file
+from flask import render_template, request, redirect, url_for, flash, jsonify, send_file, session
+from functools import wraps
 from app import app, db
-from models import BuildJob, AppMetadata
+from models import BuildJob, AppMetadata, AdminUser, AdminSettings, Advertisement
 from services.web_scraper import scrape_website_metadata
 from services.package_builder import PackageBuilder
 from services.manifest_generator import generate_manifest
 from services.pwa_detector import analyze_website_pwa_status
 from services.pwa_generator import PWAGenerator
+from werkzeug.utils import secure_filename
+from datetime import timedelta
+
+# Admin authentication decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_id' not in session:
+            flash('Please login to access admin panel', 'error')
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Allowed file extensions for ad uploads
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/health')
 def health_check():
@@ -460,6 +479,172 @@ def sync_jobs():
         return jsonify({'status': 'success', 'synced_jobs': len(pending_jobs)})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# Admin Routes
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    """Admin login page"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        admin = AdminUser.query.filter_by(username=username).first()
+        if admin and admin.check_password(password):
+            session['admin_id'] = admin.id
+            session['admin_username'] = admin.username
+            flash('Login successful!', 'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Invalid username or password', 'error')
+    
+    return render_template('admin/login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    """Admin logout"""
+    session.pop('admin_id', None)
+    session.pop('admin_username', None)
+    flash('Logged out successfully', 'success')
+    return redirect(url_for('index'))
+
+@app.route('/admin/dashboard')
+@admin_required
+def admin_dashboard():
+    """Admin dashboard"""
+    settings = AdminSettings.query.first()
+    pending_ads = Advertisement.query.filter_by(status='pending').count()
+    active_ads = Advertisement.query.filter_by(status='active').count()
+    total_ads = Advertisement.query.count()
+    
+    return render_template('admin/dashboard.html', 
+                         settings=settings,
+                         pending_ads=pending_ads,
+                         active_ads=active_ads,
+                         total_ads=total_ads)
+
+@app.route('/admin/settings', methods=['GET', 'POST'])
+@admin_required
+def admin_settings():
+    """Manage admin settings"""
+    settings = AdminSettings.query.first()
+    if not settings:
+        settings = AdminSettings()
+        db.session.add(settings)
+        db.session.commit()
+    
+    if request.method == 'POST':
+        settings.google_adsense_code = request.form.get('google_adsense_code', '')
+        settings.payment_account_name = request.form.get('payment_account_name', '')
+        settings.payment_bank_name = request.form.get('payment_bank_name', '')
+        settings.payment_account_number = request.form.get('payment_account_number', '')
+        settings.admin_email = request.form.get('admin_email', '')
+        settings.banner_price_per_day = float(request.form.get('banner_price_per_day', 10.0))
+        
+        db.session.commit()
+        flash('Settings updated successfully!', 'success')
+        return redirect(url_for('admin_settings'))
+    
+    return render_template('admin/settings.html', settings=settings)
+
+@app.route('/admin/ads')
+@admin_required
+def admin_ads():
+    """Manage advertisements"""
+    ads = Advertisement.query.order_by(Advertisement.created_at.desc()).all()
+    return render_template('admin/ads.html', ads=ads)
+
+@app.route('/admin/ads/<int:ad_id>/activate', methods=['POST'])
+@admin_required
+def activate_ad(ad_id):
+    """Activate an advertisement"""
+    ad = Advertisement.query.get_or_404(ad_id)
+    ad.status = 'active'
+    ad.activated_at = datetime.utcnow()
+    ad.expires_at = datetime.utcnow() + timedelta(days=ad.days_to_display)
+    db.session.commit()
+    flash(f'Advertisement "{ad.product_name}" activated successfully!', 'success')
+    return redirect(url_for('admin_ads'))
+
+@app.route('/admin/ads/<int:ad_id>/deactivate', methods=['POST'])
+@admin_required
+def deactivate_ad(ad_id):
+    """Deactivate an advertisement"""
+    ad = Advertisement.query.get_or_404(ad_id)
+    ad.status = 'expired'
+    db.session.commit()
+    flash(f'Advertisement "{ad.product_name}" deactivated!', 'success')
+    return redirect(url_for('admin_ads'))
+
+@app.route('/admin/ads/<int:ad_id>/delete', methods=['POST'])
+@admin_required
+def delete_ad(ad_id):
+    """Delete an advertisement"""
+    ad = Advertisement.query.get_or_404(ad_id)
+    if ad.image_path and os.path.exists(ad.image_path):
+        os.remove(ad.image_path)
+    db.session.delete(ad)
+    db.session.commit()
+    flash('Advertisement deleted!', 'success')
+    return redirect(url_for('admin_ads'))
+
+# Guest Ad Placement Routes
+@app.route('/place-advert', methods=['GET', 'POST'])
+def place_advert():
+    """Guest ad placement page"""
+    settings = AdminSettings.query.first()
+    if not settings:
+        flash('Ad placement is currently unavailable', 'error')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        product_name = request.form.get('product_name')
+        product_url = request.form.get('product_url')
+        description = request.form.get('description')
+        contact_name = request.form.get('contact_name')
+        contact_email = request.form.get('contact_email')
+        days_to_display = int(request.form.get('days_to_display', 1))
+        
+        # Calculate amount
+        amount_payable = settings.banner_price_per_day * days_to_display
+        
+        # Handle file upload
+        image_path = None
+        if 'ad_file' in request.files:
+            file = request.files['ad_file']
+            if file and file.filename and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filename = f"{uuid.uuid4()}_{filename}"
+                upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'ads')
+                os.makedirs(upload_folder, exist_ok=True)
+                file_path = os.path.join(upload_folder, filename)
+                file.save(file_path)
+                image_path = file_path
+        
+        # Create advertisement
+        ad = Advertisement(
+            product_name=product_name,
+            product_url=product_url,
+            description=description,
+            contact_name=contact_name,
+            contact_email=contact_email,
+            image_path=image_path,
+            days_to_display=days_to_display,
+            amount_payable=amount_payable,
+            status='pending'
+        )
+        db.session.add(ad)
+        db.session.commit()
+        
+        return redirect(url_for('ad_payment_details', ad_id=ad.id))
+    
+    return render_template('place_advert.html', settings=settings)
+
+@app.route('/advert/payment/<int:ad_id>')
+def ad_payment_details(ad_id):
+    """Show payment details for advertisement"""
+    ad = Advertisement.query.get_or_404(ad_id)
+    settings = AdminSettings.query.first()
+    return render_template('ad_payment.html', ad=ad, settings=settings)
 
 @app.errorhandler(404)
 def not_found_error(error):
