@@ -53,6 +53,36 @@
         </div>
     </div>
     
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-graduation-cap me-2"></i>Active Tutorials</h5>
+                    <h2>{{ active_tutorials or 0 }}</h2>
+                    <p class="mb-0">Published tutorials</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-secondary">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-book me-2"></i>Total Tutorials</h5>
+                    <h2>{{ total_tutorials or 0 }}</h2>
+                    <p class="mb-0">All tutorials</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-white bg-dark">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-certificate me-2"></i>Completions</h5>
+                    <h2>{{ total_completions or 0 }}</h2>
+                    <p class="mb-0">Certificates issued</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="row">
         <div class="col-md-6 mb-3">
             <div class="card">
@@ -69,6 +99,24 @@
                     <h5 class="card-title"><i class="fas fa-ad me-2"></i>Advertisements</h5>
                     <p class="card-text">View and manage banner advertisements.</p>
                     <a href="{{ url_for('admin_ads') }}" class="btn btn-primary">Manage Ads</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-graduation-cap me-2"></i>Tutorials</h5>
+                    <p class="card-text">Create and manage learning tutorials with HTML content.</p>
+                    <a href="{{ url_for('admin_tutorials') }}" class="btn btn-primary">Manage Tutorials</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-certificate me-2"></i>Completions</h5>
+                    <p class="card-text">View tutorial completions and issued certificates.</p>
+                    <a href="{{ url_for('admin_tutorial_completions') }}" class="btn btn-primary">View Completions</a>
                 </div>
             </div>
         </div>

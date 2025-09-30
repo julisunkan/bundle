@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from flask import render_template, request, redirect, url_for, flash, jsonify, send_file, session
 from functools import wraps
 from app import app, db
-from models import BuildJob, AppMetadata, AdminUser, AdminSettings, Advertisement
+from models import BuildJob, AppMetadata, AdminUser, AdminSettings, Advertisement, Tutorial, TutorialCompletion
 from services.web_scraper import scrape_website_metadata
 from services.package_builder import PackageBuilder
 from services.manifest_generator import generate_manifest
@@ -507,6 +507,77 @@ def sync_jobs():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Tutorial Routes (Guest Access)
+@app.route('/tutorials')
+def tutorials_list():
+    """List all active tutorials for guests"""
+    tutorials = Tutorial.query.filter_by(is_active=True).order_by(Tutorial.order_position, Tutorial.created_at).all()
+    return render_template('tutorials/list.html', tutorials=tutorials)
+
+@app.route('/tutorial/<int:tutorial_id>')
+def view_tutorial(tutorial_id):
+    """View individual tutorial"""
+    tutorial = Tutorial.query.filter_by(id=tutorial_id, is_active=True).first_or_404()
+    all_tutorials = Tutorial.query.filter_by(is_active=True).order_by(Tutorial.order_position, Tutorial.created_at).all()
+    
+    # Find current position
+    current_index = 0
+    for i, t in enumerate(all_tutorials):
+        if t.id == tutorial_id:
+            current_index = i
+            break
+    
+    next_tutorial = all_tutorials[current_index + 1] if current_index < len(all_tutorials) - 1 else None
+    prev_tutorial = all_tutorials[current_index - 1] if current_index > 0 else None
+    
+    return render_template('tutorials/view.html', 
+                         tutorial=tutorial, 
+                         next_tutorial=next_tutorial,
+                         prev_tutorial=prev_tutorial,
+                         current_index=current_index + 1,
+                         total_tutorials=len(all_tutorials))
+
+@app.route('/tutorial-complete', methods=['GET', 'POST'])
+def complete_tutorials():
+    """Complete tutorials and generate certificate"""
+    if request.method == 'POST':
+        learner_name = request.form.get('learner_name', '').strip()
+        if not learner_name:
+            flash('Please enter your name to generate the certificate.', 'error')
+            return redirect(url_for('complete_tutorials'))
+        
+        # Get all active tutorials
+        tutorials = Tutorial.query.filter_by(is_active=True).all()
+        tutorial_ids = [str(t.id) for t in tutorials]
+        
+        # Generate certificate ID
+        certificate_id = str(uuid.uuid4())
+        
+        # Save completion record
+        completion = TutorialCompletion(
+            learner_name=learner_name,
+            tutorial_ids=json.dumps(tutorial_ids),
+            certificate_id=certificate_id
+        )
+        db.session.add(completion)
+        db.session.commit()
+        
+        return redirect(url_for('view_certificate', certificate_id=certificate_id))
+    
+    tutorials = Tutorial.query.filter_by(is_active=True).order_by(Tutorial.order_position, Tutorial.created_at).all()
+    return render_template('tutorials/complete.html', tutorials=tutorials)
+
+@app.route('/certificate/<certificate_id>')
+def view_certificate(certificate_id):
+    """View generated certificate"""
+    completion = TutorialCompletion.query.filter_by(certificate_id=certificate_id).first_or_404()
+    tutorial_ids = json.loads(completion.tutorial_ids)
+    tutorials = Tutorial.query.filter(Tutorial.id.in_(tutorial_ids)).all()
+    
+    return render_template('tutorials/certificate.html', 
+                         completion=completion, 
+                         tutorials=tutorials)
+
 # Admin Routes
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -545,12 +616,18 @@ def admin_dashboard():
         pending_ads = Advertisement.query.filter_by(status='pending').count()
         active_ads = Advertisement.query.filter_by(status='active').count()
         total_ads = Advertisement.query.count()
+        total_tutorials = Tutorial.query.count()
+        active_tutorials = Tutorial.query.filter_by(is_active=True).count()
+        total_completions = TutorialCompletion.query.count()
         
         return render_template('admin/dashboard.html', 
                              settings=settings,
                              pending_ads=pending_ads,
                              active_ads=active_ads,
-                             total_ads=total_ads)
+                             total_ads=total_ads,
+                             total_tutorials=total_tutorials,
+                             active_tutorials=active_tutorials,
+                             total_completions=total_completions)
     except Exception as e:
         app.logger.error(f"Admin dashboard error: {str(e)}")
         # Initialize database tables if they don't exist
@@ -668,6 +745,76 @@ def delete_ad(ad_id):
     db.session.commit()
     flash('Advertisement deleted!', 'success')
     return redirect(url_for('admin_ads'))
+
+# Admin Tutorial Management Routes
+@app.route('/admin/tutorials')
+@admin_required
+def admin_tutorials():
+    """Manage tutorials"""
+    tutorials = Tutorial.query.order_by(Tutorial.order_position, Tutorial.created_at).all()
+    return render_template('admin/tutorials.html', tutorials=tutorials)
+
+@app.route('/admin/tutorials/add', methods=['GET', 'POST'])
+@admin_required
+def add_tutorial():
+    """Add new tutorial"""
+    if request.method == 'POST':
+        title = request.form.get('title')
+        description = request.form.get('description')
+        content = request.form.get('content')
+        order_position = int(request.form.get('order_position', 0))
+        is_active = request.form.get('is_active') == 'on'
+        
+        tutorial = Tutorial(
+            title=title,
+            description=description,
+            content=content,
+            order_position=order_position,
+            is_active=is_active
+        )
+        db.session.add(tutorial)
+        db.session.commit()
+        flash(f'Tutorial "{title}" added successfully!', 'success')
+        return redirect(url_for('admin_tutorials'))
+    
+    return render_template('admin/add_tutorial.html')
+
+@app.route('/admin/tutorials/<int:tutorial_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_tutorial(tutorial_id):
+    """Edit tutorial"""
+    tutorial = Tutorial.query.get_or_404(tutorial_id)
+    
+    if request.method == 'POST':
+        tutorial.title = request.form.get('title')
+        tutorial.description = request.form.get('description')
+        tutorial.content = request.form.get('content')
+        tutorial.order_position = int(request.form.get('order_position', 0))
+        tutorial.is_active = request.form.get('is_active') == 'on'
+        tutorial.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        flash(f'Tutorial "{tutorial.title}" updated successfully!', 'success')
+        return redirect(url_for('admin_tutorials'))
+    
+    return render_template('admin/edit_tutorial.html', tutorial=tutorial)
+
+@app.route('/admin/tutorials/<int:tutorial_id>/delete', methods=['POST'])
+@admin_required
+def delete_tutorial(tutorial_id):
+    """Delete tutorial"""
+    tutorial = Tutorial.query.get_or_404(tutorial_id)
+    db.session.delete(tutorial)
+    db.session.commit()
+    flash('Tutorial deleted!', 'success')
+    return redirect(url_for('admin_tutorials'))
+
+@app.route('/admin/tutorial-completions')
+@admin_required
+def admin_tutorial_completions():
+    """View tutorial completions"""
+    completions = TutorialCompletion.query.order_by(TutorialCompletion.completion_date.desc()).all()
+    return render_template('admin/tutorial_completions.html', completions=completions)
 
 # Guest Ad Placement Routes
 @app.route('/place-advert', methods=['GET', 'POST'])

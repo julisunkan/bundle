@@ -1,0 +1,221 @@
+
+{% extends "base.html" %}
+
+{% block title %}Certificate of Completion - {{ completion.learner_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Certificate -->
+            <div class="certificate-container mb-4" id="certificate">
+                <div class="certificate-border">
+                    <div class="certificate-content">
+                        <!-- Header -->
+                        <div class="text-center mb-4">
+                            <div class="certificate-logo mb-3">
+                                <div class="d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background: var(--primary-gradient); border-radius: 50%;">
+                                    <i class="fas fa-graduation-cap text-white fa-2x"></i>
+                                </div>
+                            </div>
+                            <h1 class="certificate-title">Certificate of Completion</h1>
+                            <div class="certificate-subtitle">DigitalSkeleton Training Program</div>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div class="text-center mb-4">
+                            <p class="certificate-text">This is to certify that</p>
+                            <h2 class="learner-name">{{ completion.learner_name }}</h2>
+                            <p class="certificate-text">has successfully completed the</p>
+                            <h3 class="program-name">Website to Mobile App Development Tutorial Series</h3>
+                        </div>
+
+                        <!-- Tutorial List -->
+                        <div class="mb-4">
+                            <h6 class="text-center mb-3">Completed Tutorials:</h6>
+                            <div class="row">
+                                {% for tutorial in tutorials %}
+                                <div class="col-md-6 mb-1">
+                                    <div class="tutorial-item">
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        {{ tutorial.title }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="certificate-footer">
+                                    <div class="signature-line"></div>
+                                    <small>DigitalSkeleton Training Team</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <div class="certificate-footer">
+                                    <strong>Date:</strong> {{ completion.completion_date.strftime('%B %d, %Y') }}<br>
+                                    <strong>Certificate ID:</strong> {{ completion.certificate_id[:8] }}...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center">
+                <button class="btn btn-primary me-2" onclick="printCertificate()">
+                    <i class="fas fa-print me-2"></i>Print Certificate
+                </button>
+                <button class="btn btn-success me-2" onclick="downloadCertificate()">
+                    <i class="fas fa-download me-2"></i>Download PNG
+                </button>
+                <a href="{{ url_for('tutorials_list') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-graduation-cap me-2"></i>Back to Tutorials
+                </a>
+            </div>
+
+            <!-- Certificate Details -->
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Certificate Verification</h6>
+                        <p class="card-text">
+                            <strong>Certificate ID:</strong> {{ completion.certificate_id }}<br>
+                            <strong>Issued Date:</strong> {{ completion.completion_date.strftime('%B %d, %Y at %I:%M %p') }}<br>
+                            <strong>Tutorials Completed:</strong> {{ tutorials|length }}<br>
+                            <strong>Learner:</strong> {{ completion.learner_name }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.certificate-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.certificate-border {
+    background: white;
+    border-radius: 10px;
+    padding: 40px;
+    border: 3px solid #f8f9fa;
+    position: relative;
+}
+
+.certificate-border::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+.certificate-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.certificate-subtitle {
+    font-size: 1.2rem;
+    color: #7f8c8d;
+    margin-bottom: 30px;
+}
+
+.certificate-text {
+    font-size: 1.1rem;
+    color: #34495e;
+    margin: 10px 0;
+}
+
+.learner-name {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #2980b9;
+    margin: 20px 0;
+    text-decoration: underline;
+    text-decoration-color: #3498db;
+}
+
+.program-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #8e44ad;
+    margin: 20px 0;
+}
+
+.tutorial-item {
+    font-size: 0.9rem;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.signature-line {
+    width: 200px;
+    height: 2px;
+    background: #bdc3c7;
+    margin: 20px 0 10px 0;
+}
+
+.certificate-footer {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+@media print {
+    .container {
+        max-width: none !important;
+    }
+    
+    .certificate-container {
+        box-shadow: none;
+        margin: 0;
+        page-break-inside: avoid;
+    }
+    
+    .btn, .card:last-child {
+        display: none !important;
+    }
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+function printCertificate() {
+    window.print();
+}
+
+function downloadCertificate() {
+    const certificate = document.getElementById('certificate');
+    
+    html2canvas(certificate, {
+        scale: 2,
+        backgroundColor: null,
+        allowTaint: true,
+        useCORS: true
+    }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'certificate-{{ completion.learner_name|replace(" ", "_") }}.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    }).catch(err => {
+        console.error('Error generating certificate image:', err);
+        alert('Error generating certificate image. Please try printing instead.');
+    });
+}
+</script>
+{% endblock %}

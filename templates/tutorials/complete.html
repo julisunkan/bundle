@@ -1,0 +1,89 @@
+
+{% extends "base.html" %}
+
+{% block title %}Complete Tutorials - Get Certificate{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="hero-section text-center p-4 mb-5">
+                <div class="hero-icon mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; background: var(--primary-gradient); border-radius: 50%;">
+                        <i class="fas fa-certificate text-white fa-lg"></i>
+                    </div>
+                </div>
+                <h1 class="display-5 fw-bold mb-3">Get Your Certificate</h1>
+                <p class="lead" style="color: #666;">Congratulations! You've completed all our tutorials.</p>
+            </div>
+
+            {% if tutorials %}
+            <!-- Tutorial Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list-check me-2"></i>Completed Tutorials</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for tutorial in tutorials %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                <span>{{ tutorial.title }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certificate Form -->
+            <div class="card">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4">
+                        <i class="fas fa-user-graduate me-2"></i>Generate Your Certificate
+                    </h5>
+                    
+                    <form method="POST">
+                        <div class="mb-4">
+                            <label for="learner_name" class="form-label">Your Full Name</label>
+                            <input type="text" class="form-control form-control-lg" id="learner_name" name="learner_name" required placeholder="Enter your full name as it should appear on the certificate">
+                            <div class="form-text">This name will appear on your certificate exactly as you type it.</div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Certificate Details:</strong><br>
+                            • Your certificate will include completion date<br>
+                            • All {{ tutorials|length }} tutorials will be listed<br>
+                            • Certificate has a unique verification ID<br>
+                            • You can download or share your certificate
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-certificate me-2"></i>Generate My Certificate
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center">
+                <div class="card bg-light">
+                    <div class="card-body py-5">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h5>No Tutorials Available</h5>
+                        <p class="text-muted">There are currently no tutorials to complete.</p>
+                        <a href="{{ url_for('tutorials_list') }}" class="btn btn-primary">
+                            <i class="fas fa-graduation-cap me-2"></i>Browse Tutorials
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

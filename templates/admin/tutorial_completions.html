@@ -1,0 +1,101 @@
+
+{% extends "base.html" %}
+
+{% block title %}Tutorial Completions - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-certificate me-2"></i>Tutorial Completions</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+    
+    {% if completions %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Learner Name</th>
+                            <th>Certificate ID</th>
+                            <th>Completion Date</th>
+                            <th>Tutorials Completed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for completion in completions %}
+                        <tr>
+                            <td>
+                                <strong>{{ completion.learner_name }}</strong>
+                            </td>
+                            <td>
+                                <code>{{ completion.certificate_id[:8] }}...</code>
+                            </td>
+                            <td>
+                                {{ completion.completion_date.strftime('%b %d, %Y') }}<br>
+                                <small class="text-muted">{{ completion.completion_date.strftime('%I:%M %p') }}</small>
+                            </td>
+                            <td>
+                                {% set tutorial_ids = completion.tutorial_ids|fromjson %}
+                                <span class="badge bg-success">{{ tutorial_ids|length }} tutorials</span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('view_certificate', certificate_id=completion.certificate_id) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                    <i class="fas fa-certificate me-1"></i>View Certificate
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="card-title">Summary Statistics</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4 class="text-primary">{{ completions|length }}</h4>
+                            <p class="mb-0">Total Completions</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4 class="text-success">{{ completions|selectattr('completion_date')|selectattr('completion_date', 'gt', (now() - timedelta(days=30)))|list|length }}</h4>
+                            <p class="mb-0">This Month</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4 class="text-info">{{ completions|map(attribute='learner_name')|unique|list|length }}</h4>
+                            <p class="mb-0">Unique Learners</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center">
+        <div class="card bg-light">
+            <div class="card-body py-5">
+                <i class="fas fa-certificate fa-3x text-muted mb-3"></i>
+                <h5>No Completions Yet</h5>
+                <p class="text-muted">When learners complete tutorials and generate certificates, they will appear here.</p>
+                <a href="{{ url_for('admin_tutorials') }}" class="btn btn-primary">
+                    <i class="fas fa-graduation-cap me-2"></i>Manage Tutorials
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -116,3 +116,42 @@ class Advertisement(db.Model):
     
     def __repr__(self):
         return f'<Advertisement {self.id}: {self.product_name}>'
+
+class Tutorial(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    content = db.Column(db.Text, nullable=False)  # HTML content
+    order_position = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __init__(self, title, content, description=None, order_position=0, is_active=True, 
+                 created_at=None, updated_at=None):
+        self.title = title
+        self.content = content
+        self.description = description
+        self.order_position = order_position
+        self.is_active = is_active
+        self.created_at = created_at or datetime.utcnow()
+        self.updated_at = updated_at or datetime.utcnow()
+    
+    def __repr__(self):
+        return f'<Tutorial {self.id}: {self.title}>'
+
+class TutorialCompletion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    learner_name = db.Column(db.String(200), nullable=False)
+    tutorial_ids = db.Column(db.Text)  # JSON string of completed tutorial IDs
+    completion_date = db.Column(db.DateTime, default=datetime.utcnow)
+    certificate_id = db.Column(db.String(36), unique=True)  # UUID for certificate
+    
+    def __init__(self, learner_name, tutorial_ids, certificate_id, completion_date=None):
+        self.learner_name = learner_name
+        self.tutorial_ids = tutorial_ids
+        self.certificate_id = certificate_id
+        self.completion_date = completion_date or datetime.utcnow()
+    
+    def __repr__(self):
+        return f'<TutorialCompletion {self.id}: {self.learner_name}>'
