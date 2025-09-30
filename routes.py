@@ -1,6 +1,7 @@
 import os
 import json
 import uuid
+import shutil
 from datetime import datetime
 from urllib.parse import urlparse
 
