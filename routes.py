@@ -967,6 +967,198 @@ def download_backup(filename):
     
     return send_file(backup_path, as_attachment=True, download_name=filename)
 
+@app.route('/babaj/file-manager')
+@admin_required
+def admin_file_manager():
+    """Admin file management page"""
+    try:
+        files_info = []
+        total_size = 0
+        
+        # Scan generated_packages directory
+        if os.path.exists(app.config['UPLOAD_FOLDER']):
+            for root, dirs, files in os.walk(app.config['UPLOAD_FOLDER']):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    try:
+                        stat = os.stat(file_path)
+                        relative_path = os.path.relpath(file_path, app.config['UPLOAD_FOLDER'])
+                        file_size = stat.st_size
+                        total_size += file_size
+                        
+                        # Determine file type
+                        file_type = 'other'
+                        if file.endswith('.zip'):
+                            file_type = 'package'
+                        elif file.endswith(('.json', '.html', '.js', '.css')):
+                            file_type = 'pwa'
+                        elif file.endswith(('.txt', '.md')):
+                            file_type = 'documentation'
+                        
+                        files_info.append({
+                            'name': file,
+                            'relative_path': relative_path,
+                            'full_path': file_path,
+                            'size': file_size,
+                            'size_mb': round(file_size / (1024 * 1024), 2),
+                            'modified': datetime.fromtimestamp(stat.st_mtime),
+                            'type': file_type
+                        })
+                    except (OSError, IOError):
+                        continue
+        
+        # Sort files by modification date (newest first)
+        files_info.sort(key=lambda x: x['modified'], reverse=True)
+        
+        # Get database statistics
+        total_jobs = BuildJob.query.count()
+        completed_jobs = BuildJob.query.filter_by(status='completed').count()
+        total_metadata = AppMetadata.query.count()
+        total_certificates = TutorialCompletion.query.count()
+        
+        return render_template('admin/file_manager.html', 
+                             files=files_info,
+                             total_files=len(files_info),
+                             total_size_mb=round(total_size / (1024 * 1024), 2),
+                             total_jobs=total_jobs,
+                             completed_jobs=completed_jobs,
+                             total_metadata=total_metadata,
+                             total_certificates=total_certificates)
+                             
+    except Exception as e:
+        app.logger.error(f"File manager error: {str(e)}")
+        flash('Error loading file manager. Please try again.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+@app.route('/babaj/delete-file', methods=['POST'])
+@admin_required
+def admin_delete_file():
+    """Delete a specific file"""
+    try:
+        relative_path = request.form.get('file_path')
+        if not relative_path:
+            flash('No file specified for deletion.', 'error')
+            return redirect(url_for('admin_file_manager'))
+        
+        # Security check - ensure file is within upload folder
+        full_path = os.path.join(app.config['UPLOAD_FOLDER'], relative_path)
+        if not full_path.startswith(app.config['UPLOAD_FOLDER']):
+            flash('Invalid file path.', 'error')
+            return redirect(url_for('admin_file_manager'))
+        
+        if os.path.exists(full_path):
+            os.remove(full_path)
+            flash(f'File "{os.path.basename(relative_path)}" deleted successfully.', 'success')
+        else:
+            flash('File not found.', 'error')
+            
+    except Exception as e:
+        app.logger.error(f"File deletion error: {str(e)}")
+        flash(f'Error deleting file: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_file_manager'))
+
+@app.route('/babaj/delete-multiple-files', methods=['POST'])
+@admin_required
+def admin_delete_multiple_files():
+    """Delete multiple selected files"""
+    try:
+        file_paths = request.form.getlist('selected_files')
+        if not file_paths:
+            flash('No files selected for deletion.', 'error')
+            return redirect(url_for('admin_file_manager'))
+        
+        deleted_count = 0
+        errors = []
+        
+        for relative_path in file_paths:
+            try:
+                # Security check - ensure file is within upload folder
+                full_path = os.path.join(app.config['UPLOAD_FOLDER'], relative_path)
+                if not full_path.startswith(app.config['UPLOAD_FOLDER']):
+                    errors.append(f'Invalid path: {relative_path}')
+                    continue
+                
+                if os.path.exists(full_path):
+                    os.remove(full_path)
+                    deleted_count += 1
+                else:
+                    errors.append(f'File not found: {os.path.basename(relative_path)}')
+            except Exception as e:
+                errors.append(f'Error deleting {os.path.basename(relative_path)}: {str(e)}')
+        
+        if deleted_count > 0:
+            flash(f'Successfully deleted {deleted_count} file(s).', 'success')
+        
+        if errors:
+            for error in errors[:5]:  # Show max 5 errors
+                flash(error, 'error')
+            if len(errors) > 5:
+                flash(f'...and {len(errors) - 5} more errors.', 'error')
+                
+    except Exception as e:
+        app.logger.error(f"Multiple file deletion error: {str(e)}")
+        flash(f'Error deleting files: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_file_manager'))
+
+@app.route('/babaj/cleanup-orphaned-files', methods=['POST'])
+@admin_required
+def admin_cleanup_orphaned_files():
+    """Clean up files that don't have corresponding database records"""
+    try:
+        cleaned_count = 0
+        errors = []
+        
+        if os.path.exists(app.config['UPLOAD_FOLDER']):
+            # Get all build job download paths from database
+            valid_paths = set()
+            build_jobs = BuildJob.query.filter(BuildJob.download_path.isnot(None)).all()
+            for job in build_jobs:
+                if job.download_path and os.path.exists(job.download_path):
+                    valid_paths.add(os.path.abspath(job.download_path))
+            
+            # Scan all files and check if they're referenced
+            for root, dirs, files in os.walk(app.config['UPLOAD_FOLDER']):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    abs_path = os.path.abspath(file_path)
+                    
+                    # Skip if file is referenced by a build job
+                    if abs_path in valid_paths:
+                        continue
+                    
+                    # Skip template directories and important files
+                    relative_path = os.path.relpath(file_path, app.config['UPLOAD_FOLDER'])
+                    if any(part in relative_path for part in ['template', 'README', 'manifest.json']):
+                        continue
+                    
+                    try:
+                        # Check if file is older than 7 days
+                        stat = os.stat(file_path)
+                        file_age = datetime.now() - datetime.fromtimestamp(stat.st_mtime)
+                        
+                        if file_age.days >= 7:  # Only delete files older than 7 days
+                            os.remove(file_path)
+                            cleaned_count += 1
+                    except Exception as e:
+                        errors.append(f'Error cleaning {file}: {str(e)}')
+        
+        if cleaned_count > 0:
+            flash(f'Cleaned up {cleaned_count} orphaned file(s).', 'success')
+        else:
+            flash('No orphaned files found to clean up.', 'info')
+        
+        if errors:
+            for error in errors[:3]:  # Show max 3 errors
+                flash(error, 'error')
+                
+    except Exception as e:
+        app.logger.error(f"Cleanup error: {str(e)}")
+        flash(f'Error during cleanup: {str(e)}', 'error')
+    
+    return redirect(url_for('admin_file_manager'))
+
 @app.route('/babaj/restore-backup', methods=['POST'])
 @admin_required
 def restore_backup():
