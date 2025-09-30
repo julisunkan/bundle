@@ -583,16 +583,13 @@ def view_certificate(certificate_id):
 @app.route('/babaj/login', methods=['GET', 'POST'])
 def admin_login():
     """Admin login page - auto login without credentials"""
-    # Get the first admin user (or create one if none exists)
+    # Get the first admin user (admin should already exist from app initialization)
     admin = AdminUser.query.first()
     if not admin:
-        admin = AdminUser(
-            username='admin',
-            email='admin@digitalskeleton.com'
-        )
-        admin.set_password('admin123')
-        db.session.add(admin)
-        db.session.commit()
+        # This should not happen if app.py initialization worked correctly
+        app.logger.warning("No admin user found during login - this should not happen")
+        flash('Admin user not found. Please contact support.', 'error')
+        return redirect(url_for('index'))
     
     # Automatically log in the user
     session['admin_id'] = admin.id
@@ -631,32 +628,8 @@ def admin_dashboard():
                              total_completions=total_completions)
     except Exception as e:
         app.logger.error(f"Admin dashboard error: {str(e)}")
-        # Initialize database tables if they don't exist
-        try:
-            db.create_all()
-            # Create default settings if missing
-            settings = AdminSettings.query.first()
-            if not settings:
-                settings = AdminSettings(
-                    google_adsense_code='',
-                    payment_account_name='Digital Skeleton',
-                    payment_bank_name='Default Bank',
-                    payment_account_number='1234567890',
-                    admin_email='admin@digitalskeleton.com',
-                    banner_price_per_day=10.0
-                )
-                db.session.add(settings)
-                db.session.commit()
-            
-            return render_template('admin/dashboard.html', 
-                                 settings=settings,
-                                 pending_ads=0,
-                                 active_ads=0,
-                                 total_ads=0)
-        except Exception as init_error:
-            app.logger.error(f"Failed to initialize admin dashboard: {str(init_error)}")
-            flash('Database initialization error. Please contact support.', 'error')
-            return redirect(url_for('index'))
+        flash('Error loading dashboard. Please try again.', 'error')
+        return redirect(url_for('index'))
 
 @app.route('/babaj/settings', methods=['GET', 'POST'])
 @admin_required
@@ -823,17 +796,10 @@ def place_advert():
     """Guest ad placement page"""
     settings = AdminSettings.query.first()
     if not settings:
-        # Create default settings if none exist
-        settings = AdminSettings(
-            google_adsense_code='',
-            payment_account_name='Digital Skeleton',
-            payment_bank_name='Default Bank',
-            payment_account_number='1234567890',
-            admin_email='admin@digitalskeleton.com',
-            banner_price_per_day=10.0
-        )
-        db.session.add(settings)
-        db.session.commit()
+        # This should not happen if app.py initialization worked correctly
+        app.logger.warning("No admin settings found - this should not happen")
+        flash('System settings not found. Please contact support.', 'error')
+        return redirect(url_for('index'))
     
     if request.method == 'POST':
         product_name = request.form.get('product_name')
