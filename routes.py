@@ -501,14 +501,20 @@ def admin_login():
         username = request.form.get('username')
         password = request.form.get('password')
         
+        app.logger.info(f"Login attempt for username: {username}")
+        
         admin = AdminUser.query.filter_by(username=username).first()
-        if admin and admin.check_password(password):
-            session['admin_id'] = admin.id
-            session['admin_username'] = admin.username
-            flash('Login successful!', 'success')
-            return redirect(url_for('admin_dashboard'))
-        else:
-            flash('Invalid username or password', 'error')
+        app.logger.info(f"Admin found: {admin is not None}")
+        
+        if admin:
+            app.logger.info(f"Password check result: {admin.check_password(password)}")
+            if admin.check_password(password):
+                session['admin_id'] = admin.id
+                session['admin_username'] = admin.username
+                flash('Login successful!', 'success')
+                return redirect(url_for('admin_dashboard'))
+        
+        flash('Invalid username or password', 'error')
     
     return render_template('admin/login.html')
 
