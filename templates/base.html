@@ -120,14 +120,18 @@
                         <a href="{{ ad.product_url }}" target="_blank" class="text-decoration-none">
                             {% if ad.image_path and ad.image_path.endswith(('.mp4', '.webm')) %}
                             <video style="width: 100%; max-height: 100px; object-fit: cover;" autoplay loop muted>
-                                <source src="{{ url_for('static', filename='../' + ad.image_path) }}" type="video/{{ ad.image_path.split('.')[-1] }}">
+                                <source src="{{ ad.image_path }}" type="video/{{ ad.image_path.split('.')[-1] }}">
                             </video>
                             {% elif ad.image_path %}
-                            <img src="{{ url_for('static', filename='../' + ad.image_path) }}" alt="{{ ad.product_name }}" style="width: 100%; max-height: 100px; object-fit: cover;">
+                            <img src="{{ ad.image_path }}" alt="{{ ad.product_name }}" style="width: 100%; max-height: 100px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div class="bg-primary text-white p-3 text-center" style="display: none;">
+                                <h5>{{ ad.product_name }}</h5>
+                                <p class="mb-0">{{ ad.description[:100] if ad.description else 'Click to visit' }}...</p>
+                            </div>
                             {% else %}
                             <div class="bg-primary text-white p-3 text-center">
                                 <h5>{{ ad.product_name }}</h5>
-                                <p class="mb-0">{{ ad.description[:100] }}...</p>
+                                <p class="mb-0">{{ ad.description[:100] if ad.description else 'Click to visit' }}...</p>
                             </div>
                             {% endif %}
                         </a>
