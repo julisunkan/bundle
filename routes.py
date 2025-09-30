@@ -32,6 +32,19 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# Context processor to inject settings and ads into all templates
+@app.context_processor
+def inject_global_data():
+    settings = AdminSettings.query.first()
+    active_ads = Advertisement.query.filter_by(status='active').filter(
+        Advertisement.expires_at > datetime.utcnow()
+    ).all() if Advertisement.query.first() else []
+    
+    return {
+        'adsense_code': settings.google_adsense_code if settings else None,
+        'active_ads': active_ads
+    }
+
 @app.route('/health')
 def health_check():
     """Health check endpoint for deployment monitoring"""

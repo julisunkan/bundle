@@ -33,6 +33,11 @@
     <!-- PWA CSS -->
     <link href="{{ url_for('static', filename='css/pwa.css') }}" rel="stylesheet">
     
+    <!-- Google AdSense -->
+    {% if adsense_code %}
+    {{ adsense_code|safe }}
+    {% endif %}
+    
     {% block head %}{% endblock %}
 </head>
 <body data-theme="light">
@@ -75,6 +80,11 @@
                             </button>
                         </div>
                     </li>
+                    <li class="nav-item me-3">
+                        <a href="{{ url_for('place_advert') }}" class="btn btn-warning btn-sm px-3 py-2" style="border-radius: 25px; font-weight: 500;">
+                            <i class="fas fa-bullhorn me-2"></i>Place Advert
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <button id="install-pwa-btn" class="btn btn-outline-light btn-sm px-3 py-2" style="display: none; border-radius: 25px; font-weight: 500;">
                             <i class="fas fa-download me-2"></i>Install App
@@ -98,6 +108,36 @@
             </div>
         {% endif %}
     {% endwith %}
+
+    <!-- Banner Ads -->
+    {% if active_ads %}
+    <div class="container mt-3">
+        <div class="row">
+            {% for ad in active_ads[:2] %}
+            <div class="col-md-6 mb-3">
+                <div class="card shadow-sm">
+                    <div class="card-body p-2">
+                        <a href="{{ ad.product_url }}" target="_blank" class="text-decoration-none">
+                            {% if ad.image_path and ad.image_path.endswith(('.mp4', '.webm')) %}
+                            <video style="width: 100%; max-height: 100px; object-fit: cover;" autoplay loop muted>
+                                <source src="{{ url_for('static', filename='../' + ad.image_path) }}" type="video/{{ ad.image_path.split('.')[-1] }}">
+                            </video>
+                            {% elif ad.image_path %}
+                            <img src="{{ url_for('static', filename='../' + ad.image_path) }}" alt="{{ ad.product_name }}" style="width: 100%; max-height: 100px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-primary text-white p-3 text-center">
+                                <h5>{{ ad.product_name }}</h5>
+                                <p class="mb-0">{{ ad.description[:100] }}...</p>
+                            </div>
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Main Content -->
     <main>
