@@ -633,6 +633,32 @@ def deactivate_ad(ad_id):
     flash(f'Advertisement "{ad.product_name}" deactivated!', 'success')
     return redirect(url_for('admin_ads'))
 
+@app.route('/admin/ads/<int:ad_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_ad(ad_id):
+    """Edit an advertisement"""
+    ad = Advertisement.query.get_or_404(ad_id)
+    
+    if request.method == 'POST':
+        ad.product_name = request.form.get('product_name')
+        ad.product_url = request.form.get('product_url')
+        ad.description = request.form.get('description')
+        ad.contact_name = request.form.get('contact_name')
+        ad.contact_email = request.form.get('contact_email')
+        ad.image_path = request.form.get('ad_image_url')
+        ad.days_to_display = int(request.form.get('days_to_display', 1))
+        
+        # Recalculate amount if days changed
+        settings = AdminSettings.query.first()
+        if settings:
+            ad.amount_payable = settings.banner_price_per_day * ad.days_to_display
+        
+        db.session.commit()
+        flash(f'Advertisement "{ad.product_name}" updated successfully!', 'success')
+        return redirect(url_for('admin_ads'))
+    
+    return render_template('admin/edit_ad.html', ad=ad)
+
 @app.route('/admin/ads/<int:ad_id>/delete', methods=['POST'])
 @admin_required
 def delete_ad(ad_id):
