@@ -61,22 +61,16 @@
             <div class="card-body">
                 <h6 class="card-title">Summary Statistics</h6>
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="text-center">
                             <h4 class="text-primary">{{ completions|length }}</h4>
                             <p class="mb-0">Total Completions</p>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="text-center">
-                            <h4 class="text-success">{{ completions|selectattr('completion_date')|selectattr('completion_date', 'gt', (now() - timedelta(days=30)))|list|length }}</h4>
-                            <p class="mb-0">This Month</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <h4 class="text-info">{{ completions|map(attribute='learner_name')|unique|list|length }}</h4>
-                            <p class="mb-0">Unique Learners</p>
+                            <h4 class="text-success">{{ completions|length }}</h4>
+                            <p class="mb-0">Certificates Generated</p>
                         </div>
                     </div>
                 </div>

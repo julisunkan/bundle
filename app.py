@@ -1,5 +1,6 @@
 import os
 import logging
+import json
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -30,12 +31,12 @@ if database_url.startswith("postgresql://") or database_url.startswith("postgres
     # Handle PostgreSQL URL format for newer versions
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
-    
+
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
     }
-    
+
     # Production settings for PostgreSQL
     if os.environ.get('RENDER'):
         app.config["SQLALCHEMY_ENGINE_OPTIONS"].update({
@@ -64,11 +65,20 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # initialize the app with the extension
 db.init_app(app)
 
+# Add custom Jinja2 filters
+@app.template_filter('fromjson')
+def fromjson_filter(value):
+    """Convert JSON string to Python object"""
+    try:
+        return json.loads(value) if value else []
+    except (json.JSONDecodeError, TypeError):
+        return []
+
 with app.app_context():
     # Import models and routes
     import models
     import routes
-    
+
     try:
         db.create_all()
         app.logger.info("Database tables created successfully")
