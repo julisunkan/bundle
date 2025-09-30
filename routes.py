@@ -496,27 +496,23 @@ def sync_jobs():
 # Admin Routes
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
-    """Admin login page"""
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        app.logger.info(f"Login attempt for username: {username}")
-        
-        admin = AdminUser.query.filter_by(username=username).first()
-        app.logger.info(f"Admin found: {admin is not None}")
-        
-        if admin:
-            app.logger.info(f"Password check result: {admin.check_password(password)}")
-            if admin.check_password(password):
-                session['admin_id'] = admin.id
-                session['admin_username'] = admin.username
-                flash('Login successful!', 'success')
-                return redirect(url_for('admin_dashboard'))
-        
-        flash('Invalid username or password', 'error')
+    """Admin login page - auto login without credentials"""
+    # Get the first admin user (or create one if none exists)
+    admin = AdminUser.query.first()
+    if not admin:
+        admin = AdminUser(
+            username='admin',
+            email='admin@digitalskeleton.com'
+        )
+        admin.set_password('admin123')
+        db.session.add(admin)
+        db.session.commit()
     
-    return render_template('admin/login.html')
+    # Automatically log in the user
+    session['admin_id'] = admin.id
+    session['admin_username'] = admin.username
+    flash('Automatically logged in as admin!', 'success')
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/logout')
 def admin_logout():
