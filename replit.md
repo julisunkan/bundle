@@ -12,7 +12,7 @@ Preferred communication style: Simple, everyday language.
 The application features a professional UI with modern gradient backgrounds, glass morphism effects, and a responsive design. It includes a dynamic theme switcher (dark, light, grey modes) and professional loading states. The overall design prioritizes a clean, user-friendly interface.
 
 ### Technical Implementations
-- **Backend**: Flask (Python) with SQLAlchemy ORM. Uses SQLite for development and is configurable for production databases like PostgreSQL.
+- **Backend**: Flask (Python) with SQLAlchemy ORM. Uses PostgreSQL database (configured via DATABASE_URL environment variable) with SQLite fallback for development.
 - **Frontend**: Jinja2 templating, Bootstrap 5 (dark theme), Vanilla JavaScript, and Font Awesome.
 - **Cross-Platform Architecture**:
     - **Mobile (Android/iOS)**: Utilizes Capacitor-based development and TWA (Trusted Web Activity) technology for Android. iOS conversion is PWA-based with online builders.
