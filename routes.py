@@ -492,6 +492,15 @@ def serve_service_worker():
     """Serve service worker file"""
     return send_file('static/sw.js', mimetype='application/javascript')
 
+@app.route('/ads.txt')
+def serve_ads_txt():
+    """Serve Google AdSense ads.txt file"""
+    settings = AdminSettings.query.first()
+    if settings and settings.ads_txt_content:
+        from flask import Response
+        return Response(settings.ads_txt_content, mimetype='text/plain')
+    return Response('', mimetype='text/plain', status=404)
+
 @app.route('/api/sync-jobs', methods=['POST'])
 def sync_jobs():
     """Background sync endpoint for PWA"""
@@ -644,6 +653,7 @@ def admin_settings():
 
     if request.method == 'POST':
         settings.google_adsense_code = request.form.get('google_adsense_code', '')
+        settings.ads_txt_content = request.form.get('ads_txt_content', '')
         settings.payment_account_name = request.form.get('payment_account_name', '')
         settings.payment_bank_name = request.form.get('payment_bank_name', '')
         settings.payment_account_number = request.form.get('payment_account_number', '')

@@ -73,6 +73,7 @@ class AdminUser(db.Model):
 class AdminSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     google_adsense_code = db.Column(db.Text)
+    ads_txt_content = db.Column(db.Text)
     payment_account_name = db.Column(db.String(200))
     payment_bank_name = db.Column(db.String(200))
     payment_account_number = db.Column(db.String(100))

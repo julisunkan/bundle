@@ -31,6 +31,11 @@
                     <textarea class="form-control" id="google_adsense_code" name="google_adsense_code" rows="5" placeholder="Paste your Google AdSense code here">{{ settings.google_adsense_code or '' }}</textarea>
                     <small class="text-muted">This will be displayed on all pages</small>
                 </div>
+                <div class="mb-3">
+                    <label for="ads_txt_content" class="form-label">ads.txt File Content</label>
+                    <textarea class="form-control" id="ads_txt_content" name="ads_txt_content" rows="5" placeholder="google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0">{{ settings.ads_txt_content or '' }}</textarea>
+                    <small class="text-muted">This will be accessible at <a href="/ads.txt" target="_blank">/ads.txt</a></small>
+                </div>
             </div>
         </div>
         
