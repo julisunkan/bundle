@@ -6,7 +6,7 @@ packages = ["cairo", "freetype", "gdk-pixbuf", "lcms2", "libimagequant", "libjpe
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["gunicorn", "--bind", "0.0.0.0:5000", "--reuse-port", "main:app"]
+run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
 
 [workflows]
 runButton = "Project"
@@ -24,17 +24,21 @@ args = "Start application"
 name = "Start application"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app"
 waitForPort = 5000
 
-[workflows.workflow.metadata]
-outputType = "webview"
-
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 36407
+externalPort = 3000
 
 [agent]
 integrations = ["python_openai==1.0.0"]
