@@ -56,8 +56,12 @@ def inject_global_data():
         Advertisement.expires_at > datetime.utcnow()
     ).all() if Advertisement.query.first() else []
 
+    # Hardcoded AdSense code
+    hardcoded_adsense = '''<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0654816099674324"
+     crossorigin="anonymous"></script>'''
+
     return {
-        'adsense_code': settings.google_adsense_code if settings else None,
+        'adsense_code': hardcoded_adsense,
         'active_ads': active_ads
     }
 
