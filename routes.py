@@ -500,10 +500,9 @@ def serve_service_worker():
 def serve_ads_txt():
     """Serve Google AdSense ads.txt file"""
     from flask import Response
-    settings = AdminSettings.query.first()
-    if settings and settings.ads_txt_content:
-        return Response(settings.ads_txt_content, mimetype='text/plain')
-    return Response('', mimetype='text/plain')
+    # Hardcoded ads.txt content
+    ads_txt_content = "google.com, pub-0654816099674324, DIRECT, f08c47fec0942fa0"
+    return Response(ads_txt_content, mimetype='text/plain')
 
 @app.route('/api/sync-jobs', methods=['POST'])
 def sync_jobs():
