@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session
+from flask import Blueprint, render_template, session, redirect, request
 from models import db, Course, Payment, Policy
 
 main_bp = Blueprint('main', __name__)
@@ -24,15 +24,15 @@ def course_detail(course_id):
 
 @main_bp.route('/privacy')
 def privacy():
-    policy = Policy.query.filter_by(name='Privacy Policy').first()
+    policy = Policy.query.filter_by(policy_type='privacy').first()
     return render_template('privacy.html', policy=policy)
 
 @main_bp.route('/terms')
 def terms():
-    policy = Policy.query.filter_by(name='Terms & Conditions').first()
+    policy = Policy.query.filter_by(policy_type='terms').first()
     return render_template('terms.html', policy=policy)
 
 @main_bp.route('/refund')
 def refund():
-    policy = Policy.query.filter_by(name='Refund Policy').first()
+    policy = Policy.query.filter_by(policy_type='refund').first()
     return render_template('refund.html', policy=policy)
