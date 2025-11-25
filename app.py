@@ -67,6 +67,9 @@ def init_database():
         ('paystack_secret_key', ''),
         ('flutterwave_public_key', ''),
         ('flutterwave_secret_key', ''),
+        ('paypal_client_id', ''),
+        ('paypal_client_secret', ''),
+        ('paypal_mode', 'sandbox'),
         ('exchange_rate', '1500'),
     ]
     

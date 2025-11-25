@@ -34,6 +34,30 @@
                value="{{ settings.get('flutterwave_secret_key', '') }}">
     </div>
     
+    <h4 class="mt-4">PayPal</h4>
+    <div class="mb-3">
+        <label for="paypal_client_id" class="form-label">Client ID</label>
+        <input type="text" class="form-control" id="paypal_client_id" name="paypal_client_id" 
+               value="{{ settings.get('paypal_client_id', '') }}">
+        <small class="form-text text-muted">Get your PayPal Client ID from the PayPal Developer Dashboard</small>
+    </div>
+    
+    <div class="mb-3">
+        <label for="paypal_client_secret" class="form-label">Client Secret</label>
+        <input type="password" class="form-control" id="paypal_client_secret" name="paypal_client_secret" 
+               value="{{ settings.get('paypal_client_secret', '') }}">
+        <small class="form-text text-muted">Get your PayPal Client Secret from the PayPal Developer Dashboard</small>
+    </div>
+    
+    <div class="mb-3">
+        <label for="paypal_mode" class="form-label">PayPal Mode</label>
+        <select class="form-control" id="paypal_mode" name="paypal_mode">
+            <option value="sandbox" {% if settings.get('paypal_mode', 'sandbox') == 'sandbox' %}selected{% endif %}>Sandbox (Testing)</option>
+            <option value="live" {% if settings.get('paypal_mode', 'sandbox') == 'live' %}selected{% endif %}>Live (Production)</option>
+        </select>
+        <small class="form-text text-muted">Use Sandbox for testing, Live for production payments</small>
+    </div>
+    
     <h4 class="mt-4">Currency Exchange Rate</h4>
     <div class="mb-3">
         <label for="exchange_rate" class="form-label">NGN to USD Rate</label>

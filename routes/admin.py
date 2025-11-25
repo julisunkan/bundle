@@ -294,7 +294,8 @@ def delete_assignment(assignment_id):
 def settings():
     if request.method == 'POST':
         keys = ['paystack_public_key', 'paystack_secret_key', 
-                'flutterwave_public_key', 'flutterwave_secret_key', 'exchange_rate']
+                'flutterwave_public_key', 'flutterwave_secret_key',
+                'paypal_client_id', 'paypal_client_secret', 'paypal_mode', 'exchange_rate']
         
         for key in keys:
             value = request.form.get(key)
