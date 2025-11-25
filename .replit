@@ -1,4 +1,4 @@
-modules = ["python-3.11", "web", "nodejs-20", "bash", "postgresql-16"]
+modules = ["python-3.11", "web", "nodejs-20", "bash"]
 
 [nix]
 channel = "stable-25_05"
@@ -43,6 +43,10 @@ externalPort = 3001
 [[ports]]
 localPort = 45195
 externalPort = 3000
+
+[[ports]]
+localPort = 46577
+externalPort = 3002
 
 [agent]
 integrations = ["python_openai==1.0.0"]
