@@ -2,8 +2,16 @@ from app import create_app
 from models import db, Course, Module, Quiz, QuizQuestion, Assignment
 
 def populate_courses():
-    app = create_app()
-    with app.app_context():
+    from flask import current_app
+    
+    if current_app:
+        ctx = None
+    else:
+        app = create_app()
+        ctx = app.app_context()
+        ctx.push()
+    
+    try:
         if Course.query.count() > 0:
             print("Courses already exist. Skipping population.")
             return
@@ -272,6 +280,9 @@ def populate_courses():
         
         db.session.commit()
         print("Database populated with 5 courses successfully!")
+    finally:
+        if ctx:
+            ctx.pop()
 
 if __name__ == '__main__':
     populate_courses()

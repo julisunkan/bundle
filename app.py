@@ -44,7 +44,8 @@ def create_app():
     return app
 
 def init_database():
-    from models import User, Settings
+    from models import User, Settings, Course
+    from init_data import populate_courses
     
     if not User.query.filter_by(email='admin@example.com').first():
         admin = User(
@@ -69,6 +70,9 @@ def init_database():
             db.session.add(setting)
     
     db.session.commit()
+    
+    if Course.query.count() == 0:
+        populate_courses()
 
 if __name__ == '__main__':
     app = create_app()

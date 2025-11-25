@@ -82,30 +82,39 @@ def paystack_callback():
     
     secret_key = get_setting('paystack_secret_key')
     
-    if secret_key:
-        try:
-            headers = {
-                'Authorization': f'Bearer {secret_key}'
-            }
-            response = requests.get(
-                f'https://api.paystack.co/transaction/verify/{reference}',
-                headers=headers
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('data', {}).get('status') == 'success':
-                    payment.status = 'success'
-                    db.session.commit()
-                    flash('Payment successful! You can now access the course.', 'success')
-                    return redirect(url_for('student.view_course', course_id=payment.course_id))
-        except Exception as e:
-            logging.error(f'Paystack verification error: {e}')
+    if not secret_key:
+        flash('Payment system not configured. Please contact admin.', 'danger')
+        payment.status = 'failed'
+        db.session.commit()
+        return redirect(url_for('main.index'))
     
-    payment.status = 'success'
-    db.session.commit()
-    flash('Payment successful! You can now access the course.', 'success')
-    return redirect(url_for('student.view_course', course_id=payment.course_id))
+    try:
+        headers = {
+            'Authorization': f'Bearer {secret_key}'
+        }
+        response = requests.get(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers=headers
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('data', {}).get('status') == 'successful':
+                payment.status = 'success'
+                db.session.commit()
+                flash('Payment successful! You can now access the course.', 'success')
+                return redirect(url_for('student.view_course', course_id=payment.course_id))
+        
+        payment.status = 'failed'
+        db.session.commit()
+        flash('Payment verification failed. Please contact support.', 'danger')
+        return redirect(url_for('main.index'))
+    except Exception as e:
+        logging.error(f'Paystack verification error: {e}')
+        payment.status = 'failed'
+        db.session.commit()
+        flash('Payment verification error. Please contact support.', 'danger')
+        return redirect(url_for('main.index'))
 
 @payments_bp.route('/flutterwave/<int:course_id>')
 @login_required
@@ -154,31 +163,34 @@ def flutterwave_callback():
     
     secret_key = get_setting('flutterwave_secret_key')
     
-    payment = None
+    if not secret_key:
+        flash('Payment system not configured. Please contact admin.', 'danger')
+        return redirect(url_for('main.index'))
     
-    if secret_key:
-        try:
-            headers = {
-                'Authorization': f'Bearer {secret_key}'
-            }
-            response = requests.get(
-                f'https://api.flutterwave.com/v3/transactions/{transaction_id}/verify',
-                headers=headers
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('data', {}).get('status') == 'successful':
-                    tx_ref = data.get('data', {}).get('tx_ref')
-                    payment = Payment.query.filter_by(transaction_ref=tx_ref).first()
-                    
-                    if payment:
-                        payment.status = 'success'
-                        db.session.commit()
-                        flash('Payment successful! You can now access the course.', 'success')
-                        return redirect(url_for('student.view_course', course_id=payment.course_id))
-        except Exception as e:
-            logging.error(f'Flutterwave verification error: {e}')
-    
-    flash('Payment verification pending', 'info')
-    return redirect(url_for('main.index'))
+    try:
+        headers = {
+            'Authorization': f'Bearer {secret_key}'
+        }
+        response = requests.get(
+            f'https://api.flutterwave.com/v3/transactions/{transaction_id}/verify',
+            headers=headers
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('data', {}).get('status') == 'successful':
+                tx_ref = data.get('data', {}).get('tx_ref')
+                payment = Payment.query.filter_by(transaction_ref=tx_ref).first()
+                
+                if payment:
+                    payment.status = 'success'
+                    db.session.commit()
+                    flash('Payment successful! You can now access the course.', 'success')
+                    return redirect(url_for('student.view_course', course_id=payment.course_id))
+        
+        flash('Payment verification failed. Please contact support.', 'danger')
+        return redirect(url_for('main.index'))
+    except Exception as e:
+        logging.error(f'Flutterwave verification error: {e}')
+        flash('Payment verification error. Please contact support.', 'danger')
+        return redirect(url_for('main.index'))
