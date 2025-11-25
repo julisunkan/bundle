@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from functools import wraps
 from models import db, Course, Module, Quiz, QuizQuestion, Assignment, Settings, User, Payment, Policy
 from werkzeug.utils import secure_filename
+from datetime import datetime
 import os
 
 admin_bp = Blueprint('admin', __name__)
@@ -185,6 +186,107 @@ def add_assignment(module_id):
         return redirect(url_for('admin.course_modules', course_id=module.course_id))
     
     return render_template('admin/add_assignment.html', module=module)
+
+@admin_bp.route('/module/edit/<int:module_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_module(module_id):
+    module = Module.query.get_or_404(module_id)
+    
+    if request.method == 'POST':
+        module.title = request.form.get('title')
+        module.content = request.form.get('content')
+        module.video_url = request.form.get('video_url', '')
+        module.order = int(request.form.get('order', 0))
+        
+        db.session.commit()
+        flash('Module updated successfully!', 'success')
+        return redirect(url_for('admin.course_modules', course_id=module.course_id))
+    
+    return render_template('admin/edit_module.html', module=module)
+
+@admin_bp.route('/module/delete/<int:module_id>')
+@login_required
+@admin_required
+def delete_module(module_id):
+    module = Module.query.get_or_404(module_id)
+    course_id = module.course_id
+    db.session.delete(module)
+    db.session.commit()
+    flash('Module deleted successfully!', 'success')
+    return redirect(url_for('admin.course_modules', course_id=course_id))
+
+@admin_bp.route('/quiz/edit/<int:quiz_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_quiz(quiz_id):
+    quiz = Quiz.query.get_or_404(quiz_id)
+    
+    if request.method == 'POST':
+        quiz.title = request.form.get('title')
+        
+        # Delete existing questions
+        QuizQuestion.query.filter_by(quiz_id=quiz_id).delete()
+        
+        # Add new questions
+        question_count = int(request.form.get('question_count', 1))
+        for i in range(question_count):
+            question_text = request.form.get(f'question_{i}')
+            if question_text:
+                question = QuizQuestion(
+                    quiz_id=quiz.id,
+                    question=question_text,
+                    option_a=request.form.get(f'option_a_{i}', ''),
+                    option_b=request.form.get(f'option_b_{i}', ''),
+                    option_c=request.form.get(f'option_c_{i}', ''),
+                    option_d=request.form.get(f'option_d_{i}', ''),
+                    correct_answer=request.form.get(f'correct_{i}', 'A')
+                )
+                db.session.add(question)
+        
+        db.session.commit()
+        flash('Quiz updated successfully!', 'success')
+        return redirect(url_for('admin.course_modules', course_id=quiz.module.course_id))
+    
+    return render_template('admin/edit_quiz.html', quiz=quiz)
+
+@admin_bp.route('/quiz/delete/<int:quiz_id>')
+@login_required
+@admin_required
+def delete_quiz(quiz_id):
+    quiz = Quiz.query.get_or_404(quiz_id)
+    course_id = quiz.module.course_id
+    db.session.delete(quiz)
+    db.session.commit()
+    flash('Quiz deleted successfully!', 'success')
+    return redirect(url_for('admin.course_modules', course_id=course_id))
+
+@admin_bp.route('/assignment/edit/<int:assignment_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_assignment(assignment_id):
+    assignment = Assignment.query.get_or_404(assignment_id)
+    
+    if request.method == 'POST':
+        assignment.title = request.form.get('title')
+        assignment.description = request.form.get('description')
+        
+        db.session.commit()
+        flash('Assignment updated successfully!', 'success')
+        return redirect(url_for('admin.course_modules', course_id=assignment.module.course_id))
+    
+    return render_template('admin/edit_assignment.html', assignment=assignment)
+
+@admin_bp.route('/assignment/delete/<int:assignment_id>')
+@login_required
+@admin_required
+def delete_assignment(assignment_id):
+    assignment = Assignment.query.get_or_404(assignment_id)
+    course_id = assignment.module.course_id
+    db.session.delete(assignment)
+    db.session.commit()
+    flash('Assignment deleted successfully!', 'success')
+    return redirect(url_for('admin.course_modules', course_id=course_id))
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required

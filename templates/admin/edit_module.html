@@ -1,0 +1,33 @@
+
+{% extends "base.html" %}
+
+{% block title %}Edit Module - Admin{% endblock %}
+
+{% block content %}
+<h1>Edit Module</h1>
+
+<form method="POST">
+    <div class="mb-3">
+        <label for="title" class="form-label">Module Title</label>
+        <input type="text" class="form-control" id="title" name="title" value="{{ module.title }}" required>
+    </div>
+    
+    <div class="mb-3">
+        <label for="content" class="form-label">Content</label>
+        <textarea class="form-control" id="content" name="content" rows="6" required>{{ module.content }}</textarea>
+    </div>
+    
+    <div class="mb-3">
+        <label for="video_url" class="form-label">Video URL (YouTube embed link)</label>
+        <input type="url" class="form-control" id="video_url" name="video_url" value="{{ module.video_url or '' }}">
+    </div>
+    
+    <div class="mb-3">
+        <label for="order" class="form-label">Order</label>
+        <input type="number" class="form-control" id="order" name="order" value="{{ module.order }}" required>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Update Module</button>
+    <a href="{{ url_for('admin.course_modules', course_id=module.course_id) }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}
