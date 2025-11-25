@@ -80,8 +80,17 @@
     </main>
 
     <footer class="bg-dark text-white py-4 mt-5">
-        <div class="container text-center">
-            <p>&copy; 2025 CourseHub. All rights reserved.</p>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-2">&copy; 2025 CourseHub. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="{{ url_for('main.privacy') }}" class="text-white text-decoration-none me-3">Privacy Policy</a>
+                    <a href="{{ url_for('main.terms') }}" class="text-white text-decoration-none me-3">Terms & Conditions</a>
+                    <a href="{{ url_for('main.refund') }}" class="text-white text-decoration-none">Refund Policy</a>
+                </div>
+            </div>
         </div>
     </footer>
 

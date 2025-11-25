@@ -21,3 +21,15 @@ def course_detail(course_id):
     course = Course.query.get_or_404(course_id)
     currency = session.get('currency', 'NGN')
     return render_template('course_detail.html', course=course, currency=currency)
+
+@main_bp.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+@main_bp.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+@main_bp.route('/refund')
+def refund():
+    return render_template('refund.html')
