@@ -44,7 +44,7 @@ def create_app():
     return app
 
 def init_database():
-    from models import User, Settings, Course
+    from models import User, Settings, Course, Policy
     from init_data import populate_courses
     
     if not User.query.filter_by(email='admin@example.com').first():
@@ -68,6 +68,56 @@ def init_database():
         if not Settings.query.filter_by(key=key).first():
             setting = Settings(key=key, value=value)
             db.session.add(setting)
+    
+    from datetime import datetime
+    current_date = datetime.utcnow().strftime('%B %d, %Y')
+    
+    default_policies = [
+        ('privacy', f'''<h2>Privacy Policy</h2>
+<p>Your privacy is important to us. This privacy policy explains how we collect, use, and protect your personal information.</p>
+
+<h3>Information We Collect</h3>
+<p>We collect information you provide directly to us, such as when you create an account, enroll in a course, or contact us for support.</p>
+
+<h3>How We Use Your Information</h3>
+<p>We use the information we collect to provide, maintain, and improve our services, process transactions, and communicate with you.</p>
+
+<h3>Data Security</h3>
+<p>We implement appropriate technical and organizational measures to protect your personal information.</p>
+
+<p><em>Last updated: {current_date}</em></p>'''),
+        ('terms', f'''<h2>Terms and Conditions</h2>
+<p>Welcome to DigitalSkeleton. By accessing our platform, you agree to be bound by these terms and conditions.</p>
+
+<h3>Use of Service</h3>
+<p>You may use our service only as permitted by law and these terms. You are responsible for maintaining the security of your account.</p>
+
+<h3>Course Access</h3>
+<p>Upon successful payment, you will receive access to the purchased course materials. Course access is personal and non-transferable.</p>
+
+<h3>Intellectual Property</h3>
+<p>All course content, including videos, text, and materials, are protected by copyright and are the property of DigitalSkeleton.</p>
+
+<p><em>Last updated: {current_date}</em></p>'''),
+        ('refund', f'''<h2>Refund Policy</h2>
+<p>We want you to be satisfied with your purchase. Please read our refund policy carefully.</p>
+
+<h3>Refund Eligibility</h3>
+<p>You may request a refund within 7 days of purchase if you have not completed more than 10% of the course content.</p>
+
+<h3>How to Request a Refund</h3>
+<p>To request a refund, please contact our support team with your order details and reason for the refund request.</p>
+
+<h3>Processing Time</h3>
+<p>Approved refunds will be processed within 5-10 business days to your original payment method.</p>
+
+<p><em>Last updated: {current_date}</em></p>''')
+    ]
+    
+    for policy_type, content in default_policies:
+        if not Policy.query.filter_by(policy_type=policy_type).first():
+            policy = Policy(policy_type=policy_type, content=content)
+            db.session.add(policy)
     
     db.session.commit()
     

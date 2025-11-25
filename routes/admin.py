@@ -305,6 +305,18 @@ def settings():
                 setting = Settings(key=key, value=value)
                 db.session.add(setting)
         
+        policy_types = ['privacy', 'terms', 'refund']
+        for policy_type in policy_types:
+            content = request.form.get(f'{policy_type}_policy')
+            if content:
+                policy = Policy.query.filter_by(policy_type=policy_type).first()
+                if policy:
+                    policy.content = content
+                    policy.last_updated = datetime.utcnow()
+                else:
+                    policy = Policy(policy_type=policy_type, content=content)
+                    db.session.add(policy)
+        
         db.session.commit()
         flash('Settings updated successfully!', 'success')
         return redirect(url_for('admin.settings'))
@@ -313,7 +325,12 @@ def settings():
     for setting in Settings.query.all():
         settings_dict[setting.key] = setting.value
     
-    return render_template('admin/settings.html', settings=settings_dict)
+    policies = {}
+    for policy_type in ['privacy', 'terms', 'refund']:
+        policy = Policy.query.filter_by(policy_type=policy_type).first()
+        policies[policy_type] = policy.content if policy else ''
+    
+    return render_template('admin/settings.html', settings=settings_dict, policies=policies)
 
 @admin_bp.route('/students')
 @login_required
