@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from functools import wraps
-from models import db, Course, Module, Quiz, QuizQuestion, Assignment, Settings, User, Payment
+from models import db, Course, Module, Quiz, QuizQuestion, Assignment, Settings, User, Payment, Policy
 from werkzeug.utils import secure_filename
 import os
 
@@ -219,3 +219,47 @@ def settings():
 def students():
     students = User.query.filter_by(is_admin=False).all()
     return render_template('admin/students.html', students=students)
+
+@admin_bp.route('/policies')
+@login_required
+@admin_required
+def policies():
+    privacy = Policy.query.filter_by(policy_type='privacy').first()
+    terms = Policy.query.filter_by(policy_type='terms').first()
+    refund = Policy.query.filter_by(policy_type='refund').first()
+    return render_template('admin/policies.html', privacy=privacy, terms=terms, refund=refund)
+
+@admin_bp.route('/policy/edit/<policy_type>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_policy(policy_type):
+    if policy_type not in ['privacy', 'terms', 'refund']:
+        flash('Invalid policy type', 'danger')
+        return redirect(url_for('admin.policies'))
+    
+    policy = Policy.query.filter_by(policy_type=policy_type).first()
+    
+    if request.method == 'POST':
+        content = request.form.get('content')
+        
+        if policy:
+            policy.content = content
+            policy.last_updated = datetime.utcnow()
+        else:
+            policy = Policy(policy_type=policy_type, content=content)
+            db.session.add(policy)
+        
+        db.session.commit()
+        flash(f'{policy_type.capitalize()} policy updated successfully!', 'success')
+        return redirect(url_for('admin.policies'))
+    
+    policy_titles = {
+        'privacy': 'Privacy Policy',
+        'terms': 'Terms & Conditions',
+        'refund': 'Refund Policy'
+    }
+    
+    return render_template('admin/edit_policy.html', 
+                         policy=policy, 
+                         policy_type=policy_type,
+                         policy_title=policy_titles[policy_type])

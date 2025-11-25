@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, session
-from models import db, Course
+from models import db, Course, Payment, Policy
 
 main_bp = Blueprint('main', __name__)
 
@@ -24,12 +24,15 @@ def course_detail(course_id):
 
 @main_bp.route('/privacy')
 def privacy():
-    return render_template('privacy.html')
+    policy = Policy.query.filter_by(name='Privacy Policy').first()
+    return render_template('privacy.html', policy=policy)
 
 @main_bp.route('/terms')
 def terms():
-    return render_template('terms.html')
+    policy = Policy.query.filter_by(name='Terms & Conditions').first()
+    return render_template('terms.html', policy=policy)
 
 @main_bp.route('/refund')
 def refund():
-    return render_template('refund.html')
+    policy = Policy.query.filter_by(name='Refund Policy').first()
+    return render_template('refund.html', policy=policy)

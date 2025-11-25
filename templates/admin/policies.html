@@ -1,0 +1,69 @@
+
+{% extends "base.html" %}
+
+{% block title %}Manage Policies - CourseHub{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4">Manage Policies</h1>
+    
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Privacy Policy</h5>
+                    <p class="card-text text-muted">
+                        {% if privacy %}
+                            Last updated: {{ privacy.last_updated.strftime('%B %d, %Y') }}
+                        {% else %}
+                            Not yet created
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('admin.edit_policy', policy_type='privacy') }}" class="btn btn-primary">
+                        {% if privacy %}Edit{% else %}Create{% endif %}
+                    </a>
+                    <a href="{{ url_for('main.privacy') }}" class="btn btn-secondary" target="_blank">View</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Terms & Conditions</h5>
+                    <p class="card-text text-muted">
+                        {% if terms %}
+                            Last updated: {{ terms.last_updated.strftime('%B %d, %Y') }}
+                        {% else %}
+                            Not yet created
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('admin.edit_policy', policy_type='terms') }}" class="btn btn-primary">
+                        {% if terms %}Edit{% else %}Create{% endif %}
+                    </a>
+                    <a href="{{ url_for('main.terms') }}" class="btn btn-secondary" target="_blank">View</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Refund Policy</h5>
+                    <p class="card-text text-muted">
+                        {% if refund %}
+                            Last updated: {{ refund.last_updated.strftime('%B %d, %Y') }}
+                        {% else %}
+                            Not yet created
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('admin.edit_policy', policy_type='refund') }}" class="btn btn-primary">
+                        {% if refund %}Edit{% else %}Create{% endif %}
+                    </a>
+                    <a href="{{ url_for('main.refund') }}" class="btn btn-secondary" target="_blank">View</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

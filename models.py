@@ -125,3 +125,10 @@ class Settings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(100), unique=True, nullable=False)
     value = db.Column(db.Text)
+
+class Policy(db.Model):
+    __tablename__ = 'policies'
+    id = db.Column(db.Integer, primary_key=True)
+    policy_type = db.Column(db.String(50), unique=True, nullable=False)  # 'privacy', 'terms', 'refund'
+    content = db.Column(db.Text, nullable=False)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
