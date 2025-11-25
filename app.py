@@ -130,6 +130,8 @@ def init_database():
     if Course.query.count() == 0:
         populate_courses()
 
+# Create app instance at module level for gunicorn
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(host='0.0.0.0', port=5000, debug=True)
