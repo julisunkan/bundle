@@ -116,6 +116,61 @@ def paystack_callback():
         flash('Payment verification error. Please contact support.', 'danger')
         return redirect(url_for('main.index'))
 
+@payments_bp.route('/paystack/webhook', methods=['POST'])
+def paystack_webhook():
+    """
+    Paystack Webhook endpoint for handling payment notifications
+    Live Webhook URL: https://your-domain.repl.co/payments/paystack/webhook
+    """
+    secret_key = get_setting('paystack_secret_key')
+    
+    if not secret_key:
+        logging.error('Paystack secret key not configured')
+        return jsonify({'status': 'error', 'message': 'Configuration error'}), 500
+    
+    # Verify webhook signature
+    signature = request.headers.get('x-paystack-signature')
+    if not signature:
+        logging.error('No signature in webhook request')
+        return jsonify({'status': 'error', 'message': 'No signature'}), 400
+    
+    try:
+        import hashlib
+        import hmac
+        
+        payload = request.get_data()
+        computed_signature = hmac.new(
+            secret_key.encode('utf-8'),
+            payload,
+            hashlib.sha512
+        ).hexdigest()
+        
+        if signature != computed_signature:
+            logging.error('Invalid webhook signature')
+            return jsonify({'status': 'error', 'message': 'Invalid signature'}), 401
+        
+        # Process the webhook event
+        event = request.json
+        event_type = event.get('event')
+        
+        if event_type == 'charge.success':
+            data = event.get('data', {})
+            reference = data.get('reference')
+            status = data.get('status')
+            
+            if reference and status == 'success':
+                payment = Payment.query.filter_by(transaction_ref=reference).first()
+                if payment and payment.status == 'pending':
+                    payment.status = 'success'
+                    db.session.commit()
+                    logging.info(f'Payment {reference} marked as successful via webhook')
+        
+        return jsonify({'status': 'success'}), 200
+        
+    except Exception as e:
+        logging.error(f'Paystack webhook error: {e}')
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @payments_bp.route('/flutterwave/<int:course_id>')
 @login_required
 def flutterwave_payment(course_id):
