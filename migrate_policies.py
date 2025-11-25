@@ -32,7 +32,7 @@ def migrate_policies():
 
     <section class="my-4">
         <h2>5. Contact Us</h2>
-        <p>If you have questions about this Privacy Policy, please contact us at privacy@coursehub.com</p>
+        <p>If you have questions about this Privacy Policy, please contact us at ceo@digitalskeleton.com.ng</p>
     </section>
 </div>
 """
@@ -71,7 +71,7 @@ def migrate_policies():
 
     <section class="my-4">
         <h2>5. Contact Information</h2>
-        <p>For questions about these terms, contact us at support@coursehub.com</p>
+        <p>For questions about these terms, contact us at ceo@digitalskeleton.com.ng</p>
     </section>
 </div>
 """
@@ -105,7 +105,7 @@ def migrate_policies():
 
     <section class="my-4">
         <h2>3. How to Request a Refund</h2>
-        <p>Contact us at refunds@coursehub.com with your order details.</p>
+        <p>Contact us at ceo@digitalskeleton.com.ng with your order details.</p>
     </section>
 
     <section class="my-4">

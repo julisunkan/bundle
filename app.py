@@ -168,7 +168,7 @@ def init_database():
     <section class="my-4">
         <h2>10. Contact Us</h2>
         <p>If you have questions about this Privacy Policy, please contact us at:</p>
-        <p><strong>Email:</strong> privacy@digitalskeleton.com</p>
+        <p><strong>Email:</strong> ceo@digitalskeleton.com.ng</p>
     </section>
 </div>'''),
         ('terms', f'''<div class="container my-5">
@@ -277,7 +277,7 @@ def init_database():
     <section class="my-4">
         <h2>12. Contact Information</h2>
         <p>For questions about these Terms and Conditions, contact us at:</p>
-        <p><strong>Email:</strong> support@digitalskeleton.com</p>
+        <p><strong>Email:</strong> ceo@digitalskeleton.com.ng</p>
     </section>
 </div>'''),
         ('refund', f'''<div class="container my-5">
@@ -375,7 +375,7 @@ def init_database():
     <section class="my-4">
         <h2>8. Contact Us</h2>
         <p>If you have questions about this refund policy or need assistance with a purchase, please contact us at:</p>
-        <p><strong>Email:</strong> support@digitalskeleton.com</p>
+        <p><strong>Email:</strong> ceo@digitalskeleton.com.ng</p>
         
         <p class="text-muted">Please note that contacting us does not guarantee a refund, as our policy remains that all sales are final.</p>
     </section>
