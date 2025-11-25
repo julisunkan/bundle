@@ -63,6 +63,13 @@ Preferred communication style: Simple, everyday language.
 - **Manifest**: App-like experience on mobile
 - **Responsive Icons**: Multiple icon sizes for different devices
 
+#### 6. Policy Management (Admin)
+- **Privacy Policy Template**: Editable template for privacy policy
+- **Terms & Conditions Template**: Editable template for terms and conditions
+- **Refund Policy Template**: Editable template for refund policy
+- **HTML Support**: Templates support HTML formatting for rich content
+- **Integrated Settings**: All policy templates are managed in the admin settings page
+
 ### Database Models
 - **User**: Students and admins with authentication
 - **Course**: Course information and pricing
@@ -75,6 +82,7 @@ Preferred communication style: Simple, everyday language.
 - **Payment**: Transaction records
 - **Certificate**: Issued certificates
 - **Settings**: Payment API keys and configurations
+- **Policy**: Policy templates (privacy, terms, refund)
 
 ### Security Features
 - **Password Hashing**: Werkzeug security for password storage
@@ -106,11 +114,11 @@ The database is automatically populated with 5 starter courses on first run:
 
 Each course includes multiple modules with video content, quizzes, and assignments.
 
-### Payment Gateway Configuration
-To enable payments:
+### Admin Settings Configuration
+To configure payment gateways and policy templates:
 1. Login as admin (admin@example.com / admin123)
 2. Navigate to Admin Dashboard → Settings
-3. Enter your Paystack and/or Flutterwave API keys:
+3. Configure payment gateways by entering your Paystack and/or Flutterwave API keys:
    - Paystack Public Key
    - Paystack Secret Key
    - Flutterwave Public Key
@@ -183,9 +191,16 @@ To enable payments:
 2. **Manage Courses**: Create, edit, or delete courses
 3. **Add Content**: Create modules with videos, quizzes, and assignments
 4. **Configure Payments**: Set up Paystack/Flutterwave API keys
-5. **View Analytics**: Track students, revenue, and course enrollments
+5. **Edit Policies**: Customize Privacy Policy, Terms & Conditions, and Refund Policy templates
+6. **View Analytics**: Track students, revenue, and course enrollments
 
 ## Recent Changes
+- **2025-11-25**: Added policy template editing to admin settings
+  - Admins can now edit Privacy Policy, Terms & Conditions, and Refund Policy templates
+  - Policy templates support HTML formatting for rich content
+  - Templates are pre-populated with default content and current date
+  - All policy editing is integrated into the admin settings page
+  
 - **2025-11-25**: Initial release of CourseHub platform
   - Complete course selling and management system
   - Paystack and Flutterwave payment integrations
