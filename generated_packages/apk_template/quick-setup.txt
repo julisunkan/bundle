@@ -1,9 +1,0 @@
-QUICK SETUP - TY LatterGlory Initiatives
-
-1. Go to appsgeyser.com
-2. Select "Website" 
-3. Enter: https://tylattergloryinitiatives.wordpress.com/
-4. Set name: TY LatterGlory Initiatives
-5. Download APK
-
-Done! No SDK required.

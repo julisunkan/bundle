@@ -67,3 +67,9 @@ node_modules/
 # Temporary files
 *.tmp
 *.temp
+
+# Uploads and certificates
+static/uploads/*
+!static/uploads/.gitkeep
+static/certificates/*
+!static/certificates/.gitkeep

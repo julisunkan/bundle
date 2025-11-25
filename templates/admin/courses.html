@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Courses - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Manage Courses</h1>
+    <a href="{{ url_for('admin.add_course') }}" class="btn btn-success">Add New Course</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Price (NGN)</th>
+                <th>Price (USD)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for course in courses %}
+            <tr>
+                <td>{{ course.title }}</td>
+                <td>₦{{ "%.2f"|format(course.price_ngn) }}</td>
+                <td>${{ "%.2f"|format(course.price_usd) }}</td>
+                <td>
+                    <a href="{{ url_for('admin.course_modules', course_id=course.id) }}" class="btn btn-sm btn-info">Modules</a>
+                    <a href="{{ url_for('admin.edit_course', course_id=course.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{{ url_for('admin.delete_course', course_id=course.id) }}" class="btn btn-sm btn-danger" 
+                       onclick="return confirm('Are you sure?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

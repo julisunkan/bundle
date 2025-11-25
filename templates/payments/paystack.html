@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Paystack Payment - CourseHub{% endblock %}
+
+{% block content %}
+<h1>Pay with Paystack</h1>
+
+<div class="card">
+    <div class="card-body">
+        <h5>Course: {{ course.title }}</h5>
+        <h3>Amount: ₦{{ "%.2f"|format(amount / 100) }}</h3>
+        
+        <button onclick="payWithPaystack()" class="btn btn-primary btn-lg">
+            <i class="bi bi-credit-card"></i> Pay Now
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+function payWithPaystack() {
+    var handler = PaystackPop.setup({
+        key: '{{ public_key }}',
+        email: '{{ email }}',
+        amount: {{ amount }},
+        currency: 'NGN',
+        ref: '{{ reference }}',
+        callback: function(response) {
+            window.location.href = "{{ url_for('payments.paystack_callback') }}?reference=" + response.reference;
+        },
+        onClose: function() {
+            alert('Payment cancelled');
+        }
+    });
+    handler.openIframe();
+}
+</script>
+{% endblock %}

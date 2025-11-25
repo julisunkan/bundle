@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ module.title }} - CourseHub{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('student.dashboard') }}">My Courses</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('student.view_course', course_id=module.course_id) }}">{{ module.course.title }}</a></li>
+        <li class="breadcrumb-item active">{{ module.title }}</li>
+    </ol>
+</nav>
+
+<h1>{{ module.title }}</h1>
+
+{% if module.video_url %}
+<div class="ratio ratio-16x9 mb-4">
+    <iframe src="{{ module.video_url }}" allowfullscreen></iframe>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Module Content</h5>
+        <p class="card-text">{{ module.content }}</p>
+    </div>
+</div>
+
+{% for quiz in module.quizzes %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">{{ quiz.title }}</h5>
+        <a href="{{ url_for('student.take_quiz', quiz_id=quiz.id) }}" class="btn btn-info">Take Quiz</a>
+    </div>
+</div>
+{% endfor %}
+
+{% for assignment in module.assignments %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">{{ assignment.title }}</h5>
+        <p>{{ assignment.description }}</p>
+        <a href="{{ url_for('student.submit_assignment', assignment_id=assignment.id) }}" class="btn btn-warning">Submit Assignment</a>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

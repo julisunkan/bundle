@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.title }} - CourseHub{% endblock %}
+
+{% block content %}
+<h1>{{ course.title }}</h1>
+<p class="lead">{{ course.description }}</p>
+
+<div class="mb-4">
+    <a href="{{ url_for('student.generate_certificate', course_id=course.id) }}" class="btn btn-success">
+        <i class="bi bi-award"></i> Download Certificate
+    </a>
+</div>
+
+<h3>Course Modules</h3>
+<div class="accordion" id="moduleAccordion">
+    {% for module in modules %}
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#module{{ module.id }}">
+                {{ loop.index }}. {{ module.title }}
+            </button>
+        </h2>
+        <div id="module{{ module.id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" 
+             data-bs-parent="#moduleAccordion">
+            <div class="accordion-body">
+                <a href="{{ url_for('student.view_module', module_id=module.id) }}" class="btn btn-primary">
+                    View Module
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,143 +1,72 @@
-{% extends "admin/admin_base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Admin Dashboard - DigitalSkeleton{% endblock %}
+{% block title %}Admin Dashboard - CourseHub{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h2>
-        <div>
-            <span class="me-3">Welcome, {{ session.admin_username }}</span>
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm">Logout</a>
-        </div>
-    </div>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    
-    <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-warning">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-clock me-2"></i>Pending Ads</h5>
-                    <h2>{{ pending_ads }}</h2>
-                    <p class="mb-0">Awaiting activation</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-check-circle me-2"></i>Active Ads</h5>
-                    <h2>{{ active_ads }}</h2>
-                    <p class="mb-0">Currently displaying</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-primary">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-ad me-2"></i>Total Ads</h5>
-                    <h2>{{ total_ads }}</h2>
-                    <p class="mb-0">All time</p>
-                </div>
+<h1>Admin Dashboard</h1>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Courses</h5>
+                <h2>{{ total_courses }}</h2>
             </div>
         </div>
     </div>
-    
-    <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-info">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-graduation-cap me-2"></i>Active Tutorials</h5>
-                    <h2>{{ active_tutorials or 0 }}</h2>
-                    <p class="mb-0">Published tutorials</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-secondary">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-book me-2"></i>Total Tutorials</h5>
-                    <h2>{{ total_tutorials or 0 }}</h2>
-                    <p class="mb-0">All tutorials</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-dark">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-certificate me-2"></i>Completions</h5>
-                    <h2>{{ total_completions or 0 }}</h2>
-                    <p class="mb-0">Certificates issued</p>
-                </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Total Students</h5>
+                <h2>{{ total_students }}</h2>
             </div>
         </div>
     </div>
-    
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-cog me-2"></i>Settings</h5>
-                    <p class="card-text">Manage Google AdSense code, payment details, and pricing.</p>
-                    <a href="{{ url_for('admin_settings') }}" class="btn btn-primary">Manage Settings</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-ad me-2"></i>Advertisements</h5>
-                    <p class="card-text">View and manage banner advertisements.</p>
-                    <a href="{{ url_for('admin_ads') }}" class="btn btn-primary">Manage Ads</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-graduation-cap me-2"></i>Tutorials</h5>
-                    <p class="card-text">Create and manage learning tutorials with HTML content.</p>
-                    <a href="{{ url_for('admin_tutorials') }}" class="btn btn-primary">Manage Tutorials</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-certificate me-2"></i>Completions</h5>
-                    <p class="card-text">View tutorial completions and issued certificates.</p>
-                    <a href="{{ url_for('admin_tutorial_completions') }}" class="btn btn-primary">View Completions</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-database me-2"></i>Backup & Restore</h5>
-                    <p class="card-text">Create full system backups and restore from previous backups.</p>
-                    <a href="{{ url_for('admin_backup_restore') }}" class="btn btn-primary">Manage Backups</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-folder-open me-2"></i>File Manager</h5>
-                    <p class="card-text">View and manage all generated files, packages, and user data.</p>
-                    <a href="{{ url_for('admin_file_manager') }}" class="btn btn-primary">Manage Files</a>
-                </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Total Revenue</h5>
+                <h2>₦{{ "%.2f"|format(total_revenue) }}</h2>
             </div>
         </div>
     </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Payments</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in recent_payments %}
+                        <tr>
+                            <td>{{ payment.user.full_name }}</td>
+                            <td>{{ payment.course.title }}</td>
+                            <td>{{ payment.currency }} {{ "%.2f"|format(payment.amount) }}</td>
+                            <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('admin.courses') }}" class="btn btn-primary">Manage Courses</a>
+    <a href="{{ url_for('admin.students') }}" class="btn btn-success">View Students</a>
+    <a href="{{ url_for('admin.settings') }}" class="btn btn-warning">Settings</a>
 </div>
 {% endblock %}

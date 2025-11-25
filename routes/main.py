@@ -1,0 +1,23 @@
+from flask import Blueprint, render_template, session
+from models import db, Course
+
+main_bp = Blueprint('main', __name__)
+
+@main_bp.route('/')
+def index():
+    courses = Course.query.all()
+    currency = session.get('currency', 'NGN')
+    return render_template('index.html', courses=courses, currency=currency)
+
+@main_bp.route('/toggle-currency')
+def toggle_currency():
+    current = session.get('currency', 'NGN')
+    session['currency'] = 'USD' if current == 'NGN' else 'NGN'
+    from flask import redirect, request
+    return redirect(request.referrer or '/')
+
+@main_bp.route('/course/<int:course_id>')
+def course_detail(course_id):
+    course = Course.query.get_or_404(course_id)
+    currency = session.get('currency', 'NGN')
+    return render_template('course_detail.html', course=course, currency=currency)

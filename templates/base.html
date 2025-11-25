@@ -1,101 +1,62 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}DigitalSkeleton - Convert Websites to Mobile Apps{% endblock %}</title>
+    <meta name="theme-color" content="#4A90E2">
+    <meta name="description" content="Learn new skills with our comprehensive online courses">
+    <title>{% block title %}Course Platform{% endblock %}</title>
     
-    <!-- PWA Meta Tags -->
-    <meta name="description" content="Convert any website into a mobile app package (APK, IPA, MSIX) with DigitalSkeleton">
-    <meta name="theme-color" content="#0d6efd">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="DigitalSkeleton">
-    <meta name="msapplication-TileColor" content="#0d6efd">
-    <meta name="msapplication-tap-highlight" content="no">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     
-    <!-- Google AdSense Account -->
-    <meta name="google-adsense-account" content="ca-pub-0654816099674324">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    
-    <!-- PWA Icons -->
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/pwa-icon.svg') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/pwa-icon.svg') }}">
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Custom CSS -->
-    <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
-    
-    <!-- PWA CSS -->
-    <link href="{{ url_for('static', filename='css/pwa.css') }}" rel="stylesheet">
-    
-    <!-- Google AdSense -->
-    {% if adsense_code %}
-    {{ adsense_code|safe }}
-    {% endif %}
-    
-    {% block head %}{% endblock %}
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
 </head>
-<body data-theme="light">
-    <!-- Professional Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light mb-4" style="background: var(--bg-nav); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-color);">
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}" style="font-weight: 700; font-size: 1.5rem;">
-                <div class="brand-icon me-3" style="width: 40px; height: 40px; background: var(--primary-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-mobile-alt text-white"></i>
-                </div>
-                <span class="brand-text">DigitalSkeleton</span>
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <i class="bi bi-mortarboard-fill"></i> CourseHub
             </a>
-            
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="box-shadow: none;">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item me-3">
-                        <a class="nav-link px-3 py-2 rounded" href="{{ url_for('index') }}" style="transition: all 0.3s ease;">
-                            <i class="fas fa-home me-2"></i>Home
-                        </a>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
                     </li>
-                    <li class="nav-item me-3">
-                        <a class="nav-link px-3 py-2 rounded" href="{{ url_for('build_history') }}" style="transition: all 0.3s ease;">
-                            <i class="fas fa-history me-2"></i>History
-                        </a>
-                    </li>
-                    <li class="nav-item me-3">
-                        <a class="nav-link px-3 py-2 rounded" href="{{ url_for('tutorials_list') }}" style="transition: all 0.3s ease;">
-                            <i class="fas fa-graduation-cap me-2"></i>Tutorials
-                        </a>
-                    </li>
-                    <li class="nav-item me-3">
-                        <div class="theme-switcher">
-                            <button class="theme-option" data-theme="dark" title="Dark Theme">
-                                <i class="fas fa-moon"></i>
-                            </button>
-                            <button class="theme-option" data-theme="light" title="Light Theme">
-                                <i class="fas fa-sun"></i>
-                            </button>
-                            <button class="theme-option" data-theme="grey" title="Grey Theme">
-                                <i class="fas fa-circle"></i>
-                            </button>
-                        </div>
-                    </li>
-                    <li class="nav-item me-3">
-                        <a href="{{ url_for('place_advert') }}" class="btn btn-warning btn-sm px-3 py-2" style="border-radius: 25px; font-weight: 500;">
-                            <i class="fas fa-bullhorn me-2"></i>Place Advert
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin</a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('student.dashboard') }}">My Courses</a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.toggle_currency') }}">
+                            <i class="bi bi-currency-exchange"></i> {{ session.get('currency', 'NGN') }}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <button id="install-pwa-btn" class="btn btn-outline-light btn-sm px-3 py-2" style="display: none; border-radius: 25px; font-weight: 500;">
-                            <i class="fas fa-download me-2"></i>Install App
+                        <button class="btn btn-link nav-link" id="darkModeToggle">
+                            <i class="bi bi-moon-fill"></i>
                         </button>
                     </li>
                 </ul>
@@ -103,178 +64,29 @@
         </div>
     </nav>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="container">
+    <main class="container my-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                         {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-
-    <!-- Banner Ads -->
-    {% if active_ads %}
-    <div class="container mt-3">
-        <div class="row">
-            {% for ad in active_ads[:2] %}
-            <div class="col-md-6 mb-3">
-                <div class="card shadow-sm">
-                    <div class="card-body p-2">
-                        <a href="{{ ad.product_url }}" target="_blank" class="text-decoration-none">
-                            {% if ad.image_path and ad.image_path.endswith(('.mp4', '.webm')) %}
-                            <video style="width: 100%; max-height: 100px; object-fit: cover;" autoplay loop muted>
-                                <source src="{{ ad.image_path }}" type="video/{{ ad.image_path.split('.')[-1] }}">
-                            </video>
-                            {% elif ad.image_path %}
-                            <img src="{{ ad.image_path }}" alt="{{ ad.product_name }}" style="width: 100%; max-height: 100px; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            <div class="bg-primary text-white p-3 text-center" style="display: none;">
-                                <h5>{{ ad.product_name }}</h5>
-                                <p class="mb-0">{{ ad.description[:100] if ad.description else 'Click to visit' }}...</p>
-                            </div>
-                            {% else %}
-                            <div class="bg-primary text-white p-3 text-center">
-                                <h5>{{ ad.product_name }}</h5>
-                                <p class="mb-0">{{ ad.description[:100] if ad.description else 'Click to visit' }}...</p>
-                            </div>
-                            {% endif %}
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Main Content -->
-    <main>
+            {% endif %}
+        {% endwith %}
+        
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Offline Indicator -->
-    <div id="offline-indicator" class="offline-indicator">
-        <i class="fas fa-wifi me-2"></i>
-        You're offline. Some features may not work.
-    </div>
-
-    <!-- Professional Footer -->
-    <footer class="professional-footer py-5 mt-auto" style="background: var(--bg-footer); color: var(--text-on-dark);">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 mb-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="brand-icon me-3" style="width: 40px; height: 40px; background: var(--primary-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-mobile-alt text-white"></i>
-                        </div>
-                        <h5 class="fw-bold mb-0" style="color: var(--text-on-dark);">DigitalSkeleton</h5>
-                    </div>
-                    <p style="color: var(--text-on-dark-muted); line-height: 1.6;">
-                        Transform websites into professional mobile applications with advanced PWA analysis and cross-platform development packages.
-                    </p>
-                </div>
-                <div class="col-lg-2 col-md-3 mb-4">
-                    <h6 class="fw-bold text-white mb-3">Platforms</h6>
-                    <ul class="list-unstyled">
-                        <li class="mb-2">
-                            <a href="#" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
-                                <i class="fab fa-android me-2"></i>Android
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="#" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
-                                <i class="fab fa-apple me-2"></i>iOS
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="#" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
-                                <i class="fab fa-windows me-2"></i>Windows
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-lg-2 col-md-3 mb-4">
-                    <h6 class="fw-bold text-white mb-3">Legal</h6>
-                    <ul class="list-unstyled">
-                        <li class="mb-2">
-                            <a href="{{ url_for('support') }}" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
-                                Support Center
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{{ url_for('privacy') }}" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
-                                Privacy Policy
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{{ url_for('terms') }}" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
-                                Terms of Service
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-lg-2 col-md-3 mb-4">
-                    <h6 class="fw-bold text-white mb-3">Resources</h6>
-                    <ul class="list-unstyled">
-                        <li class="mb-2">
-                            <a href="{{ url_for('documentation') }}" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
-                                Documentation
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{{ url_for('api_reference') }}" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
-                                API Reference
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{{ url_for('build_history') }}" class="text-decoration-none" style="color: rgba(255, 255, 255, 0.8); transition: color 0.3s ease;">
-                                Build History
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-lg-2 col-md-3 mb-4">
-                    <h6 class="fw-bold text-white mb-3">Support</h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;">Android Studio</span>
-                        <span class="badge" style="background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); color: white;">Xcode</span>
-                        <span class="badge" style="background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); color: #333;">Visual Studio</span>
-                        <span class="badge" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white;">UWP</span>
-                    </div>
-                </div>
-            </div>
-            <hr style="border-color: rgba(255, 255, 255, 0.2); margin: 2rem 0;">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <p class="mb-0" style="color: rgba(255, 255, 255, 0.6);">
-                        &copy; 2025 DigitalSkeleton. Built with Flask, Bootstrap, and modern web technologies.
-                    </p>
-                </div>
-                <div class="col-md-4 text-md-end">
-                    <small style="color: rgba(255, 255, 255, 0.6);">
-                        Made with <i class="fas fa-heart text-danger"></i> for developers
-                    </small>
-                </div>
-            </div>
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p>&copy; 2025 CourseHub. All rights reserved.</p>
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- PWA Install Script -->
-    <script src="{{ url_for('static', filename='js/pwa-install.js') }}"></script>
-    
-    <!-- Theme Switcher -->
-    <script src="{{ url_for('static', filename='js/theme-switcher.js') }}"></script>
-    
-    <!-- Custom JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-    
     {% block scripts %}{% endblock %}
 </body>
 </html>
