@@ -5,9 +5,12 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
-    courses = Course.query.all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 4
+    pagination = Course.query.paginate(page=page, per_page=per_page, error_out=False)
+    courses = pagination.items
     currency = session.get('currency', 'NGN')
-    return render_template('index.html', courses=courses, currency=currency)
+    return render_template('index.html', courses=courses, currency=currency, pagination=pagination)
 
 @main_bp.route('/toggle-currency')
 def toggle_currency():
