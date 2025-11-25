@@ -10,9 +10,9 @@
         <h3>
             Price: 
             {% if currency == 'NGN' %}
-                ₦{{ "%.2f"|format(course.price_ngn) }}
+                ₦{{ course.price_ngn|format_currency }}
             {% else %}
-                ${{ "%.2f"|format(course.price_usd) }}
+                ${{ course.price_usd|format_currency }}
             {% endif %}
         </h3>
     </div>

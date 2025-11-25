@@ -27,9 +27,9 @@
             <div class="card-body">
                 <h3 class="card-title">
                     {% if currency == 'NGN' %}
-                        ₦{{ "%.2f"|format(course.price_ngn) }}
+                        ₦{{ course.price_ngn|format_currency }}
                     {% else %}
-                        ${{ "%.2f"|format(course.price_usd) }}
+                        ${{ course.price_usd|format_currency }}
                     {% endif %}
                 </h3>
                 {% if current_user.is_authenticated %}

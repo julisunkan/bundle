@@ -8,7 +8,7 @@
 <div class="card">
     <div class="card-body">
         <h5>Course: {{ course.title }}</h5>
-        <h3>Amount: {{ currency }} {{ "%.2f"|format(amount) }}</h3>
+        <h3>Amount: {{ currency }} {{ amount|format_currency }}</h3>
         
         <button onclick="makePayment()" class="btn btn-success btn-lg">
             <i class="bi bi-credit-card"></i> Pay Now

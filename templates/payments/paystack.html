@@ -8,7 +8,7 @@
 <div class="card">
     <div class="card-body">
         <h5>Course: {{ course.title }}</h5>
-        <h3>Amount: ₦{{ "%.2f"|format(amount / 100) }}</h3>
+        <h3>Amount: ₦{{ (amount / 100)|format_currency }}</h3>
         
         <button onclick="payWithPaystack()" class="btn btn-primary btn-lg">
             <i class="bi bi-credit-card"></i> Pay Now

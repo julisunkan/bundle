@@ -37,6 +37,12 @@ def create_app():
     app.register_blueprint(payments_bp, url_prefix='/payments')
     app.register_blueprint(pwa_bp)
     
+    @app.template_filter('format_currency')
+    def format_currency(value):
+        if value is None:
+            return '0.00'
+        return '{:,.2f}'.format(float(value))
+    
     with app.app_context():
         db.create_all()
         init_database()

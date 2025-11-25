@@ -22,8 +22,8 @@
             {% for course in courses %}
             <tr>
                 <td>{{ course.title }}</td>
-                <td>₦{{ "%.2f"|format(course.price_ngn) }}</td>
-                <td>${{ "%.2f"|format(course.price_usd) }}</td>
+                <td>₦{{ course.price_ngn|format_currency }}</td>
+                <td>${{ course.price_usd|format_currency }}</td>
                 <td>
                     <a href="{{ url_for('admin.course_modules', course_id=course.id) }}" class="btn btn-sm btn-info">Modules</a>
                     <a href="{{ url_for('admin.edit_course', course_id=course.id) }}" class="btn btn-sm btn-warning">Edit</a>
