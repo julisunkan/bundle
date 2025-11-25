@@ -12,8 +12,9 @@ def index():
 @main_bp.route('/toggle-currency')
 def toggle_currency():
     current = session.get('currency', 'NGN')
-    session['currency'] = 'USD' if current == 'NGN' else 'NGN'
-    from flask import redirect, request
+    new_currency = 'USD' if current == 'NGN' else 'NGN'
+    session['currency'] = new_currency
+    session.modified = True
     return redirect(request.referrer or '/')
 
 @main_bp.route('/course/<int:course_id>')
