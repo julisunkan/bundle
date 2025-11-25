@@ -1,6 +1,6 @@
 {
-  "name": "CourseHub - Online Learning Platform",
-  "short_name": "CourseHub",
+  "name": "DigitalSkeleton - Online Learning Platform",
+  "short_name": "DigitalSkeleton",
   "description": "Learn new skills with comprehensive online courses",
   "start_url": "/",
   "display": "standalone",
