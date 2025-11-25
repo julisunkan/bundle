@@ -34,6 +34,11 @@ def login():
         user = User.query.filter_by(email=email).first()
         
         if user and user.check_password(password):
+            # Check if user is banned
+            if hasattr(user, 'is_banned') and user.is_banned and not user.is_admin:
+                flash('Your account has been banned. Please contact support.', 'danger')
+                return redirect(url_for('auth.login'))
+            
             login_user(user)
             flash('Login successful!', 'success')
             

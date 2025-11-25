@@ -336,8 +336,141 @@ def settings():
 @login_required
 @admin_required
 def students():
-    students = User.query.filter_by(is_admin=False).all()
+    students = User.query.all()
     return render_template('admin/students.html', students=students)
+
+@admin_bp.route('/profile', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def profile():
+    if request.method == 'POST':
+        full_name = request.form.get('full_name')
+        email = request.form.get('email')
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        
+        # Check if email is taken by another user
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user and existing_user.id != current_user.id:
+            flash('Email already in use by another user', 'danger')
+            return redirect(url_for('admin.profile'))
+        
+        # Verify current password if changing password
+        if new_password:
+            if not current_password or not current_user.check_password(current_password):
+                flash('Current password is incorrect', 'danger')
+                return redirect(url_for('admin.profile'))
+            current_user.set_password(new_password)
+        
+        current_user.full_name = full_name
+        current_user.email = email
+        db.session.commit()
+        
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('admin.profile'))
+    
+    return render_template('admin/profile.html')
+
+@admin_bp.route('/user/edit/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'POST':
+        full_name = request.form.get('full_name')
+        email = request.form.get('email')
+        new_password = request.form.get('new_password')
+        
+        # Check if email is taken by another user
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user and existing_user.id != user.id:
+            flash('Email already in use by another user', 'danger')
+            return redirect(url_for('admin.edit_user', user_id=user_id))
+        
+        user.full_name = full_name
+        user.email = email
+        
+        # Update password if provided
+        if new_password:
+            user.set_password(new_password)
+        
+        db.session.commit()
+        flash('User updated successfully!', 'success')
+        return redirect(url_for('admin.students'))
+    
+    return render_template('admin/edit_user.html', user=user)
+
+@admin_bp.route('/user/ban/<int:user_id>')
+@login_required
+@admin_required
+def ban_user(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent admin from banning themselves
+    if user.id == current_user.id:
+        flash('You cannot ban yourself', 'danger')
+        return redirect(url_for('admin.students'))
+    
+    # Toggle banned status
+    if hasattr(user, 'is_banned'):
+        user.is_banned = not user.is_banned
+        status = 'banned' if user.is_banned else 'unbanned'
+    else:
+        # If is_banned column doesn't exist yet, we'll add it via model
+        flash('Ban feature requires database update', 'warning')
+        return redirect(url_for('admin.students'))
+    
+    db.session.commit()
+    flash(f'User {status} successfully!', 'success')
+    return redirect(url_for('admin.students'))
+
+@admin_bp.route('/user/send-certificate/<int:user_id>/<int:course_id>')
+@login_required
+@admin_required
+def send_certificate(user_id, course_id):
+    from models import Certificate, Course
+    from utils.certificate_generator import generate_certificate_pdf
+    import uuid
+    
+    user = User.query.get_or_404(user_id)
+    course = Course.query.get_or_404(course_id)
+    
+    # Check if user has purchased the course
+    payment = Payment.query.filter_by(
+        user_id=user_id,
+        course_id=course_id,
+        status='success'
+    ).first()
+    
+    if not payment:
+        flash('User has not purchased this course', 'warning')
+        return redirect(url_for('admin.students'))
+    
+    # Check if certificate already exists
+    certificate = Certificate.query.filter_by(
+        user_id=user_id,
+        course_id=course_id
+    ).first()
+    
+    if not certificate:
+        cert_id = f'CERT-{uuid.uuid4().hex[:8].upper()}'
+        certificate = Certificate(
+            user_id=user_id,
+            course_id=course_id,
+            certificate_id=cert_id
+        )
+        db.session.add(certificate)
+        db.session.commit()
+    
+    # Generate certificate PDF
+    try:
+        generate_certificate_pdf(user, course, certificate)
+        flash(f'Certificate generated for {user.full_name} - {course.title}', 'success')
+    except Exception as e:
+        flash(f'Error generating certificate: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin.students'))
 
 @admin_bp.route('/policies')
 @login_required

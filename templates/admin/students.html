@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Students - Admin{% endblock %}
+{% block title %}Users - Admin{% endblock %}
 
 {% block content %}
-<h1>All Students</h1>
+<h1>All Users</h1>
 
 <div class="table-responsive">
     <table class="table table-striped">
@@ -11,8 +11,11 @@
             <tr>
                 <th>Name</th>
                 <th>Email</th>
+                <th>Type</th>
+                <th>Status</th>
                 <th>Registered</th>
-                <th>Courses Purchased</th>
+                <th>Courses</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -20,8 +23,55 @@
             <tr>
                 <td>{{ student.full_name }}</td>
                 <td>{{ student.email }}</td>
+                <td>
+                    {% if student.is_admin %}
+                        <span class="badge bg-danger">Admin</span>
+                    {% else %}
+                        <span class="badge bg-primary">Student</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if student.is_banned %}
+                        <span class="badge bg-warning">Banned</span>
+                    {% else %}
+                        <span class="badge bg-success">Active</span>
+                    {% endif %}
+                </td>
                 <td>{{ student.created_at.strftime('%Y-%m-%d') }}</td>
                 <td>{{ student.purchases|selectattr('status', 'equalto', 'success')|list|length }}</td>
+                <td>
+                    <a href="{{ url_for('admin.edit_user', user_id=student.id) }}" 
+                       class="btn btn-sm btn-primary">Edit</a>
+                    
+                    {% if not student.is_admin or student.id != current_user.id %}
+                    <a href="{{ url_for('admin.ban_user', user_id=student.id) }}" 
+                       class="btn btn-sm btn-warning"
+                       onclick="return confirm('Are you sure you want to {% if student.is_banned %}unban{% else %}ban{% endif %} this user?')">
+                        {% if student.is_banned %}Unban{% else %}Ban{% endif %}
+                    </a>
+                    {% endif %}
+                    
+                    {% if student.purchases|selectattr('status', 'equalto', 'success')|list|length > 0 %}
+                    <div class="dropdown d-inline">
+                        <button class="btn btn-sm btn-success dropdown-toggle" type="button" 
+                                data-bs-toggle="dropdown">
+                            Certificate
+                        </button>
+                        <ul class="dropdown-menu">
+                            {% for payment in student.purchases %}
+                                {% if payment.status == 'success' %}
+                                <li>
+                                    <a class="dropdown-item" 
+                                       href="{{ url_for('admin.send_certificate', user_id=student.id, course_id=payment.course_id) }}">
+                                        {{ payment.course.title }}
+                                    </a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
