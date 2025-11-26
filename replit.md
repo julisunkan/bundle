@@ -1,7 +1,7 @@
 # CourseHub - Online Course Selling Platform
 
 ## Overview
-CourseHub is a comprehensive Flask-based web application for selling and managing online courses. Students can browse courses, purchase them using Paystack or Flutterwave, take quizzes, submit assignments, and receive PDF certificates upon completion. Admins have full control over course content, student management, and payment configurations.
+CourseHub is a comprehensive Flask-based web application for selling and managing online courses. Students can browse courses, purchase them using Flutterwave, take quizzes, submit assignments, and receive PDF certificates upon completion. Admins have full control over course content, student management, and payment configurations.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -20,7 +20,7 @@ Preferred communication style: Simple, everyday language.
 - **Backend**: Python Flask with SQLAlchemy ORM
 - **Database**: SQLite for local development (can be configured for PostgreSQL in production)
 - **Authentication**: Flask-Login with password hashing (Werkzeug)
-- **Payment Gateways**: Paystack & Flutterwave integration
+- **Payment Gateway**: Flutterwave integration
 - **PDF Generation**: ReportLab for certificates
 - **Frontend**: Jinja2 templates, Bootstrap 5, Vanilla JavaScript
 - **PWA Support**: Service Worker, manifest.json, offline fallback page
@@ -43,7 +43,7 @@ Preferred communication style: Simple, everyday language.
 #### 3. Student Experience
 - Browse all available courses
 - View detailed course information
-- Purchase courses using Paystack or Flutterwave
+- Purchase courses using Flutterwave
 - Access purchased course modules
 - Watch embedded video content (YouTube)
 - Take quizzes and receive instant scoring
@@ -52,7 +52,6 @@ Preferred communication style: Simple, everyday language.
 
 #### 4. Payment System
 - **Currency Switching**: Toggle between NGN and USD
-- **Paystack Integration**: Secure card payments (Nigerian market)
 - **Flutterwave Integration**: Multiple payment options
 - **Payment Verification**: Server-side transaction verification
 - **Payment History**: Track all transactions in admin dashboard
@@ -115,12 +114,10 @@ The database is automatically populated with 5 starter courses on first run:
 Each course includes multiple modules with video content, quizzes, and assignments.
 
 ### Admin Settings Configuration
-To configure payment gateways and policy templates:
+To configure payment gateway and policy templates:
 1. Login as admin (admin@example.com / admin123)
-2. Navigate to Admin Dashboard → Settings
-3. Configure payment gateways by entering your Paystack and/or Flutterwave API keys:
-   - Paystack Public Key
-   - Paystack Secret Key
+2. Navigate to Admin Dashboard -> Settings
+3. Configure Flutterwave payment gateway by entering your API keys:
    - Flutterwave Public Key
    - Flutterwave Secret Key
 4. Set the NGN to USD exchange rate (default: 1500)
@@ -181,7 +178,7 @@ To configure payment gateways and policy templates:
 ### For Students
 1. **Register**: Create an account using the Register page
 2. **Browse Courses**: View available courses on the homepage
-3. **Purchase**: Select a course and choose a payment method (Paystack/Flutterwave)
+3. **Purchase**: Select a course and choose Flutterwave for payment
 4. **Learn**: Access course modules, watch videos, take quizzes
 5. **Submit**: Complete assignments by uploading files
 6. **Certificate**: Download your certificate after completing the course
@@ -190,11 +187,16 @@ To configure payment gateways and policy templates:
 1. **Login**: Use admin credentials (admin@example.com / admin123)
 2. **Manage Courses**: Create, edit, or delete courses
 3. **Add Content**: Create modules with videos, quizzes, and assignments
-4. **Configure Payments**: Set up Paystack/Flutterwave API keys
+4. **Configure Payments**: Set up Flutterwave API keys
 5. **Edit Policies**: Customize Privacy Policy, Terms & Conditions, and Refund Policy templates
 6. **View Analytics**: Track students, revenue, and course enrollments
 
 ## Recent Changes
+- **2025-11-26**: Removed Paystack and PayPal payment methods
+  - Application now uses Flutterwave as the sole payment gateway
+  - Simplified admin settings page
+  - Removed unused payment templates
+
 - **2025-11-25**: Added policy template editing to admin settings
   - Admins can now edit Privacy Policy, Terms & Conditions, and Refund Policy templates
   - Policy templates support HTML formatting for rich content
@@ -203,7 +205,7 @@ To configure payment gateways and policy templates:
   
 - **2025-11-25**: Initial release of CourseHub platform
   - Complete course selling and management system
-  - Paystack and Flutterwave payment integrations
+  - Flutterwave payment integration
   - Quiz and assignment features
   - PDF certificate generation
   - Progressive Web App implementation

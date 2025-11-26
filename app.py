@@ -63,13 +63,8 @@ def init_database():
         db.session.add(admin)
     
     default_settings = [
-        ('paystack_public_key', ''),
-        ('paystack_secret_key', ''),
         ('flutterwave_public_key', ''),
         ('flutterwave_secret_key', ''),
-        ('paypal_client_id', ''),
-        ('paypal_client_secret', ''),
-        ('paypal_mode', 'sandbox'),
         ('exchange_rate', '1500'),
     ]
     
