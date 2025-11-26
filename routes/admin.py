@@ -293,7 +293,7 @@ def delete_assignment(assignment_id):
 @admin_required
 def settings():
     if request.method == 'POST':
-        keys = ['flutterwave_public_key', 'flutterwave_secret_key', 'exchange_rate']
+        keys = ['flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'flutterwave_webhook_secret_hash', 'exchange_rate']
         
         for key in keys:
             value = request.form.get(key)

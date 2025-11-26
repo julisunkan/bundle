@@ -63,8 +63,10 @@ def init_database():
         db.session.add(admin)
     
     default_settings = [
-        ('flutterwave_public_key', ''),
-        ('flutterwave_secret_key', ''),
+        ('flutterwave_public_key', 'FLWPUBK-fa6572916798cfedad2f364499ceb672-X'),
+        ('flutterwave_secret_key', 'FLWSECK-ae53484d0bb28cc0e8974df03fcdf410-19ac1642210vt-X'),
+        ('flutterwave_encryption_key', 'ae53484d0bb260b88589e6af'),
+        ('flutterwave_webhook_secret_hash', 'digitalskeleton_flw_webhook_2024'),
         ('exchange_rate', '1500'),
     ]
     

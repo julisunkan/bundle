@@ -107,3 +107,48 @@ def flutterwave_callback():
         logging.error(f'Flutterwave verification error: {e}')
         flash('Payment verification error. Please contact support.', 'danger')
         return redirect(url_for('main.index'))
+
+@payments_bp.route('/flutterwave/webhook', methods=['POST'])
+def flutterwave_webhook():
+    """
+    Flutterwave V3 Live Webhook endpoint for handling payment notifications
+    Live Webhook URL: https://your-domain.repl.co/payments/flutterwave/webhook
+    """
+    secret_hash = get_setting('flutterwave_webhook_secret_hash')
+    
+    if not secret_hash:
+        logging.error('Flutterwave webhook secret hash not configured')
+        return jsonify({'status': 'error', 'message': 'Configuration error'}), 500
+    
+    signature = request.headers.get('verif-hash')
+    if not signature or signature != secret_hash:
+        logging.error('Invalid webhook signature')
+        return jsonify({'status': 'error', 'message': 'Invalid signature'}), 401
+    
+    try:
+        event = request.json
+        
+        if not event:
+            return jsonify({'status': 'error', 'message': 'No payload'}), 400
+        
+        event_type = event.get('event')
+        data = event.get('data', {})
+        
+        logging.info(f'Flutterwave webhook received: {event_type}')
+        
+        if event_type == 'charge.completed':
+            status = data.get('status')
+            tx_ref = data.get('tx_ref')
+            
+            if status == 'successful' and tx_ref:
+                payment = Payment.query.filter_by(transaction_ref=tx_ref).first()
+                if payment and payment.status == 'pending':
+                    payment.status = 'success'
+                    db.session.commit()
+                    logging.info(f'Payment {tx_ref} marked as successful via webhook')
+        
+        return jsonify({'status': 'success'}), 200
+        
+    except Exception as e:
+        logging.error(f'Flutterwave webhook error: {e}')
+        return jsonify({'status': 'error', 'message': str(e)}), 500

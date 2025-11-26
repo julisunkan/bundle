@@ -8,7 +8,17 @@
 <form method="POST">
     <h3>Payment Settings</h3>
     
-    <h4 class="mt-4">Flutterwave</h4>
+    <h4 class="mt-4">Flutterwave V3 Live API Keys</h4>
+    
+    <div class="alert alert-info">
+        <strong>Flutterwave Webhook Configuration:</strong>
+        <ul class="mb-0">
+            <li><strong>Webhook URL:</strong> <code>{{ request.url_root }}payments/flutterwave/webhook</code></li>
+            <li><strong>Secret Hash:</strong> Use the value configured below in your Flutterwave Dashboard</li>
+        </ul>
+        <small class="text-muted">Copy these to your Flutterwave Dashboard webhook settings.</small>
+    </div>
+    
     <div class="mb-3">
         <label for="flutterwave_public_key" class="form-label">Public Key</label>
         <input type="text" class="form-control" id="flutterwave_public_key" name="flutterwave_public_key" 
@@ -19,6 +29,19 @@
         <label for="flutterwave_secret_key" class="form-label">Secret Key</label>
         <input type="password" class="form-control" id="flutterwave_secret_key" name="flutterwave_secret_key" 
                value="{{ settings.get('flutterwave_secret_key', '') }}">
+    </div>
+    
+    <div class="mb-3">
+        <label for="flutterwave_encryption_key" class="form-label">Encryption Key</label>
+        <input type="password" class="form-control" id="flutterwave_encryption_key" name="flutterwave_encryption_key" 
+               value="{{ settings.get('flutterwave_encryption_key', '') }}">
+    </div>
+    
+    <div class="mb-3">
+        <label for="flutterwave_webhook_secret_hash" class="form-label">Webhook Secret Hash</label>
+        <input type="text" class="form-control" id="flutterwave_webhook_secret_hash" name="flutterwave_webhook_secret_hash" 
+               value="{{ settings.get('flutterwave_webhook_secret_hash', '') }}">
+        <small class="form-text text-muted">This must match the secret hash configured in your Flutterwave Dashboard webhooks.</small>
     </div>
     
     <h4 class="mt-4">Currency Exchange Rate</h4>
