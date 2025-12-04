@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact AI Flashcard Generator - Get in touch with our team for support and feedback">
+    <meta name="theme-color" content="#6366f1">
+    <title>Contact Us - AI Flashcard Generator</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="/static/icons/icon-192x192.png">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📬 Contact Us</h1>
+            <nav>
+                <button onclick="location.href='/'" class="nav-btn">🏠 Home</button>
+            </nav>
+        </header>
+
+        <main>
+            <section class="content-section">
+                <div class="content-card">
+                    <h2>Get in Touch</h2>
+                    <p>We'd love to hear from you! Whether you have a question about our AI Flashcard Generator, need technical support, want to provide feedback, or have a suggestion for improvement, our team is here to help.</p>
+                </div>
+
+                <div class="content-card">
+                    <h2>Send Us a Message</h2>
+                    <form id="contactForm" class="contact-form">
+                        <div class="form-group">
+                            <label for="name">Your Name *</label>
+                            <input type="text" id="name" name="name" required placeholder="Enter your name" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" name="email" required placeholder="Enter your email address" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject">Subject *</label>
+                            <select id="subject" name="subject" required class="form-input">
+                                <option value="">Select a subject</option>
+                                <option value="general">General Inquiry</option>
+                                <option value="support">Technical Support</option>
+                                <option value="feedback">Feedback</option>
+                                <option value="feature">Feature Request</option>
+                                <option value="bug">Report a Bug</option>
+                                <option value="partnership">Partnership Inquiry</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message">Your Message *</label>
+                            <textarea id="message" name="message" required rows="6" placeholder="Please describe your question or feedback in detail..." class="form-input"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="primary-btn">📤 Send Message</button>
+                    </form>
+                    
+                    <div id="formStatus" class="form-status hidden"></div>
+                </div>
+
+                <div class="content-card">
+                    <h2>Frequently Asked Questions</h2>
+                    
+                    <div class="faq-item">
+                        <h3>How do I get started with AI Flashcard Generator?</h3>
+                        <p>Simply go to our <a href="/">homepage</a>, paste your text or upload a PDF document, and click "Generate with AI" to create flashcards instantly. You'll need to configure your Google Gemini API key in the <a href="/settings">Settings</a> page first.</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h3>Where do I get a Google Gemini API key?</h3>
+                        <p>You can get a free Google Gemini API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>. The free tier provides generous usage limits for most educational needs.</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h3>Is my data secure?</h3>
+                        <p>Yes! Your flashcards and study progress are stored locally in your browser. Your API key is also stored locally and is never sent to our servers. Content you upload for processing is not permanently stored. Read our <a href="/privacy">Privacy Policy</a> for more details.</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h3>Can I export my flashcards?</h3>
+                        <p>Yes, you can export your flashcard decks in multiple formats including PDF, CSV, JSON, and Anki-compatible format. This allows you to study offline or import your cards into other study applications.</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h3>What is spaced repetition?</h3>
+                        <p>Spaced repetition is a learning technique that involves reviewing information at increasing intervals. Our app uses this scientifically-proven method to help you remember information more efficiently and for longer periods.</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h3>What file types are supported?</h3>
+                        <p>Currently, we support PDF files for upload and plain text input. We're working on adding support for additional file formats in future updates.</p>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <h2>Response Time</h2>
+                    <p>We aim to respond to all inquiries within 24-48 hours during business days. For urgent technical issues, please include "URGENT" in your subject line.</p>
+                </div>
+
+                <div class="content-card">
+                    <h2>Additional Resources</h2>
+                    <ul class="feature-list">
+                        <li><a href="/about">About Us</a> - Learn more about our mission and features</li>
+                        <li><a href="/privacy">Privacy Policy</a> - How we protect your data</li>
+                        <li><a href="/terms">Terms of Service</a> - Our terms and conditions</li>
+                        <li><a href="/settings">Settings</a> - Configure your API key and preferences</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Home</div>
+        </a>
+        <a href="/" class="nav-item">
+            <div class="nav-icon">🎴</div>
+            <div class="nav-label">My Decks</div>
+        </a>
+        <a href="/analytics" class="nav-item">
+            <div class="nav-icon">📊</div>
+            <div class="nav-label">Analytics</div>
+        </a>
+        <a href="/settings" class="nav-item">
+            <div class="nav-icon">⚙️</div>
+            <div class="nav-label">Settings</div>
+        </a>
+    </nav>
+
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formStatus = document.getElementById('formStatus');
+            const form = e.target;
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value.trim();
+            
+            if (!name || !email || !subject || !message) {
+                formStatus.textContent = 'Please fill in all required fields.';
+                formStatus.className = 'form-status error';
+                formStatus.classList.remove('hidden');
+                return;
+            }
+            
+            formStatus.innerHTML = '<div class="spinner"></div> Sending your message...';
+            formStatus.className = 'form-status sending';
+            formStatus.classList.remove('hidden');
+            
+            setTimeout(function() {
+                formStatus.textContent = 'Thank you for your message! We have received your inquiry and will respond within 24-48 hours.';
+                formStatus.className = 'form-status success';
+                form.reset();
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

@@ -471,6 +471,22 @@ def quiz_page(deck_id):
 def analytics_page():
     return render_template('analytics.html')
 
+@app.route('/about')
+def about_page():
+    return render_template('about.html')
+
+@app.route('/privacy')
+def privacy_page():
+    return render_template('privacy.html')
+
+@app.route('/terms')
+def terms_page():
+    return render_template('terms.html')
+
+@app.route('/contact')
+def contact_page():
+    return render_template('contact.html')
+
 @app.route('/sw.js')
 def service_worker():
     return send_file('sw.js', mimetype='application/javascript')
