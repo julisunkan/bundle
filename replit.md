@@ -40,7 +40,12 @@ A production-ready Progressive Web App (PWA) that generates interactive flashcar
 │   ├── deck.html          # Flashcard deck view
 │   ├── study.html         # Study mode
 │   ├── quiz.html          # Quiz mode
-│   └── analytics.html     # Analytics dashboard
+│   ├── analytics.html     # Analytics dashboard
+│   ├── settings.html      # Settings page
+│   ├── about.html         # About Us page
+│   ├── privacy.html       # Privacy Policy page
+│   ├── terms.html         # Terms of Service page
+│   └── contact.html       # Contact page with form
 └── sw.js                  # Service worker for offline support
 ```
 
@@ -63,6 +68,9 @@ A production-ready Progressive Web App (PWA) that generates interactive flashcar
 ## Recent Changes
 - [2025-11-22] Initial project setup
 - [2025-11-22] Added complete feature set with AI, OCR, SRS, PWA capabilities
+- [2025-12-04] Added essential pages for AdSense compliance: About Us, Privacy Policy, Terms of Service, Contact
+- [2025-12-04] Enhanced homepage with features grid and educational content sections
+- [2025-12-04] Added footer navigation links to all policy pages
 
 ## User Preferences
 None yet.
