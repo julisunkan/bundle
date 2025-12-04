@@ -114,11 +114,16 @@ def handle_deck(deck_id):
 @app.route('/api/decks/<int:deck_id>/cards', methods=['GET', 'POST'])
 def handle_cards(deck_id):
     if request.method == 'GET':
-        # Try to load from JSON first, fallback to database
-        cards = load_cards_from_json(deck_id)
-        if cards is None:
-            cards = Card.get_by_deck(deck_id)
-        return jsonify(cards)
+        # Try to load from JSON first
+        json_cards = load_cards_from_json(deck_id)
+        
+        # If JSON cards exist, return them
+        if json_cards is not None and len(json_cards) > 0:
+            return jsonify(json_cards)
+        
+        # Otherwise fall back to database
+        db_cards = Card.get_by_deck(deck_id)
+        return jsonify(db_cards)
     
     elif request.method == 'POST':
         if not request.json:
@@ -193,17 +198,24 @@ def load_cards_from_json(deck_id):
     """Load cards from JSON file for a specific deck"""
     json_file = 'flashcards_data.json'
     if not os.path.exists(json_file):
+        print(f"JSON file not found: {json_file}")
         return None
     
     try:
         with open(json_file, 'r') as f:
             flash_data = json.load(f)
         
+        print(f"Looking for deck_id {deck_id} in JSON")
+        print(f"Available decks: {[d.get('id') for d in flash_data.get('decks', [])]}")
+        
         for deck in flash_data.get('decks', []):
-            if deck['id'] == deck_id:
+            # Try both int and string comparison
+            if deck.get('id') == deck_id or str(deck.get('id')) == str(deck_id):
+                print(f"Found deck {deck_id} with {len(deck.get('cards', []))} cards")
+                
                 # Format cards to match database format
                 formatted_cards = []
-                for i, card in enumerate(deck['cards']):
+                for i, card in enumerate(deck.get('cards', [])):
                     formatted_card = {
                         'id': i + 1,
                         'deck_id': deck_id,
@@ -211,14 +223,20 @@ def load_cards_from_json(deck_id):
                         'answer': card.get('answer', ''),
                         'choices': json.dumps(card['choices']) if card.get('choices') else None,
                         'difficulty': 'medium',
-                        'created_at': deck.get('created_at', '')
+                        'created_at': deck.get('created_at', ''),
+                        'next_review': deck.get('created_at', '')
                     }
                     formatted_cards.append(formatted_card)
+                
+                print(f"Returning {len(formatted_cards)} formatted cards")
                 return formatted_cards
         
+        print(f"Deck {deck_id} not found in JSON")
         return None
     except Exception as e:
         print(f"Error loading cards from JSON: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 

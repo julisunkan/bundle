@@ -72,15 +72,26 @@
         async function loadCards() {
             try {
                 const response = await fetch(`/api/decks/${DECK_ID}/cards`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 cards = await response.json();
+                console.log('Loaded cards:', cards);
+                
+                if (!Array.isArray(cards)) {
+                    throw new Error('Invalid cards format');
+                }
                 
                 document.getElementById('totalCards').textContent = cards.length;
                 
-                const dueCards = cards.filter(c => new Date(c.next_review) <= new Date()).length;
+                const dueCards = cards.filter(c => c.next_review && new Date(c.next_review) <= new Date()).length;
                 document.getElementById('dueCards').textContent = dueCards;
                 
                 displayCards();
             } catch (error) {
+                console.error('Error loading cards:', error);
                 showMessage('Error loading cards: ' + error.message, 'error');
             }
         }
