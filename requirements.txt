@@ -9,3 +9,14 @@ requests
 google-generativeai
 reportlab
 gunicorn
+Flask==3.0.0
+google-generativeai
+gunicorn
+pdfplumber==0.10.3
+Pillow>=10.3.0
+PyPDF2==3.0.1
+pytesseract==0.3.10
+python-dotenv==1.0.0
+reportlab
+requests
+Werkzeug==3.0.1
