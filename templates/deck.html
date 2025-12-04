@@ -30,19 +30,6 @@
                 <button onclick="exportDeck('csv')" class="action-btn">📥 Export CSV</button>
                 <button onclick="exportDeck('anki')" class="action-btn">📥 Export Anki</button>
                 <button onclick="exportDeck('pdf')" class="action-btn">📄 Export PDF</button>
-                <button onclick="showDeleteConfirmation()" class="action-btn delete-btn" id="deleteDeckBtn">🗑️ Delete Deck</button>
-            </div>
-
-            <div id="deleteConfirmation" class="delete-confirmation hidden">
-                <div class="delete-confirmation-content">
-                    <div class="delete-icon">⚠️</div>
-                    <h3>Delete Deck?</h3>
-                    <p>Are you sure you want to delete "<span id="confirmDeckName"></span>"? This action cannot be undone!</p>
-                    <div class="delete-confirmation-actions">
-                        <button onclick="cancelDelete()" class="confirm-btn cancel-btn">❌ Cancel</button>
-                        <button onclick="confirmDelete()" class="confirm-btn delete-confirm-btn">🗑️ Yes, Delete</button>
-                    </div>
-                </div>
             </div>
 
             <div class="stats-bar">
@@ -121,71 +108,8 @@
                             }
                         })() : ''}
                     </div>
-                    <button onclick="deleteCard(${card.id})" class="delete-card-btn">🗑️</button>
                 </div>
             `).join('');
-        }
-
-        let pendingDeleteCardId = null;
-
-        async function deleteCard(cardId) {
-            // Show inline confirmation message
-            const container = document.querySelector('main') || document.body;
-            
-            // Remove existing confirmation messages
-            const existingConfirm = container.querySelectorAll('.inline-message.confirm');
-            existingConfirm.forEach(msg => msg.remove());
-            
-            pendingDeleteCardId = cardId;
-            
-            // Create confirmation message
-            const confirmDiv = document.createElement('div');
-            confirmDiv.className = 'inline-message confirm warning';
-            confirmDiv.innerHTML = `
-                <span style="font-size: 1.2rem;">⚠</span>
-                <span>Delete this flashcard?</span>
-                <div style="display: flex; gap: 10px; margin-left: auto;">
-                    <button onclick="cancelDeleteCard()" style="padding: 6px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancel</button>
-                    <button onclick="confirmDeleteCard()" style="padding: 6px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Delete</button>
-                </div>
-            `;
-            
-            // Insert at the top of the container
-            container.insertBefore(confirmDiv, container.firstChild);
-            
-            // Scroll to top to show the message
-            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        function cancelDeleteCard() {
-            pendingDeleteCardId = null;
-            const container = document.querySelector('main') || document.body;
-            const confirmMsg = container.querySelector('.inline-message.confirm');
-            if (confirmMsg) {
-                confirmMsg.style.opacity = '0';
-                confirmMsg.style.transform = 'translateY(-10px)';
-                setTimeout(() => confirmMsg.remove(), 300);
-            }
-        }
-
-        async function confirmDeleteCard() {
-            if (!pendingDeleteCardId) return;
-            
-            const cardId = pendingDeleteCardId;
-            pendingDeleteCardId = null;
-            
-            // Remove confirmation message
-            const container = document.querySelector('main') || document.body;
-            const confirmMsg = container.querySelector('.inline-message.confirm');
-            if (confirmMsg) confirmMsg.remove();
-            
-            try {
-                await fetch(`/api/cards/${cardId}`, { method: 'DELETE' });
-                showMessage('Card deleted', 'success');
-                await loadCards();
-            } catch (error) {
-                showMessage('Error deleting card', 'error');
-            }
         }
 
         async function exportDeck(format) {
@@ -227,34 +151,6 @@
                 showMessage(`Deck exported as ${format.toUpperCase()} successfully!`, 'success');
             } catch (error) {
                 showMessage('Error exporting deck: ' + error.message, 'error');
-            }
-        }
-
-        function showDeleteConfirmation() {
-            const confirmation = document.getElementById('deleteConfirmation');
-            const deckNameSpan = document.getElementById('confirmDeckName');
-            deckNameSpan.textContent = currentDeck?.name || 'this deck';
-            confirmation.classList.remove('hidden');
-            confirmation.classList.add('show');
-        }
-
-        function cancelDelete() {
-            const confirmation = document.getElementById('deleteConfirmation');
-            confirmation.classList.remove('show');
-            setTimeout(() => confirmation.classList.add('hidden'), 300);
-        }
-
-        async function confirmDelete() {
-            const confirmation = document.getElementById('deleteConfirmation');
-            confirmation.classList.remove('show');
-            setTimeout(() => confirmation.classList.add('hidden'), 300);
-            
-            try {
-                await fetch(`/api/decks/${DECK_ID}`, { method: 'DELETE' });
-                showMessage('Deck deleted successfully!', 'success');
-                setTimeout(() => location.href = '/', 1000);
-            } catch (error) {
-                showMessage('Error deleting deck', 'error');
             }
         }
 

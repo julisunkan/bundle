@@ -437,26 +437,6 @@ function setupCategoryFilter() {
     }
 }
 
-// Placeholder for deleteDeck function (assuming it exists elsewhere or will be implemented)
-function deleteDeck(deckId) {
-    if (!confirm('Are you sure you want to delete this deck? This action cannot be undone.')) {
-        return;
-    }
-    fetch(`/api/decks/${deckId}`, {
-        method: 'DELETE',
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to delete deck');
-        }
-        showMessage('Deck deleted successfully!', 'success');
-        loadDecks(); // Reload the deck list
-    })
-    .catch(error => {
-        console.error('Error deleting deck:', error);
-        showMessage('Error deleting deck: ' + error.message, 'error');
-    });
-}
 
 
 function showLoading(show) {
