@@ -215,6 +215,16 @@
             <div class="admin-section">
                 <h2>Generate Flashcards</h2>
                 <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Gemini API Key:</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="password" id="genApiKey" placeholder="Enter your Gemini API key (optional - uses server key if empty)" style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            <button onclick="toggleGenApiKeyVisibility()" style="padding: 10px 15px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">👁️</button>
+                        </div>
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            Get your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #667eea;">Google AI Studio</a>
+                        </small>
+                    </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                         <div>
                             <label style="display: block; margin-bottom: 5px; font-weight: bold;">Deck Name:</label>
@@ -455,6 +465,7 @@
             const category = document.getElementById('genCategory').value;
             const numCards = parseInt(document.getElementById('genNumCards').value);
             const topic = document.getElementById('genTopic').value.trim();
+            const apiKey = document.getElementById('genApiKey').value.trim();
             const statusEl = document.getElementById('genStatus');
 
             // Validation
@@ -481,15 +492,23 @@
             statusEl.style.color = '#007bff';
 
             try {
+                // Prepare request body
+                const requestBody = {
+                    text: topic,
+                    action: 'flashcards',
+                    num_cards: numCards
+                };
+
+                // Include API key if provided
+                if (apiKey) {
+                    requestBody.api_key = apiKey;
+                }
+
                 // Generate flashcards using AI
                 const processResponse = await fetch('/api/process-text', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        text: topic,
-                        action: 'flashcards',
-                        num_cards: numCards
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (!processResponse.ok) {
@@ -562,6 +581,15 @@
             } catch (error) {
                 statusEl.textContent = `❌ Error: ${error.message}`;
                 statusEl.style.color = '#dc3545';
+            }
+        }
+
+        function toggleGenApiKeyVisibility() {
+            const input = document.getElementById('genApiKey');
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
             }
         }
 
