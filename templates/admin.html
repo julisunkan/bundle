@@ -188,17 +188,9 @@
 </head>
 <body>
     <div class="admin-container">
-        <div id="loginSection" class="login-form">
-            <h2>Admin Login</h2>
-            <input type="password" id="adminPassword" placeholder="Enter admin password" onkeypress="if(event.key==='Enter')login()">
-            <button onclick="login()">Login</button>
-            <p id="loginError" class="error-msg" style="display:none;"></p>
-        </div>
-
-        <div id="adminPanel" class="admin-panel">
+        <div id="adminPanel" class="admin-panel" style="display: block;">
             <div class="admin-header">
                 <h1>Admin Panel</h1>
-                <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
 
             <div class="stats-bar">
@@ -281,72 +273,12 @@
     </div>
 
     <script>
-        let adminToken = sessionStorage.getItem('adminToken');
         let currentDeckId = null;
 
-        if (adminToken) {
-            verifyToken();
-        }
-
-        async function login() {
-            const password = document.getElementById('adminPassword').value;
-            const errorEl = document.getElementById('loginError');
-            
-            try {
-                const response = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    adminToken = data.token;
-                    sessionStorage.setItem('adminToken', adminToken);
-                    showAdminPanel();
-                    loadDecks();
-                } else {
-                    errorEl.textContent = data.error || 'Invalid password';
-                    errorEl.style.display = 'block';
-                }
-            } catch (e) {
-                errorEl.textContent = 'Connection error';
-                errorEl.style.display = 'block';
-            }
-        }
-
-        async function verifyToken() {
-            try {
-                const response = await fetch('/api/admin/verify', {
-                    headers: { 'Authorization': `Bearer ${adminToken}` }
-                });
-                
-                if (response.ok) {
-                    showAdminPanel();
-                    loadDecks();
-                } else {
-                    sessionStorage.removeItem('adminToken');
-                    adminToken = null;
-                }
-            } catch (e) {
-                sessionStorage.removeItem('adminToken');
-                adminToken = null;
-            }
-        }
-
-        function showAdminPanel() {
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('adminPanel').style.display = 'block';
-        }
-
-        function logout() {
-            sessionStorage.removeItem('adminToken');
-            adminToken = null;
-            document.getElementById('loginSection').style.display = 'block';
-            document.getElementById('adminPanel').style.display = 'none';
-            document.getElementById('adminPassword').value = '';
-        }
+        // Load decks on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDecks();
+        });
 
         async function loadDecks() {
             try {
@@ -418,8 +350,7 @@
             
             try {
                 const response = await fetch(`/api/admin/decks/${deckId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                    method: 'DELETE'
                 });
                 
                 if (response.ok) {
@@ -441,8 +372,7 @@
             
             try {
                 const response = await fetch(`/api/admin/cards/${cardId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                    method: 'DELETE'
                 });
                 
                 if (response.ok) {
@@ -526,10 +456,7 @@
                 // Create deck
                 const deckResponse = await fetch('/api/decks', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         name: deckName, 
                         description: `AI-generated deck about: ${topic}`,
@@ -547,10 +474,7 @@
                 // Save flashcards to JSON
                 const saveResponse = await fetch('/api/save-flashcards-json', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         deck_id: deckId,
                         deck_name: deckName,
