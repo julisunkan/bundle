@@ -491,6 +491,10 @@ def contact_page():
 def service_worker():
     return send_file('sw.js', mimetype='application/javascript')
 
+@app.route('/ads.txt')
+def ads_txt():
+    return send_file('ads.txt', mimetype='text/plain')
+
 @app.route('/manifest.json')
 def manifest():
     return send_file('static/manifest.json', mimetype='application/manifest+json')
