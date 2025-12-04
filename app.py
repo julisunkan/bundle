@@ -74,17 +74,12 @@ def handle_decks():
         deck_id = Deck.create(data['name'], data.get('description', ''), data.get('category', 'General'))
         return jsonify({'id': deck_id, 'message': 'Deck created successfully'})
 
-@app.route('/api/decks/<int:deck_id>', methods=['GET', 'DELETE'])
+@app.route('/api/decks/<int:deck_id>', methods=['GET'])
 def handle_deck(deck_id):
-    if request.method == 'GET':
-        deck = Deck.get_by_id(deck_id)
-        if deck:
-            return jsonify(deck)
-        return jsonify({'error': 'Deck not found'}), 404
-    
-    elif request.method == 'DELETE':
-        Deck.delete(deck_id)
-        return jsonify({'message': 'Deck deleted successfully'})
+    deck = Deck.get_by_id(deck_id)
+    if deck:
+        return jsonify(deck)
+    return jsonify({'error': 'Deck not found'}), 404
 
 @app.route('/api/decks/<int:deck_id>/cards', methods=['GET', 'POST'])
 def handle_cards(deck_id):
@@ -117,10 +112,6 @@ def handle_cards(deck_id):
         except Exception as e:
             return jsonify({'error': 'Failed to create card'}), 500
 
-@app.route('/api/cards/<int:card_id>', methods=['DELETE'])
-def delete_card(card_id):
-    Card.delete(card_id)
-    return jsonify({'message': 'Card deleted successfully'})
 
 @app.route('/api/process-text', methods=['POST'])
 def process_text():
