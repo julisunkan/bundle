@@ -342,39 +342,41 @@ async function saveCards() {
 }
 
 async function saveCardsToDeck(deckId, deckName, category) {
-    let savedCount = 0;
-    for (const card of generatedCards) {
-        const cardResponse = await fetch(`/api/decks/${deckId}/cards`, {
+    try {
+        // Save to JSON file
+        const response = await fetch('/api/save-flashcards-json', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                question: card.question,
-                answer: card.answer,
-                choices: card.choices || null
+                deck_id: deckId,
+                deck_name: deckName,
+                category: category,
+                cards: generatedCards
             })
         });
 
-        if (cardResponse.ok) {
-            savedCount++;
-        } else {
-            console.error(`Failed to save card: ${card.question}`, await cardResponse.text());
+        if (!response.ok) {
+            throw new Error('Failed to save flashcards');
         }
+
+        const data = await response.json();
+        showMessage(`Deck "${deckName}" (${category}) created with ${data.count} cards!`, 'success');
+
+        document.getElementById('textInput').value = '';
+        document.getElementById('deckName').value = '';
+        document.getElementById('categorySelect').value = 'General';
+        document.getElementById('cardsPreview').classList.add('hidden');
+        extractedText = '';
+        generatedCards = [];
+
+        await loadDecks();
+
+        setTimeout(() => {
+            location.href = `/deck/${deckId}`;
+        }, 1000);
+    } catch (error) {
+        showMessage('Error saving cards: ' + error.message, 'error');
     }
-
-    showMessage(`Deck "${deckName}" (${category}) created with ${savedCount} cards!`, 'success');
-
-    document.getElementById('textInput').value = '';
-    document.getElementById('deckName').value = '';
-    document.getElementById('categorySelect').value = 'General';
-    document.getElementById('cardsPreview').classList.add('hidden');
-    extractedText = '';
-    generatedCards = [];
-
-    await loadDecks();
-
-    setTimeout(() => {
-        location.href = `/deck/${deckId}`;
-    }, 1000);
 }
 
 

@@ -69,8 +69,35 @@ def index():
 @app.route('/api/decks', methods=['GET', 'POST'])
 def handle_decks():
     if request.method == 'GET':
-        decks = Deck.get_all()
-        return jsonify(decks)
+        # Get decks from database
+        db_decks = Deck.get_all()
+        
+        # Get decks from JSON
+        json_decks = []
+        json_file = 'flashcards_data.json'
+        if os.path.exists(json_file):
+            try:
+                with open(json_file, 'r') as f:
+                    flash_data = json.load(f)
+                
+                for deck in flash_data.get('decks', []):
+                    json_decks.append({
+                        'id': deck['id'],
+                        'name': deck['name'],
+                        'description': f"Generated deck - {len(deck['cards'])} cards",
+                        'category': deck.get('category', 'General'),
+                        'card_count': len(deck['cards']),
+                        'created_at': deck.get('created_at', '')
+                    })
+            except Exception as e:
+                print(f"Error loading JSON decks: {e}")
+        
+        # Merge decks, prioritizing JSON decks
+        all_decks = {deck['id']: deck for deck in db_decks}
+        for deck in json_decks:
+            all_decks[deck['id']] = deck
+        
+        return jsonify(list(all_decks.values()))
     
     elif request.method == 'POST':
         data = request.json
@@ -87,7 +114,10 @@ def handle_deck(deck_id):
 @app.route('/api/decks/<int:deck_id>/cards', methods=['GET', 'POST'])
 def handle_cards(deck_id):
     if request.method == 'GET':
-        cards = Card.get_by_deck(deck_id)
+        # Try to load from JSON first, fallback to database
+        cards = load_cards_from_json(deck_id)
+        if cards is None:
+            cards = Card.get_by_deck(deck_id)
         return jsonify(cards)
     
     elif request.method == 'POST':
@@ -114,6 +144,82 @@ def handle_cards(deck_id):
             return jsonify({'id': card_id, 'message': 'Card created successfully'})
         except Exception as e:
             return jsonify({'error': 'Failed to create card'}), 500
+
+@app.route('/api/save-flashcards-json', methods=['POST'])
+def save_flashcards_json():
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    data = request.json
+    deck_id = data.get('deck_id')
+    deck_name = data.get('deck_name')
+    category = data.get('category', 'General')
+    cards = data.get('cards', [])
+    
+    if not deck_id or not deck_name or not cards:
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    try:
+        # Load existing data
+        json_file = 'flashcards_data.json'
+        if os.path.exists(json_file):
+            with open(json_file, 'r') as f:
+                flash_data = json.load(f)
+        else:
+            flash_data = {'decks': []}
+        
+        # Add new deck
+        deck_entry = {
+            'id': deck_id,
+            'name': deck_name,
+            'category': category,
+            'created_at': datetime.now().isoformat(),
+            'cards': cards
+        }
+        
+        # Remove existing deck with same ID if exists
+        flash_data['decks'] = [d for d in flash_data['decks'] if d['id'] != deck_id]
+        flash_data['decks'].append(deck_entry)
+        
+        # Save to file
+        with open(json_file, 'w') as f:
+            json.dump(flash_data, f, indent=2)
+        
+        return jsonify({'message': 'Flashcards saved successfully', 'count': len(cards)})
+    except Exception as e:
+        return jsonify({'error': f'Failed to save: {str(e)}'}), 500
+
+def load_cards_from_json(deck_id):
+    """Load cards from JSON file for a specific deck"""
+    json_file = 'flashcards_data.json'
+    if not os.path.exists(json_file):
+        return None
+    
+    try:
+        with open(json_file, 'r') as f:
+            flash_data = json.load(f)
+        
+        for deck in flash_data.get('decks', []):
+            if deck['id'] == deck_id:
+                # Format cards to match database format
+                formatted_cards = []
+                for i, card in enumerate(deck['cards']):
+                    formatted_card = {
+                        'id': i + 1,
+                        'deck_id': deck_id,
+                        'question': card.get('question', ''),
+                        'answer': card.get('answer', ''),
+                        'choices': json.dumps(card['choices']) if card.get('choices') else None,
+                        'difficulty': 'medium',
+                        'created_at': deck.get('created_at', '')
+                    }
+                    formatted_cards.append(formatted_card)
+                return formatted_cards
+        
+        return None
+    except Exception as e:
+        print(f"Error loading cards from JSON: {e}")
+        return None
 
 
 @app.route('/api/process-text', methods=['POST'])
