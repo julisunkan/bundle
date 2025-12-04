@@ -1,135 +1,363 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
 from datetime import datetime
+import json
 
-db = SQLAlchemy()
+DATABASE = 'flashcards.db'
 
-class User(UserMixin, db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
-    full_name = db.Column(db.String(100), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)
-    is_banned = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    purchases = db.relationship('Payment', backref='user', lazy=True)
-    submissions = db.relationship('Submission', backref='user', lazy=True)
-    quiz_answers = db.relationship('QuizAnswer', backref='user', lazy=True)
-    certificates = db.relationship('Certificate', backref='user', lazy=True)
-    
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-    
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+def get_db():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-class Course(db.Model):
-    __tablename__ = 'courses'
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text)
-    price_ngn = db.Column(db.Float, nullable=False)
-    price_usd = db.Column(db.Float, nullable=False)
-    image_url = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    modules = db.relationship('Module', backref='course', lazy=True, cascade='all, delete-orphan')
-    payments = db.relationship('Payment', backref='course', lazy=True)
+def init_db():
+    conn = get_db()
+    cursor = conn.cursor()
 
-class Module(db.Model):
-    __tablename__ = 'modules'
-    id = db.Column(db.Integer, primary_key=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
-    content = db.Column(db.Text)
-    video_url = db.Column(db.String(500))
-    order = db.Column(db.Integer, default=0)
-    
-    quizzes = db.relationship('Quiz', backref='module', lazy=True, cascade='all, delete-orphan')
-    assignments = db.relationship('Assignment', backref='module', lazy=True, cascade='all, delete-orphan')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS decks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
 
-class Quiz(db.Model):
-    __tablename__ = 'quizzes'
-    id = db.Column(db.Integer, primary_key=True)
-    module_id = db.Column(db.Integer, db.ForeignKey('modules.id'), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
-    
-    questions = db.relationship('QuizQuestion', backref='quiz', lazy=True, cascade='all, delete-orphan')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS cards (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            deck_id INTEGER NOT NULL,
+            question TEXT NOT NULL,
+            answer TEXT NOT NULL,
+            choices TEXT,
+            difficulty INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (deck_id) REFERENCES decks (id) ON DELETE CASCADE
+        )
+    ''')
 
-class QuizQuestion(db.Model):
-    __tablename__ = 'quiz_questions'
-    id = db.Column(db.Integer, primary_key=True)
-    quiz_id = db.Column(db.Integer, db.ForeignKey('quizzes.id'), nullable=False)
-    question = db.Column(db.Text, nullable=False)
-    option_a = db.Column(db.String(500))
-    option_b = db.Column(db.String(500))
-    option_c = db.Column(db.String(500))
-    option_d = db.Column(db.String(500))
-    correct_answer = db.Column(db.String(1), nullable=False)
-    
-    answers = db.relationship('QuizAnswer', backref='question', lazy=True)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS study_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            card_id INTEGER NOT NULL,
+            easiness_factor REAL DEFAULT 2.5,
+            interval INTEGER DEFAULT 0,
+            repetitions INTEGER DEFAULT 0,
+            next_review TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_reviewed TIMESTAMP,
+            FOREIGN KEY (card_id) REFERENCES cards (id) ON DELETE CASCADE
+        )
+    ''')
 
-class QuizAnswer(db.Model):
-    __tablename__ = 'quiz_answers'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    question_id = db.Column(db.Integer, db.ForeignKey('quiz_questions.id'), nullable=False)
-    selected_answer = db.Column(db.String(1))
-    is_correct = db.Column(db.Boolean)
-    answered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS quiz_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            deck_id INTEGER NOT NULL,
+            score INTEGER NOT NULL,
+            total INTEGER NOT NULL,
+            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (deck_id) REFERENCES decks (id) ON DELETE CASCADE
+        )
+    ''')
 
-class Assignment(db.Model):
-    __tablename__ = 'assignments'
-    id = db.Column(db.Integer, primary_key=True)
-    module_id = db.Column(db.Integer, db.ForeignKey('modules.id'), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text)
-    
-    submissions = db.relationship('Submission', backref='assignment', lazy=True, cascade='all, delete-orphan')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS badges (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            icon TEXT,
+            requirement INTEGER,
+            earned BOOLEAN DEFAULT 0,
+            earned_at TIMESTAMP
+        )
+    ''')
 
-class Submission(db.Model):
-    __tablename__ = 'submissions'
-    id = db.Column(db.Integer, primary_key=True)
-    assignment_id = db.Column(db.Integer, db.ForeignKey('assignments.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    file_path = db.Column(db.String(500))
-    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
-    grade = db.Column(db.Float)
+    cursor.execute('''
+        SELECT COUNT(*) FROM badges
+    ''')
+    if cursor.fetchone()[0] == 0:
+        badges_data = [
+            ('First Steps', 'Study your first flashcard', '🎯', 1, 0, None),
+            ('Beginner', 'Study 10 flashcards', '📚', 10, 0, None),
+            ('Scholar', 'Study 50 flashcards', '🎓', 50, 0, None),
+            ('Expert', 'Study 100 flashcards', '👨‍🎓', 100, 0, None),
+            ('Master', 'Study 500 flashcards', '🏆', 500, 0, None),
+            ('Quiz Starter', 'Complete your first quiz', '✅', 1, 0, None),
+            ('Perfect Score', 'Get 100% on a quiz', '💯', 1, 0, None),
+            ('Consistent Learner', 'Study 7 days in a row', '🔥', 7, 0, None),
+        ]
+        cursor.executemany('''
+            INSERT INTO badges (name, description, icon, requirement, earned, earned_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', badges_data)
 
-class Payment(db.Model):
-    __tablename__ = 'payments'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
-    amount = db.Column(db.Float, nullable=False)
-    currency = db.Column(db.String(3), nullable=False)
-    payment_method = db.Column(db.String(50))
-    transaction_ref = db.Column(db.String(200), unique=True)
-    status = db.Column(db.String(20), default='pending')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    conn.commit()
+    conn.close()
 
-class Certificate(db.Model):
-    __tablename__ = 'certificates'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
-    certificate_id = db.Column(db.String(100), unique=True, nullable=False)
-    issued_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    course = db.relationship('Course', backref='certificates')
+class Deck:
+    @staticmethod
+    def create(name, description=''):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO decks (name, description) VALUES (?, ?)', (name, description))
+        deck_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        return deck_id
 
-class Settings(db.Model):
-    __tablename__ = 'settings'
-    id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String(100), unique=True, nullable=False)
-    value = db.Column(db.Text)
+    @staticmethod
+    def get_all():
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT d.*, COUNT(c.id) as card_count
+            FROM decks d
+            LEFT JOIN cards c ON d.id = c.deck_id
+            GROUP BY d.id
+            ORDER BY d.created_at DESC
+        ''')
+        decks = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return decks
 
-class Policy(db.Model):
-    __tablename__ = 'policies'
-    id = db.Column(db.Integer, primary_key=True)
-    policy_type = db.Column(db.String(50), unique=True, nullable=False)  # 'privacy', 'terms', 'refund'
-    content = db.Column(db.Text, nullable=False)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    @staticmethod
+    def get_by_id(deck_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM decks WHERE id = ?', (deck_id,))
+        deck = cursor.fetchone()
+        conn.close()
+        return dict(deck) if deck else None
+
+    @staticmethod
+    def delete(deck_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM decks WHERE id = ?', (deck_id,))
+        conn.commit()
+        conn.close()
+
+class Card:
+    @staticmethod
+    def create(deck_id, question, answer, choices=None):
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # Ensure choices is properly formatted
+        choices_json = None
+        if choices:
+            if isinstance(choices, str):
+                # If it's already a string, try to parse and re-encode to ensure valid JSON
+                try:
+                    parsed = json.loads(choices)
+                    choices_json = json.dumps(parsed)
+                except json.JSONDecodeError:
+                    # If it's not valid JSON, treat as None
+                    choices_json = None
+            elif isinstance(choices, list):
+                choices_json = json.dumps(choices)
+        
+        cursor.execute('''
+            INSERT INTO cards (deck_id, question, answer, choices)
+            VALUES (?, ?, ?, ?)
+        ''', (deck_id, question, answer, choices_json))
+        card_id = cursor.lastrowid
+
+        cursor.execute('''
+            INSERT INTO study_sessions (card_id)
+            VALUES (?)
+        ''', (card_id,))
+
+        conn.commit()
+        conn.close()
+        return card_id
+
+    @staticmethod
+    def get_by_deck(deck_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT c.*, s.easiness_factor, s.interval, s.repetitions, s.next_review
+            FROM cards c
+            LEFT JOIN study_sessions s ON c.id = s.card_id
+            WHERE c.deck_id = ?
+            ORDER BY c.created_at
+        ''', (deck_id,))
+        cards = [dict(row) for row in cursor.fetchall()]
+        for card in cards:
+            if card['choices']:
+                try:
+                    card['choices'] = json.loads(card['choices'])
+                except (json.JSONDecodeError, TypeError):
+                    # If choices is invalid JSON, set to None
+                    card['choices'] = None
+        conn.close()
+        return cards
+
+    @staticmethod
+    def get_due_cards(deck_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT c.*, s.easiness_factor, s.interval, s.repetitions, s.next_review
+            FROM cards c
+            JOIN study_sessions s ON c.id = s.card_id
+            WHERE c.deck_id = ? AND s.next_review <= CURRENT_TIMESTAMP
+            ORDER BY s.next_review
+        ''', (deck_id,))
+        cards = [dict(row) for row in cursor.fetchall()]
+        for card in cards:
+            if card['choices']:
+                try:
+                    card['choices'] = json.loads(card['choices'])
+                except (json.JSONDecodeError, TypeError):
+                    # If choices is invalid JSON, set to None
+                    card['choices'] = None
+        conn.close()
+        return cards
+
+    @staticmethod
+    def delete(card_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM cards WHERE id = ?', (card_id,))
+        conn.commit()
+        conn.close()
+
+class StudySession:
+    @staticmethod
+    def update(card_id, quality):
+        from srs_algorithm import sm2_algorithm
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT easiness_factor, interval, repetitions
+            FROM study_sessions
+            WHERE card_id = ?
+        ''', (card_id,))
+        session = cursor.fetchone()
+
+        if session:
+            ef, interval, reps = session
+            new_ef, new_interval, new_reps = sm2_algorithm(quality, ef, interval, reps)
+
+            cursor.execute('''
+                UPDATE study_sessions
+                SET easiness_factor = ?,
+                    interval = ?,
+                    repetitions = ?,
+                    next_review = datetime('now', '+' || ? || ' days'),
+                    last_reviewed = CURRENT_TIMESTAMP
+                WHERE card_id = ?
+            ''', (new_ef, new_interval, new_reps, new_interval, card_id))
+
+            conn.commit()
+
+        conn.close()
+
+    @staticmethod
+    def get_stats():
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT COUNT(*) FROM study_sessions WHERE last_reviewed IS NOT NULL')
+        total_studied = cursor.fetchone()[0]
+
+        cursor.execute('SELECT COUNT(*) FROM study_sessions WHERE next_review <= CURRENT_TIMESTAMP')
+        due_today = cursor.fetchone()[0]
+
+        cursor.execute('SELECT AVG(easiness_factor) FROM study_sessions WHERE last_reviewed IS NOT NULL')
+        avg_ef = cursor.fetchone()[0] or 0
+
+        conn.close()
+
+        return {
+            'total_studied': total_studied,
+            'due_today': due_today,
+            'average_retention': round(avg_ef, 2)
+        }
+
+class QuizResult:
+    @staticmethod
+    def save(deck_id, score, total):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO quiz_results (deck_id, score, total)
+            VALUES (?, ?, ?)
+        ''', (deck_id, score, total))
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def get_by_deck(deck_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT * FROM quiz_results
+            WHERE deck_id = ?
+            ORDER BY completed_at DESC
+            LIMIT 10
+        ''', (deck_id,))
+        results = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return results
+
+class Badge:
+    @staticmethod
+    def check_and_award():
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT COUNT(*) FROM study_sessions WHERE last_reviewed IS NOT NULL')
+        cards_studied = cursor.fetchone()[0]
+
+        cursor.execute('SELECT COUNT(*) FROM quiz_results')
+        quizzes_completed = cursor.fetchone()[0]
+
+        cursor.execute('SELECT * FROM badges WHERE earned = 0')
+        unearned_badges = cursor.fetchall()
+
+        newly_earned = []
+        for badge in unearned_badges:
+            badge_dict = dict(badge)
+            if badge_dict['name'] in ['First Steps', 'Beginner', 'Scholar', 'Expert', 'Master']:
+                if cards_studied >= badge_dict['requirement']:
+                    cursor.execute('''
+                        UPDATE badges
+                        SET earned = 1, earned_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ''', (badge_dict['id'],))
+                    newly_earned.append(badge_dict['name'])
+
+            elif badge_dict['name'] == 'Quiz Starter' and quizzes_completed >= 1:
+                cursor.execute('''
+                    UPDATE badges
+                    SET earned = 1, earned_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ''', (badge_dict['id'],))
+                newly_earned.append(badge_dict['name'])
+
+            elif badge_dict['name'] == 'Perfect Score':
+                cursor.execute('SELECT * FROM quiz_results WHERE score = total LIMIT 1')
+                if cursor.fetchone():
+                    cursor.execute('''
+                        UPDATE badges
+                        SET earned = 1, earned_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ''', (badge_dict['id'],))
+                    newly_earned.append(badge_dict['name'])
+
+        conn.commit()
+        conn.close()
+        return newly_earned
+
+    @staticmethod
+    def get_all():
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM badges ORDER BY requirement')
+        badges = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return badges

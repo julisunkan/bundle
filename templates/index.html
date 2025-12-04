@@ -1,169 +1,127 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered flashcard generator with spaced repetition">
+    <meta name="theme-color" content="#6366f1">
+    <title>AI Flashcard Generator</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="/static/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 AI Flashcard Generator</h1>
+            <p class="subtitle">Transform any text or PDF into interactive flashcards</p>
+            <nav>
+                <button onclick="location.href='/analytics'" class="nav-btn">📊 Analytics</button>
+                <button onclick="location.href='/settings'" class="nav-btn">⚙️ Settings</button>
+            </nav>
+        </header>
 
-{% block title %}Home - DigitalSkeleton{% endblock %}
-
-{% block content %}
-<!-- Animated Background Elements -->
-<div class="bg-animated">
-    <div class="circle circle-1"></div>
-    <div class="circle circle-2"></div>
-    <div class="circle circle-3"></div>
-</div>
-
-<!-- Hero Carousel Slideshow -->
-<div id="heroCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel">
-    <div class="carousel-indicators">
-        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
-        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
-        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
-    </div>
-    
-    <div class="carousel-inner">
-        <div class="carousel-item active" style="background: linear-gradient(135deg, #2196F3 0%, #4CAF50 100%);">
-            <div class="d-flex align-items-center justify-content-center h-100">
-                <div class="carousel-caption">
-                    <h1 class="display-3">🎓 Learn New Skills Today</h1>
-                    <p class="lead fs-4">Master technology with expertly curated courses</p>
-                    <a href="#courses" class="btn btn-warning btn-lg mt-3">Explore Courses</a>
+        <main>
+            <section class="upload-section">
+                <h2>Create Flashcards</h2>
+                
+                <div class="input-method-tabs">
+                    <button class="tab-btn active" data-tab="text">📝 Text Input</button>
+                    <button class="tab-btn" data-tab="pdf">📄 Upload PDF</button>
                 </div>
-            </div>
-        </div>
+
+                <div class="tab-content active" id="text-tab">
+                    <textarea id="textInput" placeholder="Paste your text here..." rows="10"></textarea>
+                </div>
+
+                <div class="tab-content" id="pdf-tab">
+                    <div class="file-upload">
+                        <input type="file" id="pdfInput" accept=".pdf" hidden>
+                        <button onclick="document.getElementById('pdfInput').click()" class="upload-btn">
+                            📁 Choose PDF File
+                        </button>
+                        <p id="fileName" class="file-name"></p>
+                    </div>
+                </div>
+
+                <div class="generation-options">
+                    <label>
+                        <input type="radio" name="genType" value="flashcards" checked>
+                        🎴 Q&A Flashcards
+                    </label>
+                    <label>
+                        <input type="radio" name="genType" value="multiple_choice">
+                        ☑️ Multiple Choice
+                    </label>
+                    <label>
+                        <input type="radio" name="genType" value="summary">
+                        📋 Summary Only
+                    </label>
+                </div>
+
+                <div class="controls">
+                    <input type="text" id="deckName" placeholder="Deck name (e.g., Biology Chapter 5)" class="deck-input">
+                    <input type="number" id="numCards" placeholder="Number of cards" value="10" min="1" max="50" class="num-input">
+                    <button id="generateBtn" class="primary-btn">✨ Generate with AI</button>
+                </div>
+
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Processing with AI...</p>
+                </div>
+
+                <div id="summaryResult" class="result-box hidden">
+                    <h3>Summary</h3>
+                    <div id="summaryContent"></div>
+                </div>
+
+                <div id="cardsPreview" class="cards-preview hidden">
+                    <h3>Generated Cards Preview</h3>
+                    <div id="cardsContainer"></div>
+                    <div class="preview-actions">
+                        <button id="saveCardsBtn" class="primary-btn">💾 Save to Deck</button>
+                        <button id="exportPdfBtn" class="secondary-btn">📄 Export as PDF</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="decks-section">
+                <h2>My Flashcard Decks</h2>
+                <div id="decksList" class="decks-grid"></div>
+            </section>
+        </main>
+
         
-        <div class="carousel-item" style="background: linear-gradient(135deg, #4CAF50 0%, #FFC107 100%);">
-            <div class="d-flex align-items-center justify-content-center h-100">
-                <div class="carousel-caption">
-                    <h1 class="display-3">💼 Advance Your Career</h1>
-                    <p class="lead fs-4">Get certified and stand out in your field</p>
-                    <a href="#courses" class="btn btn-primary btn-lg mt-3">Get Started</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="carousel-item" style="background: linear-gradient(135deg, #F44336 0%, #2196F3 100%);">
-            <div class="d-flex align-items-center justify-content-center h-100">
-                <div class="carousel-caption">
-                    <h1 class="display-3">🚀 Transform Your Future</h1>
-                    <p class="lead fs-4">Join thousands of successful students worldwide</p>
-                    <a href="#courses" class="btn btn-success btn-lg mt-3">Join Now</a>
-                </div>
+        <div id="badgeModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>🎉 Badge Earned!</h2>
+                <div id="badgeInfo"></div>
+                <button onclick="closeBadgeModal()" class="primary-btn">Awesome!</button>
             </div>
         </div>
     </div>
-    
-    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Previous</span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Next</span>
-    </button>
-</div>
 
-<!-- Features Section -->
-<div class="row text-center my-5">
-    <div class="col-md-4 mb-4">
-        <div class="p-4">
-            <div class="display-4 mb-3" style="animation: float 3s ease-in-out infinite;">🎯</div>
-            <h3 style="color: #2196F3;">Expert Instructors</h3>
-            <p class="text-muted">Learn from industry professionals with years of experience</p>
-        </div>
-    </div>
-    <div class="col-md-4 mb-4">
-        <div class="p-4">
-            <div class="display-4 mb-3" style="animation: float 3s ease-in-out infinite; animation-delay: 1s;">📜</div>
-            <h3 style="color: #4CAF50;">Get Certified</h3>
-            <p class="text-muted">Earn certificates that showcase your new skills</p>
-        </div>
-    </div>
-    <div class="col-md-4 mb-4">
-        <div class="p-4">
-            <div class="display-4 mb-3" style="animation: float 3s ease-in-out infinite; animation-delay: 2s;">⚡</div>
-            <h3 style="color: #FFC107;">Lifetime Access</h3>
-            <p class="text-muted">Learn at your own pace with unlimited course access</p>
-        </div>
-    </div>
-</div>
+    <!-- Mobile App Style Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item active">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Home</div>
+        </a>
+        <a href="/" class="nav-item">
+            <div class="nav-icon">🎴</div>
+            <div class="nav-label">My Decks</div>
+        </a>
+        <a href="/analytics" class="nav-item">
+            <div class="nav-icon">📊</div>
+            <div class="nav-label">Analytics</div>
+        </a>
+        <a href="/settings" class="nav-item">
+            <div class="nav-icon">⚙️</div>
+            <div class="nav-label">Settings</div>
+        </a>
+    </nav>
 
-<h2 id="courses" class="mb-5">🌟 Available Courses</h2>
-<div class="row">
-    {% for course in courses %}
-    <div class="col-md-4 mb-4" style="animation-delay: {{ loop.index * 0.1 }}s;">
-        <div class="card h-100">
-            {% if course.image_url %}
-            <img src="{{ course.image_url }}" class="card-img-top" alt="{{ course.title }}">
-            {% else %}
-            <div class="card-img-top" style="background: linear-gradient(135deg, #2196F3, #4CAF50); height: 250px; display: flex; align-items: center; justify-content: center;">
-                <i class="bi bi-book display-1 text-white"></i>
-            </div>
-            {% endif %}
-            <div class="card-body">
-                <h5 class="card-title">{{ course.title }}</h5>
-                <p class="card-text">{{ course.description[:100] }}...</p>
-                <div class="price-tag">
-                    {% if currency == 'NGN' %}
-                        ₦{{ course.price_ngn|format_currency }}
-                    {% else %}
-                        ${{ course.price_usd|format_currency }}
-                    {% endif %}
-                </div>
-            </div>
-            <div class="card-footer">
-                <a href="{{ url_for('main.course_detail', course_id=course.id) }}" class="btn btn-primary w-100">
-                    <i class="bi bi-eye"></i> View Details
-                </a>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
-
-<!-- Pagination -->
-{% if pagination.pages > 1 %}
-<nav aria-label="Course pagination" class="mt-4">
-    <ul class="pagination justify-content-center">
-        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('main.index', page=pagination.prev_num) }}#courses" aria-label="Previous">
-                <span aria-hidden="true">&laquo;</span>
-            </a>
-        </li>
-        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-            {% if page_num %}
-                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                    <a class="page-link" href="{{ url_for('main.index', page=page_num) }}#courses">{{ page_num }}</a>
-                </li>
-            {% else %}
-                <li class="page-item disabled"><span class="page-link">...</span></li>
-            {% endif %}
-        {% endfor %}
-        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('main.index', page=pagination.next_num) }}#courses" aria-label="Next">
-                <span aria-hidden="true">&raquo;</span>
-            </a>
-        </li>
-    </ul>
-</nav>
-{% endif %}
-
-<!-- Call to Action Section -->
-<div class="text-center my-5 p-5" style="background: linear-gradient(135deg, #F44336 0%, #FFC107 100%); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
-    <h2 class="text-white mb-4">Ready to Start Learning?</h2>
-    <p class="text-white lead mb-4">Join our community of learners and transform your career today!</p>
-    <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg me-3">
-        <i class="bi bi-person-plus"></i> Sign Up Now
-    </a>
-    <a href="#courses" class="btn btn-outline-light btn-lg">
-        <i class="bi bi-collection"></i> Browse Courses
-    </a>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    // Auto-start carousel
-    var carousel = new bootstrap.Carousel(document.getElementById('heroCarousel'), {
-        interval: 4000,
-        wrap: true
-    });
-</script>
-{% endblock %}
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

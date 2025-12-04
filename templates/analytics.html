@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <title>Analytics Dashboard</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button onclick="location.href='/'" class="back-btn">← Home</button>
+            <h1>📊 Analytics Dashboard</h1>
+        </header>
+
+        <main>
+            <section class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-icon">📚</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalStudied">0</div>
+                        <div class="stat-label">Cards Studied</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏰</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="dueToday">0</div>
+                        <div class="stat-label">Due Today</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="avgRetention">0.0</div>
+                        <div class="stat-label">Avg Retention</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="badges-section">
+                <h2>🏆 Badges & Achievements</h2>
+                <div id="badgesList" class="badges-grid"></div>
+            </section>
+
+            <section class="quiz-history">
+                <h2>📝 Recent Quiz Results</h2>
+                <div id="quizHistory"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/js/analytics.js"></script>
+
+    <!-- Mobile App Style Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Home</div>
+        </a>
+        <a href="/" class="nav-item">
+            <div class="nav-icon">🎴</div>
+            <div class="nav-label">My Decks</div>
+        </a>
+        <a href="/analytics" class="nav-item active">
+            <div class="nav-icon">📊</div>
+            <div class="nav-label">Analytics</div>
+        </a>
+        <a href="/settings" class="nav-item">
+            <div class="nav-icon">⚙️</div>
+            <div class="nav-label">Settings</div>
+        </a>
+    </nav>
+</body>
+</html>

@@ -1,12 +1,11 @@
-modules = ["web", "nodejs-20", "python-3.12", "postgresql-16"]
+modules = ["python-3.11", "nodejs-20", "web"]
+[agent]
+expertMode = true
+integrations = ["python_openai:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["cairo", "freetype", "gdk-pixbuf", "glibcLocales", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "pango", "postgresql", "sqlite", "tcl", "tk", "unzip", "zlib"]
-
-[deployment]
-deploymentTarget = "autoscale"
-run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
+packages = ["freetype", "glibcLocales", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "tcl", "tesseract", "tk", "zlib"]
 
 [workflows]
 runButton = "Project"
@@ -18,50 +17,20 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Start application"
+args = "Flask Server"
 
 [[workflows.workflow]]
-name = "Start application"
+name = "Flask Server"
 author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"
+waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app"
-waitForPort = 5000
-
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 33569
-externalPort = 3003
-
-[[ports]]
-localPort = 36767
-externalPort = 5000
-
-[[ports]]
-localPort = 45079
-externalPort = 3001
-
-[[ports]]
-localPort = 45195
-externalPort = 3000
-
-[[ports]]
-localPort = 46577
-externalPort = 3002
-
-[agent]
-integrations = ["python_openai==1.0.0"]
-expertMode = true
-
-[userenv]
-
-[userenv.shared]
-FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK-fa6572916798cfedad2f364499ceb672-X"
-FLUTTERWAVE_WEBHOOK_SECRET_HASH = "digitalskeleton_flw_webhook_2024"

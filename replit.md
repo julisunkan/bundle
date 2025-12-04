@@ -1,219 +1,74 @@
-# CourseHub - Online Course Selling Platform
+# AI Flashcard Generator
 
 ## Overview
-CourseHub is a comprehensive Flask-based web application for selling and managing online courses. Students can browse courses, purchase them using Flutterwave, take quizzes, submit assignments, and receive PDF certificates upon completion. Admins have full control over course content, student management, and payment configurations.
+A production-ready Progressive Web App (PWA) that generates interactive flashcards from text or PDF files using AI. Built with Flask (Python), SQLite, and vanilla JavaScript.
 
-## User Preferences
-Preferred communication style: Simple, everyday language.
+## Features
+- **Intelligent Content Generation**: Uses local keyword extraction and NLP algorithms to create summaries, Q&A pairs, and multiple-choice questions (no API keys required!)
+- **PDF Support**: Extract text from PDFs using PyPDF2 and pdfplumber
+- **OCR Capabilities**: Scan text from images in PDFs using Tesseract OCR
+- **Spaced Repetition**: SM-2 algorithm for optimized learning intervals
+- **Study Modes**: Interactive card flipping, quiz mode with instant feedback
+- **Voice Features**: Text-to-Speech (TTS) and voice-based answering
+- **Analytics**: Track progress, retention rates, and performance metrics
+- **Gamification**: Badge and achievement system
+- **Export**: JSON, CSV, and Anki-compatible formats
+- **PWA**: Offline functionality with service worker caching
+- **Responsive**: Optimized for mobile and desktop
 
-## System Architecture
-
-### UI/UX Decisions
-- **Bootstrap 5**: Clean, modern, and responsive interface
-- **Dark Mode**: Toggle between light and dark themes
-- **Mobile-First Design**: Optimized for all screen sizes
-- **Gradient Hero Section**: Eye-catching landing page with gradient background
-- **Card-Based Layout**: Course cards with hover effects
-- **Flash Messages**: User-friendly notifications for all actions
-
-### Technical Stack
-- **Backend**: Python Flask with SQLAlchemy ORM
-- **Database**: SQLite for local development (can be configured for PostgreSQL in production)
-- **Authentication**: Flask-Login with password hashing (Werkzeug)
-- **Payment Gateway**: Flutterwave integration
-- **PDF Generation**: ReportLab for certificates
-- **Frontend**: Jinja2 templates, Bootstrap 5, Vanilla JavaScript
-- **PWA Support**: Service Worker, manifest.json, offline fallback page
-
-### Core Features
-
-#### 1. User Management
-- **Student Registration & Login**: Secure authentication with password hashing
-- **Admin Dashboard**: Full access to course and student management
-- **Role-Based Access Control**: Separate interfaces for students and admins
-
-#### 2. Course Management (Admin)
-- Create, edit, and delete courses
-- Set pricing in both NGN and USD
-- Upload course images (external URLs)
-- Add multiple modules per course
-- Create quizzes with multiple-choice questions
-- Assign assignments to modules
-
-#### 3. Student Experience
-- Browse all available courses
-- View detailed course information
-- Purchase courses using Flutterwave
-- Access purchased course modules
-- Watch embedded video content (YouTube)
-- Take quizzes and receive instant scoring
-- Submit assignments (file upload)
-- Download personalized PDF certificates
-
-#### 4. Payment System
-- **Currency Switching**: Toggle between NGN and USD
-- **Flutterwave Integration**: Multiple payment options
-- **Payment Verification**: Server-side transaction verification
-- **Payment History**: Track all transactions in admin dashboard
-
-#### 5. Progressive Web App
-- **Offline Support**: Service worker caches essential resources
-- **Installable**: Can be installed on mobile devices
-- **Manifest**: App-like experience on mobile
-- **Responsive Icons**: Multiple icon sizes for different devices
-
-#### 6. Policy Management (Admin)
-- **Privacy Policy Template**: Editable template for privacy policy
-- **Terms & Conditions Template**: Editable template for terms and conditions
-- **Refund Policy Template**: Editable template for refund policy
-- **HTML Support**: Templates support HTML formatting for rich content
-- **Integrated Settings**: All policy templates are managed in the admin settings page
-
-### Database Models
-- **User**: Students and admins with authentication
-- **Course**: Course information and pricing
-- **Module**: Individual lessons within courses
-- **Quiz**: Module quizzes with questions
-- **QuizQuestion**: Multiple-choice questions
-- **QuizAnswer**: Student quiz submissions
-- **Assignment**: Module assignments
-- **Submission**: Student assignment submissions
-- **Payment**: Transaction records
-- **Certificate**: Issued certificates
-- **Settings**: Payment API keys and configurations
-- **Policy**: Policy templates (privacy, terms, refund)
-
-### Security Features
-- **Password Hashing**: Werkzeug security for password storage
-- **Payment Verification**: Strict verification before granting access
-- **Login Required**: Protected routes for authenticated users
-- **Admin Protection**: Decorator-based admin access control
-- **CSRF Protection**: Built into Flask forms
-
-## Setup & Configuration
-
-### Environment Variables
-The application requires the following environment variable:
-- `SESSION_SECRET`: Secret key for Flask sessions (automatically provided by Replit)
-
-Payment API keys are stored in the database and can be configured through the admin settings page.
-
-### Default Admin Account
-- **Email**: admin@example.com
-- **Password**: admin123
-- **Note**: Change this password after first login for security
-
-### Pre-Populated Courses
-The database is automatically populated with 5 starter courses on first run:
-1. **Cyber Security Fundamentals** (₦45,000 / $30)
-2. **Graphics Design Masterclass** (₦35,000 / $25)
-3. **Robotics for Beginners** (₦50,000 / $35)
-4. **Electronic Engineering Foundation** (₦40,000 / $28)
-5. **Data Science & Machine Learning** (₦55,000 / $40)
-
-Each course includes multiple modules with video content, quizzes, and assignments.
-
-### Admin Settings Configuration
-To configure payment gateway and policy templates:
-1. Login as admin (admin@example.com / admin123)
-2. Navigate to Admin Dashboard -> Settings
-3. Configure Flutterwave payment gateway by entering your API keys:
-   - Flutterwave Public Key
-   - Flutterwave Secret Key
-4. Set the NGN to USD exchange rate (default: 1500)
-
-### Python Dependencies
-- Flask==3.1.1
-- Flask-SQLAlchemy==3.1.1
-- Flask-Login==0.6.3
-- Werkzeug==3.1.3
-- reportlab==4.2.5
-- requests==2.32.4
-- python-dotenv==1.0.1
-- gunicorn==23.0.0
-
-### Frontend Dependencies (CDN)
-- **Bootstrap 5.3.2**: Responsive UI framework
-- **Bootstrap Icons 1.11.3**: Icon library
-- **Feather Icons**: Additional icon set
-
-## Project Structure
+## Project Architecture
 ```
-├── app.py                      # Main Flask application factory
-├── main.py                     # Application entry point
-├── models.py                   # Database models
-├── init_data.py               # Database seeding script
-├── requirements.txt           # Python dependencies
-├── routes/                    # Route blueprints
-│   ├── auth.py               # Authentication routes
-│   ├── admin.py              # Admin dashboard routes
-│   ├── student.py            # Student dashboard routes
-│   ├── payments.py           # Payment processing routes
-│   ├── pwa.py                # PWA routes
-│   └── main.py               # Main routes (home, courses)
-├── templates/                 # Jinja2 templates
-│   ├── base.html            # Base template
-│   ├── index.html           # Homepage
-│   ├── course_detail.html   # Course details page
-│   ├── offline.html         # PWA offline page
-│   ├── auth/                # Authentication templates
-│   ├── admin/               # Admin dashboard templates
-│   ├── student/             # Student dashboard templates
-│   └── payments/            # Payment templates
-├── static/                   # Static assets
-│   ├── css/                 # Stylesheets
-│   ├── js/                  # JavaScript files
-│   ├── icons/               # PWA icons
-│   ├── uploads/             # User-uploaded files
-│   ├── certificates/        # Generated certificates
-│   ├── manifest.json        # PWA manifest
-│   └── sw.js                # Service worker
-├── utils/                    # Utility modules
-│   └── certificate_generator.py  # PDF certificate generation
-└── database.db              # SQLite database (auto-created)
+/
+├── app.py                  # Flask application entry point
+├── models.py               # Database models and schema
+├── ai_service.py           # OpenAI integration for content generation
+├── srs_algorithm.py        # SM-2 spaced repetition implementation
+├── utils.py                # Helper functions (PDF/OCR processing)
+├── requirements.txt        # Python dependencies
+├── flashcards.db          # SQLite database (auto-created)
+├── static/
+│   ├── css/
+│   │   └── style.css      # Main stylesheet
+│   ├── js/
+│   │   ├── app.js         # Main application logic
+│   │   ├── study.js       # Study mode functionality
+│   │   └── quiz.js        # Quiz mode functionality
+│   ├── icons/             # PWA icons
+│   └── manifest.json      # PWA manifest
+├── templates/
+│   ├── index.html         # Home page / upload interface
+│   ├── deck.html          # Flashcard deck view
+│   ├── study.html         # Study mode
+│   ├── quiz.html          # Quiz mode
+│   └── analytics.html     # Analytics dashboard
+└── sw.js                  # Service worker for offline support
 ```
 
-## Usage Guide
+## Technology Stack
+- **Backend**: Flask (Python 3.11)
+- **Database**: SQLite3
+- **Content Generation**: Local keyword extraction, sentence scoring, and intelligent question generation
+- **PDF Processing**: PyPDF2, pdfplumber
+- **OCR**: Tesseract, pytesseract
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- **PWA**: Service Worker, Cache API, IndexedDB
 
-### For Students
-1. **Register**: Create an account using the Register page
-2. **Browse Courses**: View available courses on the homepage
-3. **Purchase**: Select a course and choose Flutterwave for payment
-4. **Learn**: Access course modules, watch videos, take quizzes
-5. **Submit**: Complete assignments by uploading files
-6. **Certificate**: Download your certificate after completing the course
-
-### For Admins
-1. **Login**: Use admin credentials (admin@example.com / admin123)
-2. **Manage Courses**: Create, edit, or delete courses
-3. **Add Content**: Create modules with videos, quizzes, and assignments
-4. **Configure Payments**: Set up Flutterwave API keys
-5. **Edit Policies**: Customize Privacy Policy, Terms & Conditions, and Refund Policy templates
-6. **View Analytics**: Track students, revenue, and course enrollments
+## Database Schema
+- **decks**: Flashcard sets (id, name, description, created_at)
+- **cards**: Individual flashcards (id, deck_id, question, answer, difficulty, created_at)
+- **study_sessions**: Learning progress (id, card_id, easiness_factor, interval, repetitions, next_review)
+- **quiz_results**: Quiz performance tracking
+- **badges**: Achievement system
 
 ## Recent Changes
-- **2025-11-26**: Removed Paystack and PayPal payment methods
-  - Application now uses Flutterwave as the sole payment gateway
-  - Simplified admin settings page
-  - Removed unused payment templates
+- [2025-11-22] Initial project setup
+- [2025-11-22] Added complete feature set with AI, OCR, SRS, PWA capabilities
 
-- **2025-11-25**: Added policy template editing to admin settings
-  - Admins can now edit Privacy Policy, Terms & Conditions, and Refund Policy templates
-  - Policy templates support HTML formatting for rich content
-  - Templates are pre-populated with default content and current date
-  - All policy editing is integrated into the admin settings page
-  
-- **2025-11-25**: Initial release of CourseHub platform
-  - Complete course selling and management system
-  - Flutterwave payment integration
-  - Quiz and assignment features
-  - PDF certificate generation
-  - Progressive Web App implementation
-  - Pre-populated with 5 comprehensive courses
+## User Preferences
+None yet.
 
-## Notes
-- The application uses SQLite by default for simplicity
-- File uploads are stored in `static/uploads/`
-- Certificates are generated on-demand and stored in `static/certificates/`
-- The service worker caches static assets for offline access
-- Payment verification is done server-side for security
+## Configuration
+- Port: 5000 (Flask development server bound to 0.0.0.0)
+- No API keys required - fully local processing
+- Tesseract OCR system dependency required for PDF image text extraction
+- File uploads: Max 16MB, PDF files only, secure storage with UUID naming

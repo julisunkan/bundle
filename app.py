@@ -1,406 +1,493 @@
 import os
-from flask import Flask
-from flask_login import LoginManager
-from models import db, User
+from flask import Flask, render_template, request, jsonify, send_file
+from werkzeug.utils import secure_filename
+import json
+import csv
+from io import StringIO
+from datetime import datetime
 
-def create_app():
-    app = Flask(__name__)
-    app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'dev-secret-key-change-in-production')
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['UPLOAD_FOLDER'] = 'static/uploads'
-    
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    os.makedirs('static/certificates', exist_ok=True)
-    
-    db.init_app(app)
-    
-    login_manager = LoginManager()
-    login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'
-    
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(int(user_id))
-    
-    from routes.auth import auth_bp
-    from routes.admin import admin_bp
-    from routes.student import student_bp
-    from routes.payments import payments_bp
-    from routes.pwa import pwa_bp
-    from routes.main import main_bp
-    
-    app.register_blueprint(main_bp)
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(student_bp, url_prefix='/student')
-    app.register_blueprint(payments_bp, url_prefix='/payments')
-    app.register_blueprint(pwa_bp)
-    
-    @app.template_filter('format_currency')
-    def format_currency(value):
-        if value is None:
-            return '0.00'
-        return '{:,.2f}'.format(float(value))
-    
-    with app.app_context():
-        db.create_all()
-        init_database()
-    
-    return app
+from models import init_db, Deck, Card, StudySession, QuizResult, Badge
+from ai_service import generate_summary, generate_flashcards, generate_multiple_choice
+from utils import process_pdf_file, allowed_file, clean_text
+from pdf_generator import generate_flashcards_pdf
 
-def init_database():
-    from models import User, Settings, Course, Policy
-    from init_data import populate_courses
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'dev-secret-key-change-in-production')
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+init_db()
+
+@app.after_request
+def add_header(response):
+    """Add headers to prevent caching"""
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/api/decks', methods=['GET', 'POST'])
+def handle_decks():
+    if request.method == 'GET':
+        decks = Deck.get_all()
+        return jsonify(decks)
     
-    if not User.query.filter_by(email='admin@example.com').first():
-        admin = User(
-            email='admin@example.com',
-            full_name='Admin User',
-            is_admin=True
+    elif request.method == 'POST':
+        data = request.json
+        deck_id = Deck.create(data['name'], data.get('description', ''))
+        return jsonify({'id': deck_id, 'message': 'Deck created successfully'})
+
+@app.route('/api/decks/<int:deck_id>', methods=['GET', 'DELETE'])
+def handle_deck(deck_id):
+    if request.method == 'GET':
+        deck = Deck.get_by_id(deck_id)
+        if deck:
+            return jsonify(deck)
+        return jsonify({'error': 'Deck not found'}), 404
+    
+    elif request.method == 'DELETE':
+        Deck.delete(deck_id)
+        return jsonify({'message': 'Deck deleted successfully'})
+
+@app.route('/api/decks/<int:deck_id>/cards', methods=['GET', 'POST'])
+def handle_cards(deck_id):
+    if request.method == 'GET':
+        cards = Card.get_by_deck(deck_id)
+        return jsonify(cards)
+    
+    elif request.method == 'POST':
+        if not request.json:
+            return jsonify({'error': 'Invalid request'}), 400
+        
+        data = request.json
+        question = data.get('question', '').strip()
+        answer = data.get('answer', '').strip()
+        
+        if not question or not answer:
+            return jsonify({'error': 'Question and answer are required'}), 400
+        
+        if len(question) > 1000 or len(answer) > 2000:
+            return jsonify({'error': 'Question or answer too long'}), 400
+        
+        try:
+            card_id = Card.create(
+                deck_id,
+                question,
+                answer,
+                data.get('choices')
+            )
+            return jsonify({'id': card_id, 'message': 'Card created successfully'})
+        except Exception as e:
+            return jsonify({'error': 'Failed to create card'}), 500
+
+@app.route('/api/cards/<int:card_id>', methods=['DELETE'])
+def delete_card(card_id):
+    Card.delete(card_id)
+    return jsonify({'message': 'Card deleted successfully'})
+
+@app.route('/api/process-text', methods=['POST'])
+def process_text():
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    data = request.json
+    text = clean_text(data.get('text', ''))
+    action = data.get('action', 'flashcards')
+    
+    if not text:
+        return jsonify({'error': 'No text provided'}), 400
+    
+    if len(text) < 50:
+        return jsonify({'error': 'Text too short. Please provide at least 50 characters.'}), 400
+    
+    try:
+        user_api_key = data.get('api_key')
+        
+        if action == 'summary':
+            result = generate_summary(text, user_api_key=user_api_key)
+            return jsonify({'summary': result})
+        
+        elif action == 'flashcards':
+            num_cards = min(int(data.get('num_cards', 10)), 50)
+            flashcards = generate_flashcards(text, num_cards, user_api_key=user_api_key)
+            return jsonify({'flashcards': flashcards})
+        
+        elif action == 'multiple_choice':
+            num_questions = min(int(data.get('num_questions', 5)), 25)
+            questions = generate_multiple_choice(text, num_questions, user_api_key=user_api_key)
+            return jsonify({'questions': questions})
+        
+        else:
+            return jsonify({'error': 'Invalid action'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Failed to process text'}), 500
+
+@app.route('/api/upload-pdf', methods=['POST'])
+def upload_pdf():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    
+    if not file or not allowed_file(file.filename):
+        return jsonify({'error': 'Invalid file type. Only PDF files are allowed.'}), 400
+    
+    if file.content_length and file.content_length > app.config['MAX_CONTENT_LENGTH']:
+        return jsonify({'error': 'File too large. Maximum size is 16MB.'}), 400
+    
+    filename = secure_filename(file.filename)
+    import uuid
+    unique_filename = f"{uuid.uuid4()}_{filename}"
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+    
+    try:
+        file.save(filepath)
+        
+        if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
+            return jsonify({'error': 'File upload failed'}), 500
+        
+        if os.path.getsize(filepath) > 16 * 1024 * 1024:
+            os.remove(filepath)
+            return jsonify({'error': 'File too large'}), 400
+        
+        text = process_pdf_file(filepath)
+        
+        os.remove(filepath)
+        
+        if text and len(text.strip()) > 0:
+            return jsonify({'text': clean_text(text), 'message': 'PDF processed successfully'})
+        else:
+            return jsonify({'error': 'Could not extract text from PDF. File may be scanned or empty.'}), 400
+    except Exception as e:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        return jsonify({'error': 'Error processing PDF. Please try again.'}), 500
+
+@app.route('/api/test-gemini', methods=['POST'])
+def test_gemini():
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    api_key = request.json.get('api_key')
+    
+    if not api_key:
+        return jsonify({'error': 'No API key provided'}), 400
+    
+    try:
+        import google.generativeai as genai
+        
+        GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+        
+        genai.configure(api_key=api_key)
+        test_model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        response = test_model.generate_content("Say hello")
+        
+        if GEMINI_API_KEY:
+            genai.configure(api_key=GEMINI_API_KEY)
+        
+        return jsonify({'message': 'API key is valid', 'test_response': response.text})
+    except Exception as e:
+        GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+        if GEMINI_API_KEY:
+            genai.configure(api_key=GEMINI_API_KEY)
+        return jsonify({'error': f'API key test failed: {str(e)}'}), 400
+
+@app.route('/api/study/<int:card_id>', methods=['POST'])
+def study_card(card_id):
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    data = request.json
+    quality = data.get('quality', 3)
+    
+    try:
+        quality = int(quality)
+        if quality < 0 or quality > 5:
+            return jsonify({'error': 'Quality must be between 0 and 5'}), 400
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Invalid quality value'}), 400
+    
+    try:
+        StudySession.update(card_id, quality)
+        newly_earned = Badge.check_and_award()
+        
+        return jsonify({
+            'message': 'Study session recorded',
+            'badges_earned': newly_earned
+        })
+    except Exception as e:
+        return jsonify({'error': 'Failed to record study session'}), 500
+
+@app.route('/api/decks/<int:deck_id>/due-cards', methods=['GET'])
+def get_due_cards(deck_id):
+    cards = Card.get_due_cards(deck_id)
+    return jsonify(cards)
+
+@app.route('/settings')
+def settings_page():
+    return render_template('settings.html')
+
+@app.route('/api/quiz-results', methods=['POST'])
+def save_quiz_result():
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    data = request.json
+    
+    try:
+        deck_id = int(data.get('deck_id', 0))
+        score = int(data.get('score', 0))
+        total = int(data.get('total', 0))
+        
+        if deck_id <= 0 or score < 0 or total <= 0 or score > total:
+            return jsonify({'error': 'Invalid quiz data'}), 400
+        
+        QuizResult.save(deck_id, score, total)
+        newly_earned = Badge.check_and_award()
+        
+        return jsonify({
+            'message': 'Quiz result saved',
+            'badges_earned': newly_earned
+        })
+    except (ValueError, TypeError, KeyError) as e:
+        return jsonify({'error': 'Invalid request data'}), 400
+    except Exception as e:
+        return jsonify({'error': 'Failed to save quiz result'}), 500
+
+@app.route('/api/decks/<int:deck_id>/quiz-results', methods=['GET'])
+def get_quiz_results(deck_id):
+    results = QuizResult.get_by_deck(deck_id)
+    return jsonify(results)
+
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    stats = StudySession.get_stats()
+    return jsonify(stats)
+
+@app.route('/api/badges', methods=['GET'])
+def get_badges():
+    badges = Badge.get_all()
+    return jsonify(badges)
+
+@app.route('/api/export/<int:deck_id>/<format>', methods=['GET'])
+def export_deck(deck_id, format):
+    deck = Deck.get_by_id(deck_id)
+    cards = Card.get_by_deck(deck_id)
+    
+    if not deck:
+        return jsonify({'error': 'Deck not found'}), 404
+    
+    # Sanitize filename
+    safe_deck_name = "".join(c for c in deck['name'] if c.isalnum() or c in (' ', '-', '_')).strip()
+    
+    if format == 'json':
+        data = {
+            'deck': deck,
+            'cards': cards
+        }
+        from flask import Response
+        import json as json_lib
+        
+        response = Response(
+            json_lib.dumps(data, indent=2),
+            mimetype='application/json',
+            headers={
+                'Content-Disposition': f'attachment; filename={safe_deck_name or "deck"}.json'
+            }
         )
-        admin.set_password('admin123')
-        db.session.add(admin)
+        return response
     
-    default_settings = [
-        ('flutterwave_public_key', 'FLWPUBK-fa6572916798cfedad2f364499ceb672-X'),
-        ('flutterwave_secret_key', 'FLWSECK-ae53484d0bb28cc0e8974df03fcdf410-19ac1642210vt-X'),
-        ('flutterwave_encryption_key', 'ae53484d0bb260b88589e6af'),
-        ('flutterwave_webhook_secret_hash', 'digitalskeleton_flw_webhook_2024'),
-        ('exchange_rate', '1500'),
-    ]
-    
-    for key, value in default_settings:
-        if not Settings.query.filter_by(key=key).first():
-            setting = Settings(key=key, value=value)
-            db.session.add(setting)
-    
-    from datetime import datetime
-    current_date = datetime.utcnow().strftime('%B %d, %Y')
-    
-    default_policies = [
-        ('privacy', f'''<div class="container my-5">
-    <h1 class="mb-4">Privacy Policy</h1>
-    <p class="text-muted">Last updated: {current_date}</p>
-
-    <section class="my-4">
-        <h2>1. Introduction</h2>
-        <p>DigitalSkeleton ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our online learning platform.</p>
-    </section>
-
-    <section class="my-4">
-        <h2>2. Information We Collect</h2>
-        <h4>Personal Information</h4>
-        <p>We collect information you provide directly to us, including:</p>
-        <ul>
-            <li>Name and email address</li>
-            <li>Account credentials</li>
-            <li>Payment information (processed securely through third-party payment processors)</li>
-            <li>Course enrollment and progress data</li>
-            <li>Assignment submissions and quiz responses</li>
-        </ul>
+    elif format == 'csv':
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['Question', 'Answer'])
         
-        <h4>Automatically Collected Information</h4>
-        <p>When you access our platform, we may automatically collect:</p>
-        <ul>
-            <li>Device and browser information</li>
-            <li>IP address and location data</li>
-            <li>Usage data and learning analytics</li>
-            <li>Cookies and similar tracking technologies</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>3. How We Use Your Information</h2>
-        <p>We use the collected information for:</p>
-        <ul>
-            <li>Providing and maintaining our educational services</li>
-            <li>Processing course enrollments and payments</li>
-            <li>Tracking your learning progress and issuing certificates</li>
-            <li>Communicating with you about courses, updates, and support</li>
-            <li>Improving our platform and developing new features</li>
-            <li>Preventing fraud and ensuring platform security</li>
-            <li>Complying with legal obligations</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>4. Information Sharing and Disclosure</h2>
-        <p>We do not sell your personal information. We may share your information with:</p>
-        <ul>
-            <li><strong>Service Providers:</strong> Third-party vendors who assist in payment processing, hosting, and analytics</li>
-            <li><strong>Legal Requirements:</strong> When required by law or to protect our rights</li>
-            <li><strong>Business Transfers:</strong> In connection with any merger, sale, or acquisition</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>5. Data Security</h2>
-        <p>We implement industry-standard security measures to protect your personal information from unauthorized access, disclosure, alteration, or destruction. However, no internet transmission is completely secure, and we cannot guarantee absolute security.</p>
-    </section>
-
-    <section class="my-4">
-        <h2>6. Your Rights</h2>
-        <p>You have the right to:</p>
-        <ul>
-            <li>Access and update your personal information</li>
-            <li>Request deletion of your account and data</li>
-            <li>Opt-out of marketing communications</li>
-            <li>Object to certain data processing activities</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>7. Cookies</h2>
-        <p>We use cookies and similar technologies to enhance your experience, analyze usage patterns, and remember your preferences. You can control cookie settings through your browser.</p>
-    </section>
-
-    <section class="my-4">
-        <h2>8. Children's Privacy</h2>
-        <p>Our platform is not intended for users under 13 years of age. We do not knowingly collect personal information from children under 13.</p>
-    </section>
-
-    <section class="my-4">
-        <h2>9. Changes to This Policy</h2>
-        <p>We may update this Privacy Policy from time to time. We will notify you of significant changes by posting the new policy on our platform.</p>
-    </section>
-
-    <section class="my-4">
-        <h2>10. Contact Us</h2>
-        <p>If you have questions about this Privacy Policy, please contact us at:</p>
-        <p><strong>Email:</strong> ceo@digitalskeleton.com.ng</p>
-    </section>
-</div>'''),
-        ('terms', f'''<div class="container my-5">
-    <h1 class="mb-4">Terms & Conditions</h1>
-    <p class="text-muted">Last updated: {current_date}</p>
-
-    <section class="my-4">
-        <h2>1. Acceptance of Terms</h2>
-        <p>By accessing and using DigitalSkeleton's online learning platform, you accept and agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our platform.</p>
-    </section>
-
-    <section class="my-4">
-        <h2>2. User Accounts</h2>
-        <h4>Account Creation</h4>
-        <p>To access courses, you must create an account by providing accurate and complete information. You are responsible for:</p>
-        <ul>
-            <li>Maintaining the confidentiality of your account credentials</li>
-            <li>All activities that occur under your account</li>
-            <li>Notifying us immediately of any unauthorized access</li>
-        </ul>
+        for card in cards:
+            writer.writerow([card['question'], card['answer']])
         
-        <h4>Account Termination</h4>
-        <p>We reserve the right to suspend or terminate your account for violations of these terms, fraudulent activity, or any other reason at our discretion.</p>
-    </section>
-
-    <section class="my-4">
-        <h2>3. Course Enrollment and Access</h2>
-        <p>Upon successful payment, you will receive lifetime access to the purchased course content, subject to these terms:</p>
-        <ul>
-            <li>Course access is personal and non-transferable</li>
-            <li>You may not share your account credentials with others</li>
-            <li>We reserve the right to modify or discontinue courses with notice</li>
-            <li>Course content may be updated or improved over time</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>4. Payment and Pricing</h2>
-        <ul>
-            <li>All prices are listed in Nigerian Naira (NGN) and US Dollars (USD)</li>
-            <li>Payments are processed securely through third-party payment processors (Paystack/Flutterwave)</li>
-            <li>We reserve the right to change course prices at any time</li>
-            <li>All sales are final - see our Refund Policy for details</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>5. Intellectual Property Rights</h2>
-        <p>All course materials, including but not limited to videos, text, images, quizzes, and assignments, are protected by copyright and other intellectual property laws. You agree that:</p>
-        <ul>
-            <li>All content is owned by DigitalSkeleton or its licensors</li>
-            <li>You may not reproduce, distribute, or create derivative works without permission</li>
-            <li>You may not record, screenshot, or share course content publicly</li>
-            <li>Violations may result in account termination and legal action</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>6. User Conduct</h2>
-        <p>You agree not to:</p>
-        <ul>
-            <li>Use the platform for any illegal or unauthorized purpose</li>
-            <li>Attempt to gain unauthorized access to our systems</li>
-            <li>Upload malicious code or harmful content</li>
-            <li>Harass, abuse, or harm other users</li>
-            <li>Impersonate others or provide false information</li>
-            <li>Violate any applicable laws or regulations</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>7. Certificates</h2>
-        <p>Upon successful completion of a course, you may receive a certificate of completion. Certificates:</p>
-        <ul>
-            <li>Are issued at our discretion based on completion criteria</li>
-            <li>Do not represent accredited qualifications unless explicitly stated</li>
-            <li>May be revoked if terms violations are discovered</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>8. Disclaimer of Warranties</h2>
-        <p>Our platform and courses are provided "as is" without warranties of any kind, either express or implied. We do not guarantee:</p>
-        <ul>
-            <li>Uninterrupted or error-free service</li>
-            <li>Specific learning outcomes or career advancement</li>
-            <li>Accuracy or completeness of course content</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>9. Limitation of Liability</h2>
-        <p>To the maximum extent permitted by law, DigitalSkeleton shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of our platform.</p>
-    </section>
-
-    <section class="my-4">
-        <h2>10. Modifications to Terms</h2>
-        <p>We reserve the right to modify these Terms and Conditions at any time. Continued use of the platform after changes constitutes acceptance of the modified terms.</p>
-    </section>
-
-    <section class="my-4">
-        <h2>11. Governing Law</h2>
-        <p>These Terms shall be governed by and construed in accordance with the laws of Nigeria, without regard to its conflict of law provisions.</p>
-    </section>
-
-    <section class="my-4">
-        <h2>12. Contact Information</h2>
-        <p>For questions about these Terms and Conditions, contact us at:</p>
-        <p><strong>Email:</strong> ceo@digitalskeleton.com.ng</p>
-    </section>
-</div>'''),
-        ('refund', f'''<div class="container my-5">
-    <h1 class="mb-4">Refund Policy</h1>
-    <p class="text-muted">Last updated: {current_date}</p>
-
-    <section class="my-4">
-        <h2>No Refund Policy</h2>
-        <p class="lead"><strong>All course purchases are final and non-refundable.</strong></p>
-    </section>
-
-    <section class="my-4">
-        <h2>1. Policy Overview</h2>
-        <p>DigitalSkeleton operates a strict no-refund policy for all course purchases. Once you have completed payment and gained access to a course, you will not be eligible for a refund under any circumstances.</p>
-        
-        <p>This policy applies to:</p>
-        <ul>
-            <li>All individual course purchases</li>
-            <li>All payment methods (Paystack, Flutterwave, etc.)</li>
-            <li>All currencies (NGN, USD, etc.)</li>
-            <li>Partial or full course access</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>2. Why We Have This Policy</h2>
-        <p>Our no-refund policy exists because:</p>
-        <ul>
-            <li>Digital course content is delivered immediately upon purchase</li>
-            <li>Course materials can be accessed, downloaded, or viewed instantly</li>
-            <li>The nature of digital products makes them non-returnable</li>
-            <li>We invest significant resources in creating high-quality educational content</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>3. Before You Purchase</h2>
-        <p>We strongly encourage you to:</p>
-        <ul>
-            <li>Carefully review the course description and curriculum</li>
-            <li>Check course requirements and prerequisites</li>
-            <li>Review any available preview materials or sample lessons</li>
-            <li>Ensure the course matches your learning objectives</li>
-            <li>Verify that your payment information is correct</li>
-        </ul>
-        
-        <p class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle"></i> <strong>Important:</strong> By completing your purchase, you acknowledge that you have read and agree to this no-refund policy.
-        </p>
-    </section>
-
-    <section class="my-4">
-        <h2>4. Exceptions</h2>
-        <p>Refunds will only be considered in the following exceptional circumstances:</p>
-        <ul>
-            <li><strong>Duplicate Payments:</strong> If you accidentally paid for the same course multiple times</li>
-            <li><strong>Technical Errors:</strong> If payment was processed but course access was never granted due to a technical error on our end</li>
-            <li><strong>Unauthorized Transactions:</strong> If your payment was made fraudulently without your authorization (subject to verification)</li>
-        </ul>
-        
-        <p>To request consideration for these exceptional circumstances, you must contact us within 48 hours of the transaction with supporting evidence.</p>
-    </section>
-
-    <section class="my-4">
-        <h2>5. Course Access Issues</h2>
-        <p>If you experience technical difficulties accessing your purchased course:</p>
-        <ul>
-            <li>Contact our support team immediately</li>
-            <li>We will work to resolve the issue promptly</li>
-            <li>Technical issues do not qualify for refunds; we will provide solutions instead</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>6. Chargebacks</h2>
-        <p>Initiating a chargeback or payment dispute for a valid course purchase may result in:</p>
-        <ul>
-            <li>Immediate suspension of your account</li>
-            <li>Revocation of course access</li>
-            <li>Permanent ban from the platform</li>
-            <li>Legal action to recover costs</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>7. Course Updates and Changes</h2>
-        <p>We reserve the right to update, modify, or discontinue courses. If a course is discontinued:</p>
-        <ul>
-            <li>Existing students will retain access to current course materials</li>
-            <li>No refunds will be issued</li>
-            <li>We may offer access to replacement or updated courses at our discretion</li>
-        </ul>
-    </section>
-
-    <section class="my-4">
-        <h2>8. Contact Us</h2>
-        <p>If you have questions about this refund policy or need assistance with a purchase, please contact us at:</p>
-        <p><strong>Email:</strong> ceo@digitalskeleton.com.ng</p>
-        
-        <p class="text-muted">Please note that contacting us does not guarantee a refund, as our policy remains that all sales are final.</p>
-    </section>
-
-    <section class="my-4">
-        <div class="alert alert-info">
-            <h4 class="alert-heading">Summary</h4>
-            <p class="mb-0"><strong>All course purchases are final and non-refundable. Please review courses carefully before purchasing.</strong></p>
-        </div>
-    </section>
-</div>''')
-    ]
+        output.seek(0)
+        return output.getvalue(), 200, {
+            'Content-Type': 'text/csv',
+            'Content-Disposition': f'attachment; filename={safe_deck_name or "deck"}.csv'
+        }
     
-    for policy_type, content in default_policies:
-        if not Policy.query.filter_by(policy_type=policy_type).first():
-            policy = Policy(policy_type=policy_type, content=content)
-            db.session.add(policy)
+    elif format == 'anki':
+        output = StringIO()
+        for card in cards:
+            output.write(f"{card['question']}\t{card['answer']}\n")
+        
+        output.seek(0)
+        return output.getvalue(), 200, {
+            'Content-Type': 'text/plain',
+            'Content-Disposition': f'attachment; filename={safe_deck_name or "deck"}_anki.txt'
+        }
     
-    db.session.commit()
+    elif format == 'pdf':
+        # Convert cards to the format expected by PDF generator
+        pdf_cards = []
+        for card in cards:
+            pdf_card = {
+                'question': card['question'],
+                'answer': card['answer']
+            }
+            if card.get('choices'):
+                try:
+                    pdf_card['choices'] = json.loads(card['choices'])
+                except:
+                    pass
+            pdf_cards.append(pdf_card)
+        
+        try:
+            pdf_buffer = generate_flashcards_pdf(pdf_cards, deck['name'])
+            
+            return send_file(
+                pdf_buffer,
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=f"{safe_deck_name or 'deck'}_flashcards.pdf"
+            )
+        except Exception as e:
+            print(f"PDF generation error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': f'Failed to generate PDF: {str(e)}'}), 500
     
-    if Course.query.count() == 0:
-        populate_courses()
+    return jsonify({'error': 'Invalid format'}), 400
 
-# Create app instance at module level for gunicorn
-app = create_app()
+@app.route('/api/export-cards-pdf', methods=['POST'])
+def export_cards_pdf():
+    """Export generated cards to PDF"""
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    cards = request.json.get('cards', [])
+    deck_name = request.json.get('deck_name', 'Flashcards')
+    
+    # Validate input
+    if not cards or not isinstance(cards, list):
+        return jsonify({'error': 'No cards provided'}), 400
+    
+    if len(cards) > 100:
+        return jsonify({'error': 'Cannot export more than 100 cards at once'}), 400
+    
+    if not isinstance(deck_name, str):
+        deck_name = 'Flashcards'
+    
+    # Validate total payload size
+    total_size = len(str(cards))
+    if total_size > 1_000_000:  # 1MB limit for total payload
+        return jsonify({'error': 'Payload too large'}), 400
+    
+    # Validate each card structure
+    for i, card in enumerate(cards):
+        if not isinstance(card, dict):
+            return jsonify({'error': f'Card {i+1} is invalid'}), 400
+        
+        if 'question' not in card or 'answer' not in card:
+            return jsonify({'error': f'Card {i+1} is missing required fields'}), 400
+        
+        if not isinstance(card['question'], str) or not isinstance(card['answer'], str):
+            return jsonify({'error': f'Card {i+1} has invalid field types'}), 400
+        
+        # Trim and validate length
+        question = card['question'].strip()
+        answer = card['answer'].strip()
+        
+        if not question or not answer:
+            return jsonify({'error': f'Card {i+1} has empty question or answer'}), 400
+        
+        if len(question) > 10000 or len(answer) > 10000:
+            return jsonify({'error': f'Card {i+1} fields are too long (max 10,000 characters)'}), 400
+        
+        # Update card with trimmed values
+        card['question'] = question
+        card['answer'] = answer
+        
+        # Validate choices if present
+        if 'choices' in card:
+            if not isinstance(card['choices'], list):
+                return jsonify({'error': f'Card {i+1} has invalid choices format'}), 400
+            
+            if len(card['choices']) > 10:
+                return jsonify({'error': f'Card {i+1} has too many choices (max 10)'}), 400
+            
+            trimmed_choices = []
+            for choice in card['choices']:
+                if not isinstance(choice, str):
+                    return jsonify({'error': f'Card {i+1} has invalid choice format'}), 400
+                
+                trimmed_choice = choice.strip()
+                if not trimmed_choice:
+                    return jsonify({'error': f'Card {i+1} has empty choice'}), 400
+                
+                if len(trimmed_choice) > 5000:
+                    return jsonify({'error': f'Card {i+1} has choice that is too long (max 5,000 characters)'}), 400
+                
+                trimmed_choices.append(trimmed_choice)
+            
+            card['choices'] = trimmed_choices
+    
+    try:
+        pdf_buffer = generate_flashcards_pdf(cards, deck_name)
+        
+        # Sanitize filename
+        safe_filename = "".join(c for c in deck_name if c.isalnum() or c in (' ', '-', '_')).strip()
+        filename = f"{safe_filename or 'Flashcards'}_flashcards.pdf"
+        
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': 'Failed to generate PDF. Please try again.'}), 500
+
+@app.route('/deck/<int:deck_id>')
+def deck_page(deck_id):
+    return render_template('deck.html', deck_id=deck_id)
+
+@app.route('/study/<int:deck_id>')
+def study_page(deck_id):
+    return render_template('study.html', deck_id=deck_id)
+
+@app.route('/quiz/<int:deck_id>')
+def quiz_page(deck_id):
+    return render_template('quiz.html', deck_id=deck_id)
+
+@app.route('/analytics')
+def analytics_page():
+    return render_template('analytics.html')
+
+@app.route('/sw.js')
+def service_worker():
+    return send_file('sw.js', mimetype='application/javascript')
+
+@app.route('/manifest.json')
+def manifest():
+    return send_file('static/manifest.json', mimetype='application/manifest+json')
+
+@app.errorhandler(404)
+def not_found(error):
+    # If it's an API request, return JSON
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Route not found'}), 404
+    
+    # For HTML requests, redirect to home page
+    from flask import redirect
+    return redirect('/')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
