@@ -11,6 +11,54 @@
           "question": "API Key Required"
         }
       ]
+    },
+    {
+      "id": 17,
+      "name": "Physics Made Easy",
+      "category": "General",
+      "created_at": "2025-12-04T19:25:48.380413",
+      "cards": [
+        {
+          "answer": "Lagrangian mechanics is based on the principle of least action, finding the path that minimizes the action integral. Unlike Newtonian mechanics, it focuses on energy rather than forces, providing a more general and often simpler approach to solving mechanics problems, especially for constrained systems.",
+          "question": "What is the central principle underlying Lagrangian mechanics, and how does it differ from Newtonian mechanics?"
+        },
+        {
+          "answer": "Maxwell's equations are a set of four fundamental equations that describe the behavior of electric and magnetic fields. They unify electricity and magnetism, predict the existence of electromagnetic waves, and form the foundation for classical electrodynamics and optics.",
+          "question": "Describe the significance of Maxwell's equations in electromagnetism."
+        },
+        {
+          "answer": "The wavefunction, denoted as \u03c8, represents the quantum state of a particle. Its absolute square, |\u03c8|^2, gives the probability density of finding the particle at a specific location. The Schr\u00f6dinger equation describes how this wavefunction evolves over time.",
+          "question": "Explain the physical interpretation of the wavefunction in the Schr\u00f6dinger equation."
+        },
+        {
+          "answer": "Perturbation theory is used to approximate solutions to the Schr\u00f6dinger equation when the Hamiltonian (representing the total energy) can be written as the sum of an exactly solvable part and a small perturbation. This allows us to find approximate energy levels and wavefunctions for complex systems where exact solutions are not possible.",
+          "question": "What is the purpose of using approximation methods like perturbation theory in quantum mechanics?"
+        },
+        {
+          "answer": "Ensembles represent collections of identical systems in different possible states. The microcanonical ensemble describes isolated systems with fixed energy, volume, and number of particles. The canonical ensemble describes systems in thermal equilibrium with a heat bath at fixed temperature, volume, and number of particles. The grand canonical ensemble describes systems in equilibrium with a heat and particle reservoir, allowing for fluctuations in energy and particle number.",
+          "question": "Define and differentiate between the microcanonical, canonical, and grand canonical ensembles in statistical mechanics."
+        },
+        {
+          "answer": "The fundamental postulates of special relativity are: (1) the laws of physics are the same for all observers in uniform motion and (2) the speed of light in a vacuum is the same for all observers, regardless of the motion of the light source. These postulates lead to the concepts of time dilation and length contraction, altering our classical understanding of space and time as absolute quantities.",
+          "question": "What is the fundamental postulate of special relativity, and how does it impact our understanding of space and time?"
+        },
+        {
+          "answer": "The metric tensor describes the geometry of spacetime. It defines distances and angles in curved spacetime, influenced by the presence of mass and energy. It is a fundamental quantity used in the Einstein field equations to relate the curvature of spacetime to the distribution of matter and energy.",
+          "question": "Explain the role of the metric tensor in general relativity."
+        },
+        {
+          "answer": "Complex analysis provides powerful techniques for solving differential equations, evaluating integrals, and analyzing functions with singularities. It's particularly crucial in quantum mechanics for representing wavefunctions and calculating probabilities, and in electromagnetism for analyzing alternating current circuits and electromagnetic waves.",
+          "question": "Why is complex analysis a crucial tool for physicists, particularly in quantum mechanics and electromagnetism?"
+        },
+        {
+          "answer": "The Standard Model is a theoretical framework that describes the fundamental particles and forces in the universe, excluding gravity. It classifies elementary particles into fermions (quarks and leptons) and bosons (force carriers) and explains their interactions through the strong, weak, and electromagnetic forces.",
+          "question": "What is the significance of the Standard Model in particle physics?"
+        },
+        {
+          "answer": "Fourier and Laplace transforms convert differential equations into algebraic equations, which are often easier to solve. The solution is then transformed back to the original domain. These transforms are particularly useful for analyzing linear, time-invariant systems and solving equations with specific initial conditions or forcing functions.",
+          "question": "Describe the utility of Fourier and Laplace transforms in solving differential equations encountered in physics."
+        }
+      ]
     }
   ]
 }
