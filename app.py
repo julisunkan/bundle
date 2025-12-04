@@ -40,7 +40,7 @@ def handle_decks():
     
     elif request.method == 'POST':
         data = request.json
-        deck_id = Deck.create(data['name'], data.get('description', ''))
+        deck_id = Deck.create(data['name'], data.get('description', ''), data.get('category', 'General'))
         return jsonify({'id': deck_id, 'message': 'Deck created successfully'})
 
 @app.route('/api/decks/<int:deck_id>', methods=['GET', 'DELETE'])

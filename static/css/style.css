@@ -1836,7 +1836,7 @@ body {
         display: flex;
         flex-direction: column;
     }
-    
+
     .bottom-nav {
         padding: 10px 0;
     }
@@ -2073,11 +2073,11 @@ select.form-input {
     .content-card {
         padding: 20px;
     }
-    
+
     .content-card h2 {
         font-size: 1.3rem;
     }
-    
+
     .feature-list li {
         padding: 10px 0 10px 25px;
     }
@@ -2215,12 +2215,52 @@ select.form-input {
     .features-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .benefits-list {
         grid-template-columns: 1fr;
     }
-    
+
     .feature-card {
         padding: 20px;
     }
+}
+
+/* Decks Section Styles */
+.decks-section {
+    margin-top: 2rem;
+}
+
+.decks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.decks-section h2 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.category-filter {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.category-filter:hover {
+    border-color: var(--primary-color);
+}
+
+.category-filter:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }

@@ -18,6 +18,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             description TEXT,
+            category TEXT DEFAULT 'General',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -95,10 +96,10 @@ def init_db():
 
 class Deck:
     @staticmethod
-    def create(name, description=''):
+    def create(name, description='', category='General'):
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO decks (name, description) VALUES (?, ?)', (name, description))
+        cursor.execute('INSERT INTO decks (name, description, category) VALUES (?, ?, ?)', (name, description, category))
         deck_id = cursor.lastrowid
         conn.commit()
         conn.close()
