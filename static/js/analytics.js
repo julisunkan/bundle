@@ -29,13 +29,16 @@ async function loadBadges() {
             return;
         }
         
-        container.innerHTML = badges.map(badge => `
+        container.innerHTML = badges.map(badge => {
+            const earnedDate = new Date(badge.earned_at);
+            const isValidDate = badge.earned_at && earnedDate.getFullYear() > 1970;
+            return `
             <div class="badge-card">
                 <div class="badge-icon">🏆</div>
                 <div class="badge-name">${escapeHtml(badge.name)}</div>
-                <div class="badge-date">${new Date(badge.earned_at).toLocaleDateString()}</div>
+                ${isValidDate ? `<div class="badge-date">${earnedDate.toLocaleDateString()}</div>` : ''}
             </div>
-        `).join('');
+        `}).join('');
     } catch (error) {
         console.error('Error loading badges:', error);
     }
