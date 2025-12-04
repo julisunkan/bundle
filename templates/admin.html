@@ -213,6 +213,51 @@
             </div>
 
             <div class="admin-section">
+                <h2>Generate Flashcards</h2>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Deck Name:</label>
+                            <input type="text" id="genDeckName" placeholder="e.g., Advanced Physics" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Category:</label>
+                            <select id="genCategory" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
+                                <option value="General">General</option>
+                                <option value="Science">Science</option>
+                                <option value="History">History</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Literature">Literature</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Psychology">Psychology</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Philosophy">Philosophy</option>
+                                <option value="Biology">Biology</option>
+                                <option value="Art & Design">Art & Design</option>
+                                <option value="Medicine">Medicine</option>
+                                <option value="Geography">Geography</option>
+                                <option value="Architecture">Architecture</option>
+                                <option value="Economics">Economics</option>
+                                <option value="Military">Military</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Number of Cards (1-50):</label>
+                        <input type="number" id="genNumCards" value="10" min="1" max="50" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Topic/Subject Matter:</label>
+                        <textarea id="genTopic" placeholder="Describe what the flashcards should cover (e.g., 'Introduction to quantum mechanics', 'World War II timeline', etc.)" rows="3" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <button onclick="generateFlashcards()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                        ✨ Generate Flashcards with AI
+                    </button>
+                    <p id="genStatus" style="margin-top: 10px; text-align: center; font-weight: bold;"></p>
+                </div>
+            </div>
+
+            <div class="admin-section">
                 <h2>Manage Decks</h2>
                 <ul id="deckList" class="deck-list"></ul>
             </div>
@@ -402,6 +447,121 @@
                 }
             } catch (e) {
                 alert('Error deleting card');
+            }
+        }
+
+        async function generateFlashcards() {
+            const deckName = document.getElementById('genDeckName').value.trim();
+            const category = document.getElementById('genCategory').value;
+            const numCards = parseInt(document.getElementById('genNumCards').value);
+            const topic = document.getElementById('genTopic').value.trim();
+            const statusEl = document.getElementById('genStatus');
+
+            // Validation
+            if (!deckName) {
+                statusEl.textContent = '❌ Please enter a deck name';
+                statusEl.style.color = '#dc3545';
+                return;
+            }
+
+            if (!topic) {
+                statusEl.textContent = '❌ Please describe the topic/subject matter';
+                statusEl.style.color = '#dc3545';
+                return;
+            }
+
+            if (numCards < 1 || numCards > 50) {
+                statusEl.textContent = '❌ Number of cards must be between 1 and 50';
+                statusEl.style.color = '#dc3545';
+                return;
+            }
+
+            // Show loading state
+            statusEl.textContent = '⏳ Generating flashcards with AI... This may take a moment.';
+            statusEl.style.color = '#007bff';
+
+            try {
+                // Generate flashcards using AI
+                const processResponse = await fetch('/api/process-text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: topic,
+                        action: 'flashcards',
+                        num_cards: numCards
+                    })
+                });
+
+                if (!processResponse.ok) {
+                    const errorData = await processResponse.json();
+                    throw new Error(errorData.error || 'Failed to generate flashcards');
+                }
+
+                const processData = await processResponse.json();
+                const flashcards = processData.flashcards;
+
+                if (!flashcards || flashcards.length === 0) {
+                    throw new Error('No flashcards generated');
+                }
+
+                // Create deck
+                const deckResponse = await fetch('/api/decks', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ 
+                        name: deckName, 
+                        description: `AI-generated deck about: ${topic}`,
+                        category: category 
+                    })
+                });
+
+                if (!deckResponse.ok) {
+                    throw new Error('Failed to create deck');
+                }
+
+                const deckData = await deckResponse.json();
+                const deckId = deckData.id;
+
+                // Save flashcards to JSON
+                const saveResponse = await fetch('/api/save-flashcards-json', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        deck_id: deckId,
+                        deck_name: deckName,
+                        category: category,
+                        cards: flashcards
+                    })
+                });
+
+                if (!saveResponse.ok) {
+                    throw new Error('Failed to save flashcards');
+                }
+
+                const saveData = await saveResponse.json();
+
+                // Success!
+                statusEl.textContent = `✅ Successfully created "${deckName}" with ${saveData.count} flashcards!`;
+                statusEl.style.color = '#28a745';
+
+                // Clear form
+                document.getElementById('genDeckName').value = '';
+                document.getElementById('genTopic').value = '';
+                document.getElementById('genNumCards').value = '10';
+                document.getElementById('genCategory').value = 'General';
+
+                // Reload decks list
+                loadDecks();
+
+            } catch (error) {
+                statusEl.textContent = `❌ Error: ${error.message}`;
+                statusEl.style.color = '#dc3545';
             }
         }
 
