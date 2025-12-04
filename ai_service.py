@@ -111,7 +111,32 @@ Generate exactly {num_cards} flashcards. Make each question thought-provoking an
             result_text = result_text.split('```')[1].split('```')[0].strip()
 
         import json
-        flashcards = json.loads(result_text)
+        
+        # Clean up common JSON issues
+        result_text = result_text.replace('\n', ' ')  # Remove newlines
+        result_text = re.sub(r',\s*]', ']', result_text)  # Remove trailing commas in arrays
+        result_text = re.sub(r',\s*}', '}', result_text)  # Remove trailing commas in objects
+        
+        # Try to parse JSON
+        try:
+            flashcards = json.loads(result_text)
+        except json.JSONDecodeError as e:
+            # If JSON parsing fails, try to extract question-answer pairs manually
+            import re
+            flashcards = []
+            
+            # Try to find JSON-like objects
+            pattern = r'\{\s*"question"\s*:\s*"([^"]+)"\s*,\s*"answer"\s*:\s*"([^"]+)"\s*\}'
+            matches = re.findall(pattern, result_text, re.DOTALL)
+            
+            for question, answer in matches:
+                flashcards.append({
+                    'question': question.strip(),
+                    'answer': answer.strip()
+                })
+            
+            if not flashcards:
+                raise ValueError(f"Failed to parse flashcards: {str(e)}")
 
         # Validate structure
         if not isinstance(flashcards, list):
