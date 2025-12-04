@@ -1,6 +1,9 @@
 import os
 import secrets
 import hashlib
+import threading
+import time
+import requests
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, send_file
 from werkzeug.utils import secure_filename
@@ -570,13 +573,27 @@ def admin_delete_card(card_id):
 
 @app.errorhandler(404)
 def not_found(error):
-    # If it's an API request, return JSON
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Route not found'}), 404
     
-    # For HTML requests, redirect to home page
     from flask import redirect
     return redirect('/')
 
+@app.route('/api/ping')
+def ping():
+    return jsonify({'status': 'alive', 'timestamp': datetime.now().isoformat()})
+
+def keep_alive():
+    while True:
+        time.sleep(300)
+        try:
+            requests.get('http://localhost:5000/api/ping', timeout=10)
+            print(f"[Keep-Alive] Ping successful at {datetime.now().isoformat()}")
+        except Exception as e:
+            print(f"[Keep-Alive] Ping failed: {e}")
+
 if __name__ == '__main__':
+    keep_alive_thread = threading.Thread(target=keep_alive, daemon=True)
+    keep_alive_thread.start()
+    print("[Keep-Alive] Self-ping started (every 5 minutes)")
     app.run(host='0.0.0.0', port=5000, debug=True)
