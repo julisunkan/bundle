@@ -729,6 +729,7 @@ textarea:focus {
 .deck-card p {
     color: var(--text-light);
     font-size: 0.95rem;
+    margin-bottom: 15px;
 }
 
 .deck-meta {

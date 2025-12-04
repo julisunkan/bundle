@@ -307,7 +307,7 @@ async function exportPdf() {
 
 async function saveCards() {
     const deckName = document.getElementById('deckName').value.trim();
-    const category = document.getElementById('categorySelect').value; // Get selected category
+    const category = document.getElementById('categorySelect').value;
 
     if (!deckName) {
         showMessage('Please enter a deck name', 'warning');
@@ -320,40 +320,15 @@ async function saveCards() {
     }
 
     try {
-        // First, create or get the deck, including the category
         const deckResponse = await fetch('/api/decks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: deckName, category: category }) // Include category here
+            body: JSON.stringify({ name: deckName, category: category })
         });
 
         if (!deckResponse.ok) {
-            // If deck with this name and category already exists, get its ID
-            if (deckResponse.status === 409) { // Assuming 409 Conflict for existing deck
-                const existingDeckData = await deckResponse.json();
-                const deckId = existingDeckData.id;
-
-                // Optionally, prompt user if they want to add cards to existing deck or create new one
-                // For now, we'll assume we add to it if it exists with the same name and category
-                // But this logic might need refinement based on desired behavior
-                let addConfirmation = confirm(`Deck "${deckName}" with category "${category}" already exists. Add cards to it?`);
-                if (!addConfirmation) {
-                    showMessage('Save cancelled. Deck already exists.', 'warning');
-                    return;
-                }
-                
-                // We need to re-fetch the deck to get the ID if it was a conflict response
-                 const fetchDeckResponse = await fetch(`/api/decks?name=${encodeURIComponent(deckName)}&category=${encodeURIComponent(category)}`);
-                 const fetchedDeckData = await fetchDeckResponse.json();
-                 const deckIdToUse = fetchedDeckData[0].id; // Assuming it returns an array and we take the first match
-
-                 // Proceed to save cards to this existing deck
-                 await saveCardsToDeck(deckIdToUse, deckName, category);
-
-            } else {
-                 throw new Error('Failed to create or retrieve deck');
-            }
-            return; // Exit after handling existing deck scenario
+            const errorData = await deckResponse.json();
+            throw new Error(errorData.error || 'Failed to create deck');
         }
 
         const deckData = await deckResponse.json();
@@ -369,38 +344,34 @@ async function saveCards() {
 async function saveCardsToDeck(deckId, deckName, category) {
     let savedCount = 0;
     for (const card of generatedCards) {
-        // Ensure to include category when saving cards if the API supports it
         const cardResponse = await fetch(`/api/decks/${deckId}/cards`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 question: card.question,
                 answer: card.answer,
-                choices: card.choices || null,
-                category: category // Assuming the card model also has a category field
+                choices: card.choices || null
             })
         });
 
         if (cardResponse.ok) {
             savedCount++;
         } else {
-             console.error(`Failed to save card: ${card.question}`, await cardResponse.text());
+            console.error(`Failed to save card: ${card.question}`, await cardResponse.text());
         }
     }
 
-    showMessage(`Deck "${deckName}" (${category}) created/updated with ${savedCount} cards!`, 'success');
+    showMessage(`Deck "${deckName}" (${category}) created with ${savedCount} cards!`, 'success');
 
-    // Clear form and generated cards
     document.getElementById('textInput').value = '';
     document.getElementById('deckName').value = '';
-    document.getElementById('categorySelect').value = 'General'; // Reset to default category
+    document.getElementById('categorySelect').value = 'General';
     document.getElementById('cardsPreview').classList.add('hidden');
     extractedText = '';
     generatedCards = [];
 
-    await loadDecks(); // Reload decks to reflect changes
+    await loadDecks();
 
-    // Navigate to the newly created/updated deck
     setTimeout(() => {
         location.href = `/deck/${deckId}`;
     }, 1000);
@@ -445,20 +416,12 @@ function renderDecks(filterCategory = 'all') {
     }
 
     decksList.innerHTML = filteredDecks.map(deck => `
-        <div class="deck-card">
-            <div class="deck-header">
-                <h3>${escapeHtml(deck.name)}</h3>
-                <button onclick="deleteDeck(${deck.id})" class="delete-btn" title="Delete deck">🗑️</button>
-            </div>
-            <p class="deck-description">${escapeHtml(deck.description || 'No description')}</p>
-            <div class="deck-stats">
+        <div class="deck-card" onclick="location.href='/deck/${deck.id}'">
+            <h3>${escapeHtml(deck.name)}</h3>
+            <p>${escapeHtml(deck.description || 'No description')}</p>
+            <div class="deck-meta">
                 <span>📂 ${escapeHtml(deck.category || 'General')}</span>
                 <span>📚 ${deck.card_count} cards</span>
-            </div>
-            <div class="deck-actions">
-                <a href="/deck/${deck.id}" class="btn secondary-btn">View Cards</a>
-                <a href="/study/${deck.id}" class="btn primary-btn">Study</a>
-                <a href="/quiz/${deck.id}" class="btn success-btn">Quiz</a>
             </div>
         </div>
     `).join('');
