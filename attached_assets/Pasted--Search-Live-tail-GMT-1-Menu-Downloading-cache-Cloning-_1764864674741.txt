@@ -1,0 +1,74 @@
+
+Search
+
+Live tail
+GMT+1
+
+Menu
+
+==> Downloading cache...
+==> Cloning from https://github.com/julisunkan/bundle
+==> Checking out commit 28fdbd20ab3c7d08f069d2f9fda1afbd5ee026b8 in branch main
+==> Downloaded 139MB in 3s. Extraction took 3s.
+==> Installing Python version 3.13.4...
+==> Using Python version 3.13.4 (default)
+==> Docs on specifying a Python version: https://render.com/docs/python-version
+==> Using Poetry version 2.1.3 (default)
+==> Docs on specifying a Poetry version: https://render.com/docs/poetry-version
+==> Using uv version 0.7.12 (default)
+==> Docs on specifying a uv version: https://render.com/docs/uv-version
+==> Running build command 'pip install -r requirements.txt'...
+Collecting Flask==3.0.0 (from -r requirements.txt (line 1))
+  Using cached flask-3.0.0-py3-none-any.whl.metadata (3.6 kB)
+Collecting Werkzeug==3.0.1 (from -r requirements.txt (line 2))
+  Using cached werkzeug-3.0.1-py3-none-any.whl.metadata (4.1 kB)
+Collecting PyPDF2==3.0.1 (from -r requirements.txt (line 3))
+  Using cached pypdf2-3.0.1-py3-none-any.whl.metadata (6.8 kB)
+Collecting pdfplumber==0.10.3 (from -r requirements.txt (line 4))
+  Using cached pdfplumber-0.10.3-py3-none-any.whl.metadata (38 kB)
+Collecting pytesseract==0.3.10 (from -r requirements.txt (line 5))
+  Using cached pytesseract-0.3.10-py3-none-any.whl.metadata (11 kB)
+Collecting Pillow==10.1.0 (from -r requirements.txt (line 6))
+  Using cached Pillow-10.1.0.tar.gz (50.8 MB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  × Getting requirements to build wheel did not run successfully.
+  │ exit code: 1
+  ╰─> [21 lines of output]
+      Traceback (most recent call last):
+        File "/opt/render/project/src/.venv/lib/python3.13/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 389, in <module>
+          main()
+          ~~~~^^
+        File "/opt/render/project/src/.venv/lib/python3.13/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 373, in main
+          json_out["return_val"] = hook(**hook_input["kwargs"])
+                                   ~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/opt/render/project/src/.venv/lib/python3.13/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 143, in get_requires_for_build_wheel
+          return hook(config_settings)
+        File "/tmp/pip-build-env-5rt9kass/overlay/lib/python3.13/site-packages/setuptools/build_meta.py", line 331, in get_requires_for_build_wheel
+          return self._get_build_requires(config_settings, requirements=[])
+                 ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/tmp/pip-build-env-5rt9kass/overlay/lib/python3.13/site-packages/setuptools/build_meta.py", line 301, in _get_build_requires
+          self.run_setup()
+          ~~~~~~~~~~~~~~^^
+        File "/tmp/pip-build-env-5rt9kass/overlay/lib/python3.13/site-packages/setuptools/build_meta.py", line 317, in run_setup
+          exec(code, locals())
+          ~~~~^^^^^^^^^^^^^^^^
+        File "<string>", line 30, in <module>
+        File "<string>", line 27, in get_version
+      KeyError: '__version__'
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+[notice] A new release of pip is available: 25.1.1 -> 25.3
+[notice] To update, run: pip install --upgrade pip
+error: subprocess-exited-with-error
+× Getting requirements to build wheel did not run successfully.
+│ exit code: 1
+╰─> See above for output.
+note: This error originates from a subprocess, and is likely not a problem with pip.
+==> Build failed 😞
+==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
