@@ -38,3 +38,8 @@ externalPort = 80
 [[ports]]
 localPort = 34971
 externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+ADMIN_PASSWORD = "FlashAdmin2024!"

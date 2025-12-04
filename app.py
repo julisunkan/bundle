@@ -1,10 +1,13 @@
 import os
+import secrets
+import hashlib
+from functools import wraps
 from flask import Flask, render_template, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 import json
 import csv
 from io import StringIO
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from models import init_db, Deck, Card, StudySession, QuizResult, Badge
 from ai_service import generate_summary, generate_flashcards, generate_multiple_choice
@@ -19,6 +22,34 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 init_db()
+
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+admin_tokens = {}
+
+def generate_admin_token():
+    token = secrets.token_hex(32)
+    admin_tokens[token] = datetime.now() + timedelta(hours=24)
+    return token
+
+def verify_admin_token(token):
+    if token in admin_tokens:
+        if datetime.now() < admin_tokens[token]:
+            return True
+        else:
+            del admin_tokens[token]
+    return False
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Unauthorized'}), 401
+        token = auth_header[7:]
+        if not verify_admin_token(token):
+            return jsonify({'error': 'Invalid or expired token'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.after_request
 def add_header(response):
@@ -498,6 +529,53 @@ def ads_txt():
 @app.route('/manifest.json')
 def manifest():
     return send_file('static/manifest.json', mimetype='application/manifest+json')
+
+@app.route('/xadmin7829')
+def admin_page():
+    return render_template('admin.html')
+
+@app.route('/api/admin/login', methods=['POST'])
+def admin_login():
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    password = request.json.get('password', '')
+    
+    if password == ADMIN_PASSWORD:
+        token = generate_admin_token()
+        return jsonify({'token': token, 'message': 'Login successful'})
+    
+    return jsonify({'error': 'Invalid password'}), 401
+
+@app.route('/api/admin/verify', methods=['GET'])
+def admin_verify():
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    token = auth_header[7:]
+    if verify_admin_token(token):
+        return jsonify({'valid': True})
+    
+    return jsonify({'error': 'Invalid token'}), 401
+
+@app.route('/api/admin/decks/<int:deck_id>', methods=['DELETE'])
+@admin_required
+def admin_delete_deck(deck_id):
+    try:
+        Deck.delete(deck_id)
+        return jsonify({'message': 'Deck deleted successfully'})
+    except Exception as e:
+        return jsonify({'error': 'Failed to delete deck'}), 500
+
+@app.route('/api/admin/cards/<int:card_id>', methods=['DELETE'])
+@admin_required
+def admin_delete_card(card_id):
+    try:
+        Card.delete(card_id)
+        return jsonify({'message': 'Card deleted successfully'})
+    except Exception as e:
+        return jsonify({'error': 'Failed to delete card'}), 500
 
 @app.errorhandler(404)
 def not_found(error):
