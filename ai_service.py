@@ -122,7 +122,6 @@ Generate exactly {num_cards} flashcards. Make each question thought-provoking an
             flashcards = json.loads(result_text)
         except json.JSONDecodeError as e:
             # If JSON parsing fails, try to extract question-answer pairs manually
-            import re
             flashcards = []
             
             # Try to find JSON-like objects
