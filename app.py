@@ -323,6 +323,8 @@ def upload_pdf():
 
 @app.route('/api/test-gemini', methods=['POST'])
 def test_gemini():
+    import google.generativeai as genai
+    
     if not request.json:
         return jsonify({'error': 'Invalid request'}), 400
     
@@ -331,11 +333,9 @@ def test_gemini():
     if not api_key:
         return jsonify({'error': 'No API key provided'}), 400
     
+    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+    
     try:
-        import google.generativeai as genai
-        
-        GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
-        
         genai.configure(api_key=api_key)
         test_model = genai.GenerativeModel('gemini-2.0-flash')
         
@@ -346,7 +346,6 @@ def test_gemini():
         
         return jsonify({'message': 'API key is valid', 'test_response': response.text})
     except Exception as e:
-        GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
         if GEMINI_API_KEY:
             genai.configure(api_key=GEMINI_API_KEY)
         return jsonify({'error': f'API key test failed: {str(e)}'}), 400
