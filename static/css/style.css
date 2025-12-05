@@ -1981,29 +1981,69 @@ select.form-input {
     margin-bottom: 0;
 }
 
+.site-footer {
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+    padding: 48px 24px 24px;
+    margin-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 32px;
+}
+
+.footer-section h3 {
+    color: var(--text);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.footer-section p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
 .footer-links {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    margin-top: 20px;
-    flex-wrap: wrap;
-    position: relative;
-    z-index: 1;
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
-.footer-link {
-    color: rgba(255, 255, 255, 0.85);
+.footer-links li {
+    margin-bottom: 12px;
+}
+
+.footer-links a {
+    color: var(--text-secondary);
     text-decoration: none;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.95rem;
     transition: all var(--transition);
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
+    display: inline-block;
 }
 
-.footer-link:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.15);
+.footer-links a:hover {
+    color: var(--primary);
+    transform: translateX(4px);
+}
+
+.footer-bottom {
+    max-width: 1200px;
+    margin: 32px auto 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
+
+.footer-bottom p {
+    color: var(--text-light);
+    font-size: 0.85rem;
 }
 
 .features-section {
