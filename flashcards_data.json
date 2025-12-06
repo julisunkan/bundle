@@ -44,5 +44,85 @@
         }
       ]
     }
+  ],
+  "next_deck_id": 18,
+  "next_card_id": 1,
+  "next_session_id": 1,
+  "next_quiz_id": 1,
+  "study_sessions": [],
+  "quiz_results": [],
+  "badges": [
+    {
+      "id": 1,
+      "name": "First Steps",
+      "description": "Study your first flashcard",
+      "icon": "\ud83c\udfaf",
+      "requirement": 1,
+      "earned": false,
+      "earned_at": null
+    },
+    {
+      "id": 2,
+      "name": "Beginner",
+      "description": "Study 10 flashcards",
+      "icon": "\ud83d\udcda",
+      "requirement": 10,
+      "earned": false,
+      "earned_at": null
+    },
+    {
+      "id": 3,
+      "name": "Scholar",
+      "description": "Study 50 flashcards",
+      "icon": "\ud83c\udf93",
+      "requirement": 50,
+      "earned": false,
+      "earned_at": null
+    },
+    {
+      "id": 4,
+      "name": "Expert",
+      "description": "Study 100 flashcards",
+      "icon": "\ud83d\udc68\u200d\ud83c\udf93",
+      "requirement": 100,
+      "earned": false,
+      "earned_at": null
+    },
+    {
+      "id": 5,
+      "name": "Master",
+      "description": "Study 500 flashcards",
+      "icon": "\ud83c\udfc6",
+      "requirement": 500,
+      "earned": false,
+      "earned_at": null
+    },
+    {
+      "id": 6,
+      "name": "Quiz Starter",
+      "description": "Complete your first quiz",
+      "icon": "\u2705",
+      "requirement": 1,
+      "earned": false,
+      "earned_at": null
+    },
+    {
+      "id": 7,
+      "name": "Perfect Score",
+      "description": "Get 100% on a quiz",
+      "icon": "\ud83d\udcaf",
+      "requirement": 1,
+      "earned": false,
+      "earned_at": null
+    },
+    {
+      "id": 8,
+      "name": "Consistent Learner",
+      "description": "Study 7 days in a row",
+      "icon": "\ud83d\udd25",
+      "requirement": 7,
+      "earned": false,
+      "earned_at": null
+    }
   ]
 }

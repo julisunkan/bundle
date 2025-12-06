@@ -69,35 +69,8 @@ def index():
 @app.route('/api/decks', methods=['GET', 'POST'])
 def handle_decks():
     if request.method == 'GET':
-        # Get decks from database
-        db_decks = Deck.get_all()
-        
-        # Get decks from JSON
-        json_decks = []
-        json_file = 'flashcards_data.json'
-        if os.path.exists(json_file):
-            try:
-                with open(json_file, 'r') as f:
-                    flash_data = json.load(f)
-                
-                for deck in flash_data.get('decks', []):
-                    json_decks.append({
-                        'id': deck['id'],
-                        'name': deck['name'],
-                        'description': f"Generated deck - {len(deck['cards'])} cards",
-                        'category': deck.get('category', 'General'),
-                        'card_count': len(deck['cards']),
-                        'created_at': deck.get('created_at', '')
-                    })
-            except Exception as e:
-                print(f"Error loading JSON decks: {e}")
-        
-        # Merge decks, prioritizing JSON decks
-        all_decks = {deck['id']: deck for deck in db_decks}
-        for deck in json_decks:
-            all_decks[deck['id']] = deck
-        
-        return jsonify(list(all_decks.values()))
+        decks = Deck.get_all()
+        return jsonify(decks)
     
     elif request.method == 'POST':
         data = request.json
@@ -114,16 +87,8 @@ def handle_deck(deck_id):
 @app.route('/api/decks/<int:deck_id>/cards', methods=['GET', 'POST'])
 def handle_cards(deck_id):
     if request.method == 'GET':
-        # Try to load from JSON first
-        json_cards = load_cards_from_json(deck_id)
-        
-        # If JSON cards exist, return them
-        if json_cards is not None and len(json_cards) > 0:
-            return jsonify(json_cards)
-        
-        # Otherwise fall back to database
-        db_cards = Card.get_by_deck(deck_id)
-        return jsonify(db_cards)
+        cards = Card.get_by_deck(deck_id)
+        return jsonify(cards)
     
     elif request.method == 'POST':
         if not request.json:
