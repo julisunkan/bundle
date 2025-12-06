@@ -122,87 +122,29 @@ def save_flashcards_json():
     
     data = request.json
     deck_id = data.get('deck_id')
-    deck_name = data.get('deck_name')
-    category = data.get('category', 'General')
     cards = data.get('cards', [])
     
-    if not deck_id or not deck_name or not cards:
+    if not deck_id or not cards:
         return jsonify({'error': 'Missing required fields'}), 400
     
     try:
-        # Load existing data
-        json_file = 'flashcards_data.json'
-        if os.path.exists(json_file):
-            with open(json_file, 'r') as f:
-                flash_data = json.load(f)
-        else:
-            flash_data = {'decks': []}
+        deck = Deck.get_by_id(deck_id)
+        if not deck:
+            return jsonify({'error': 'Deck not found'}), 404
         
-        # Add new deck
-        deck_entry = {
-            'id': deck_id,
-            'name': deck_name,
-            'category': category,
-            'created_at': datetime.now().isoformat(),
-            'cards': cards
-        }
+        Card.clear_for_deck(deck_id)
         
-        # Remove existing deck with same ID if exists
-        flash_data['decks'] = [d for d in flash_data['decks'] if d['id'] != deck_id]
-        flash_data['decks'].append(deck_entry)
-        
-        # Save to file
-        with open(json_file, 'w') as f:
-            json.dump(flash_data, f, indent=2)
+        for card in cards:
+            Card.create(
+                deck_id,
+                card.get('question', ''),
+                card.get('answer', ''),
+                card.get('choices')
+            )
         
         return jsonify({'message': 'Flashcards saved successfully', 'count': len(cards)})
     except Exception as e:
         return jsonify({'error': f'Failed to save: {str(e)}'}), 500
-
-def load_cards_from_json(deck_id):
-    """Load cards from JSON file for a specific deck"""
-    json_file = 'flashcards_data.json'
-    if not os.path.exists(json_file):
-        print(f"JSON file not found: {json_file}")
-        return None
-    
-    try:
-        with open(json_file, 'r') as f:
-            flash_data = json.load(f)
-        
-        print(f"Looking for deck_id {deck_id} in JSON")
-        print(f"Available decks: {[d.get('id') for d in flash_data.get('decks', [])]}")
-        
-        for deck in flash_data.get('decks', []):
-            # Try both int and string comparison
-            if deck.get('id') == deck_id or str(deck.get('id')) == str(deck_id):
-                print(f"Found deck {deck_id} with {len(deck.get('cards', []))} cards")
-                
-                # Format cards to match database format
-                formatted_cards = []
-                for i, card in enumerate(deck.get('cards', [])):
-                    formatted_card = {
-                        'id': i + 1,
-                        'deck_id': deck_id,
-                        'question': card.get('question', ''),
-                        'answer': card.get('answer', ''),
-                        'choices': json.dumps(card['choices']) if card.get('choices') else None,
-                        'difficulty': 'medium',
-                        'created_at': deck.get('created_at', ''),
-                        'next_review': deck.get('created_at', '')
-                    }
-                    formatted_cards.append(formatted_card)
-                
-                print(f"Returning {len(formatted_cards)} formatted cards")
-                return formatted_cards
-        
-        print(f"Deck {deck_id} not found in JSON")
-        return None
-    except Exception as e:
-        print(f"Error loading cards from JSON: {e}")
-        import traceback
-        traceback.print_exc()
-        return None
 
 
 @app.route('/api/process-text', methods=['POST'])
@@ -645,20 +587,6 @@ def admin_verify():
 def admin_delete_deck(deck_id):
     try:
         Deck.delete(deck_id)
-        
-        json_file = 'flashcards_data.json'
-        if os.path.exists(json_file):
-            try:
-                with open(json_file, 'r') as f:
-                    flash_data = json.load(f)
-                
-                flash_data['decks'] = [d for d in flash_data.get('decks', []) if d.get('id') != deck_id and str(d.get('id')) != str(deck_id)]
-                
-                with open(json_file, 'w') as f:
-                    json.dump(flash_data, f, indent=2)
-            except Exception as e:
-                print(f"Error removing deck from JSON: {e}")
-        
         return jsonify({'message': 'Deck deleted successfully'})
     except Exception as e:
         return jsonify({'error': 'Failed to delete deck'}), 500
@@ -667,28 +595,6 @@ def admin_delete_deck(deck_id):
 def admin_delete_card(card_id):
     try:
         Card.delete(card_id)
-        
-        deck_id = request.args.get('deck_id')
-        if deck_id:
-            json_file = 'flashcards_data.json'
-            if os.path.exists(json_file):
-                try:
-                    with open(json_file, 'r') as f:
-                        flash_data = json.load(f)
-                    
-                    for deck in flash_data.get('decks', []):
-                        if str(deck.get('id')) == str(deck_id):
-                            cards = deck.get('cards', [])
-                            if 0 < card_id <= len(cards):
-                                cards.pop(card_id - 1)
-                                deck['cards'] = cards
-                            break
-                    
-                    with open(json_file, 'w') as f:
-                        json.dump(flash_data, f, indent=2)
-                except Exception as e:
-                    print(f"Error removing card from JSON: {e}")
-        
         return jsonify({'message': 'Card deleted successfully'})
     except Exception as e:
         return jsonify({'error': 'Failed to delete card'}), 500

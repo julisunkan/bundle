@@ -231,6 +231,19 @@ class Card:
         data['study_sessions'] = [s for s in data.get('study_sessions', []) if s.get('card_id') != card_id]
         save_data(data)
 
+    @staticmethod
+    def clear_for_deck(deck_id):
+        data = get_data()
+        card_ids_to_remove = []
+        for deck in data['decks']:
+            if deck['id'] == deck_id or str(deck['id']) == str(deck_id):
+                card_ids_to_remove = [c.get('id') for c in deck.get('cards', [])]
+                deck['cards'] = []
+                break
+        data['study_sessions'] = [s for s in data.get('study_sessions', []) 
+                                   if s.get('card_id') not in card_ids_to_remove]
+        save_data(data)
+
 class StudySession:
     @staticmethod
     def update(card_id, quality):
