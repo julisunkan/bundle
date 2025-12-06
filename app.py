@@ -599,6 +599,38 @@ def admin_delete_card(card_id):
     except Exception as e:
         return jsonify({'error': 'Failed to delete card'}), 500
 
+@app.route('/api/admin/decks/<int:deck_id>/update', methods=['PUT'])
+def admin_update_deck(deck_id):
+    if not request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+    
+    data = request.json
+    description = data.get('description', '').strip()
+    category = data.get('category', 'General').strip()
+    
+    if len(description) > 500:
+        return jsonify({'error': 'Description too long (max 500 characters)'}), 400
+    
+    try:
+        from models import get_data, save_data
+        data_store = get_data()
+        
+        deck_found = False
+        for deck in data_store['decks']:
+            if deck['id'] == deck_id:
+                deck['description'] = description
+                deck['category'] = category
+                deck_found = True
+                break
+        
+        if not deck_found:
+            return jsonify({'error': 'Deck not found'}), 404
+        
+        save_data(data_store)
+        return jsonify({'message': 'Deck updated successfully'})
+    except Exception as e:
+        return jsonify({'error': 'Failed to update deck'}), 500
+
 @app.errorhandler(404)
 def not_found(error):
     if request.path.startswith('/api/'):

@@ -138,6 +138,95 @@
             font-size: 14px;
             margin-right: 10px;
         }
+        .edit-deck-btn {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .edit-deck-btn:hover {
+            background: #e0a800;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .modal-content h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .modal-content label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .modal-content input,
+        .modal-content textarea,
+        .modal-content select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .modal-content textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .save-btn {
+            background: #28a745;
+            color: white;
+        }
+        .save-btn:hover {
+            background: #218838;
+        }
+        .cancel-btn {
+            background: #6c757d;
+            color: white;
+        }
+        .cancel-btn:hover {
+            background: #5a6268;
+        }
         .card-viewer {
             display: none;
             margin-top: 20px;
@@ -274,11 +363,44 @@
                 <ul id="cardList" class="card-list"></ul>
             </div>
         </div>
+
+        <div id="editDeckModal" class="modal">
+            <div class="modal-content">
+                <h3>Edit Deck</h3>
+                <label for="editDeckDescription">Description:</label>
+                <textarea id="editDeckDescription" maxlength="500"></textarea>
+                <label for="editDeckCategory">Category:</label>
+                <select id="editDeckCategory">
+                    <option value="General">General</option>
+                    <option value="Science">Science</option>
+                    <option value="History">History</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Literature">Literature</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Psychology">Psychology</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Philosophy">Philosophy</option>
+                    <option value="Biology">Biology</option>
+                    <option value="Art & Design">Art & Design</option>
+                    <option value="Medicine">Medicine</option>
+                    <option value="Geography">Geography</option>
+                    <option value="Architecture">Architecture</option>
+                    <option value="Economics">Economics</option>
+                    <option value="Military">Military</option>
+                </select>
+                <div class="modal-buttons">
+                    <button class="save-btn" onclick="saveEditDeck()">Save Changes</button>
+                    <button class="cancel-btn" onclick="closeEditModal()">Cancel</button>
+                </div>
+                <p id="editStatus" style="margin-top: 10px; text-align: center; font-weight: bold;"></p>
+            </div>
+        </div>
     </div>
 
     <script>
         let currentDeckId = null;
         let currentDeckName = null;
+        let editingDeckId = null;
 
         // Load decks on page load
         document.addEventListener('DOMContentLoaded', () => {
@@ -287,12 +409,19 @@
             // Event delegation for deck list buttons
             document.getElementById('deckList').addEventListener('click', (e) => {
                 const viewBtn = e.target.closest('.view-cards-btn');
+                const editBtn = e.target.closest('.edit-deck-btn');
                 const deleteBtn = e.target.closest('.delete-btn');
                 
                 if (viewBtn) {
                     const deckId = parseInt(viewBtn.dataset.deckId);
                     const deckName = decodeURIComponent(viewBtn.dataset.deckName);
                     viewCards(deckId, deckName);
+                } else if (editBtn) {
+                    const deckId = parseInt(editBtn.dataset.deckId);
+                    const deckName = decodeURIComponent(editBtn.dataset.deckName);
+                    const deckDescription = decodeURIComponent(editBtn.dataset.deckDescription);
+                    const deckCategory = decodeURIComponent(editBtn.dataset.deckCategory);
+                    openEditModal(deckId, deckName, deckDescription, deckCategory);
                 } else if (deleteBtn && deleteBtn.closest('.deck-item')) {
                     const deckId = parseInt(deleteBtn.dataset.deckId);
                     const deckName = decodeURIComponent(deleteBtn.dataset.deckName);
@@ -330,6 +459,7 @@
                         </div>
                         <div>
                             <button class="view-cards-btn" data-deck-id="${deck.id}" data-deck-name="${encodeURIComponent(deck.name)}">View Cards</button>
+                            <button class="edit-deck-btn" data-deck-id="${deck.id}" data-deck-name="${encodeURIComponent(deck.name)}" data-deck-description="${encodeURIComponent(deck.description || '')}" data-deck-category="${encodeURIComponent(deck.category)}">Edit</button>
                             <button class="delete-btn" data-deck-id="${deck.id}" data-deck-name="${encodeURIComponent(deck.name)}">Delete Deck</button>
                         </div>
                     </li>
@@ -547,6 +677,66 @@
                 input.type = 'password';
             }
         }
+
+        function openEditModal(deckId, deckName, deckDescription, deckCategory) {
+            editingDeckId = deckId;
+            document.getElementById('editDeckDescription').value = deckDescription;
+            document.getElementById('editDeckCategory').value = deckCategory;
+            document.getElementById('editStatus').textContent = '';
+            document.getElementById('editDeckModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editDeckModal').classList.remove('active');
+            editingDeckId = null;
+        }
+
+        async function saveEditDeck() {
+            const description = document.getElementById('editDeckDescription').value.trim();
+            const category = document.getElementById('editDeckCategory').value;
+            const statusEl = document.getElementById('editStatus');
+
+            if (description.length > 500) {
+                statusEl.textContent = '❌ Description too long (max 500 characters)';
+                statusEl.style.color = '#dc3545';
+                return;
+            }
+
+            statusEl.textContent = '⏳ Saving...';
+            statusEl.style.color = '#007bff';
+
+            try {
+                const response = await fetch(`/api/admin/decks/${editingDeckId}/update`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ description, category })
+                });
+
+                if (response.ok) {
+                    statusEl.textContent = '✅ Deck updated successfully!';
+                    statusEl.style.color = '#28a745';
+                    
+                    setTimeout(() => {
+                        closeEditModal();
+                        loadDecks();
+                    }, 1000);
+                } else {
+                    const data = await response.json();
+                    statusEl.textContent = '❌ ' + (data.error || 'Failed to update deck');
+                    statusEl.style.color = '#dc3545';
+                }
+            } catch (e) {
+                statusEl.textContent = '❌ Error updating deck';
+                statusEl.style.color = '#dc3545';
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('editDeckModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editDeckModal') {
+                closeEditModal();
+            }
+        });
 
         function escapeHtml(text) {
             if (!text) return '';
