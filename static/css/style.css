@@ -2042,6 +2042,37 @@ textarea::placeholder, input::placeholder {
     header {
         padding: var(--spacing-xl) var(--spacing);
     }
+    
+    .stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stat-card {
+        padding: var(--spacing);
+    }
+    
+    .site-footer {
+        padding: var(--spacing-xl) var(--spacing);
+    }
+    
+    .footer-section {
+        padding: var(--spacing);
+    }
+    
+    .footer-section a {
+        padding: 10px 18px;
+        font-size: 0.8rem;
+    }
+    
+    .decks-header {
+        flex-direction: column;
+        gap: var(--spacing);
+        align-items: stretch;
+    }
+    
+    .category-filter {
+        width: 100%;
+    }
 }
 
 /* Responsive Design - Mobile */
@@ -2056,13 +2087,14 @@ textarea::placeholder, input::placeholder {
 
     nav {
         flex-direction: column;
-        gap: var(--spacing);
+        gap: var(--spacing-sm);
     }
 
     .nav-btn {
         width: 100%;
         justify-content: center;
-        padding: 12px 16px;
+        padding: 14px 16px;
+        min-height: 48px;
     }
 
     section {
@@ -2099,6 +2131,7 @@ textarea::placeholder, input::placeholder {
     .rate-btn {
         width: 100%;
         margin: 0;
+        min-height: 48px;
     }
 
     .preview-actions, .result-actions, .deck-actions {
@@ -2108,15 +2141,28 @@ textarea::placeholder, input::placeholder {
     .preview-actions button, .result-actions button, .action-btn {
         width: 100%;
         min-width: unset;
+        min-height: 48px;
     }
 
     .stats-bar {
         grid-template-columns: 1fr;
         gap: var(--spacing);
     }
+    
+    .stats-overview {
+        grid-template-columns: 1fr;
+    }
 
     .flashcard-front, .flashcard-back {
         padding: var(--spacing-lg);
+    }
+    
+    .flashcard {
+        min-height: 350px;
+    }
+    
+    .card-text {
+        font-size: 1.1rem;
     }
 
     .question-card {
@@ -2132,9 +2178,10 @@ textarea::placeholder, input::placeholder {
     .tab-btn {
         min-width: unset;
         flex: 1;
-        padding: 10px 12px;
+        padding: 12px 10px;
         font-size: 0.85rem;
         white-space: normal;
+        min-height: 48px;
     }
     
     .input-method-tabs {
@@ -2147,6 +2194,46 @@ textarea::placeholder, input::placeholder {
         min-height: 48px;
         white-space: normal;
     }
+    
+    .flip-btn, .flip-btn-back, .tts-btn {
+        min-height: 44px;
+        padding: 12px 20px;
+    }
+    
+    .keyboard-hint {
+        display: none;
+    }
+    
+    .site-footer {
+        padding: var(--spacing-lg) var(--spacing);
+    }
+    
+    .footer-content {
+        gap: var(--spacing);
+    }
+    
+    .footer-section a {
+        display: block;
+        margin: 6px 0;
+        text-align: center;
+    }
+    
+    .info-section {
+        padding: var(--spacing);
+    }
+    
+    .info-content {
+        padding: var(--spacing);
+    }
+    
+    .benefits-list li {
+        padding: var(--spacing-sm) 0;
+    }
+    
+    .mcq-choices .choice-btn {
+        min-height: 48px;
+        padding: 14px;
+    }
 }
 
 /* Responsive Design - Small Mobile */
@@ -2154,14 +2241,16 @@ textarea::placeholder, input::placeholder {
     header {
         padding: var(--spacing-lg) var(--spacing);
         margin-bottom: var(--spacing);
+        border-radius: var(--radius-lg);
     }
     
     header h1 {
-        font-size: 1.5rem;
+        font-size: 1.35rem;
     }
     
     .subtitle {
-        font-size: 0.875rem;
+        font-size: 0.85rem;
+        margin-bottom: var(--spacing);
     }
     
     .container {
@@ -2174,20 +2263,35 @@ textarea::placeholder, input::placeholder {
     }
     
     h2 {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
+        padding-left: var(--spacing);
+    }
+    
+    h2::before {
+        left: 0;
+        width: 3px;
     }
     
     .nav-btn, .back-btn {
-        padding: 10px 14px;
-        font-size: 0.85rem;
+        padding: 12px 14px;
+        font-size: 0.8rem;
+        min-height: 44px;
     }
     
     .deck-card {
         padding: var(--spacing);
     }
     
+    .deck-card h3 {
+        font-size: 1rem;
+    }
+    
     .feature-card {
         padding: var(--spacing);
+    }
+    
+    .feature-icon {
+        font-size: 2rem;
     }
     
     .card-preview-enhanced {
@@ -2196,6 +2300,12 @@ textarea::placeholder, input::placeholder {
     
     textarea {
         min-height: 150px;
+        font-size: 16px;
+    }
+    
+    input[type="text"], input[type="number"], input[type="email"], select {
+        font-size: 16px;
+        padding: 14px;
     }
     
     .file-upload {
@@ -2203,8 +2313,98 @@ textarea::placeholder, input::placeholder {
     }
     
     .upload-btn {
-        padding: 12px 20px;
+        padding: 14px 20px;
         font-size: 0.9rem;
+        min-height: 48px;
+    }
+    
+    .progress-bar {
+        height: 8px;
+    }
+    
+    .progress-text {
+        font-size: 0.8rem;
+    }
+    
+    .stat-card {
+        padding: var(--spacing);
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+    }
+    
+    .flashcard {
+        min-height: 300px;
+    }
+    
+    .card-label {
+        font-size: 0.7rem;
+    }
+    
+    .card-text {
+        font-size: 1rem;
+    }
+    
+    .rate-btn {
+        font-size: 0.85rem;
+        padding: 12px;
+    }
+    
+    .badges-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+    
+    .badge-card {
+        padding: var(--spacing-sm);
+    }
+    
+    .badge-icon {
+        font-size: 2rem;
+    }
+    
+    .content-card {
+        padding: var(--spacing);
+    }
+    
+    .content-card h2 {
+        font-size: 1.2rem;
+    }
+    
+    .feature-list li {
+        padding: 12px 0;
+        padding-left: 28px;
+        font-size: 0.9rem;
+    }
+    
+    .faq-item h3 {
+        font-size: 1rem;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem;
+    }
+    
+    .form-input {
+        font-size: 16px;
+        padding: 14px;
+    }
+    
+    .footer-section h3 {
+        font-size: 1rem;
+    }
+    
+    .footer-section p {
+        font-size: 0.85rem;
+    }
+    
+    .footer-bottom p {
+        font-size: 0.8rem;
     }
 }
 
