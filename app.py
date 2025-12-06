@@ -680,6 +680,20 @@ def admin_verify():
 def admin_delete_deck(deck_id):
     try:
         Deck.delete(deck_id)
+        
+        json_file = 'flashcards_data.json'
+        if os.path.exists(json_file):
+            try:
+                with open(json_file, 'r') as f:
+                    flash_data = json.load(f)
+                
+                flash_data['decks'] = [d for d in flash_data.get('decks', []) if d.get('id') != deck_id and str(d.get('id')) != str(deck_id)]
+                
+                with open(json_file, 'w') as f:
+                    json.dump(flash_data, f, indent=2)
+            except Exception as e:
+                print(f"Error removing deck from JSON: {e}")
+        
         return jsonify({'message': 'Deck deleted successfully'})
     except Exception as e:
         return jsonify({'error': 'Failed to delete deck'}), 500
