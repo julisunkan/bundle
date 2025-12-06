@@ -213,7 +213,9 @@ header h1 {
     position: relative;
     z-index: 1;
     font-weight: 800;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}spacing: -0.03em;
     line-height: 1.2;
 }
 

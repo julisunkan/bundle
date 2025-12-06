@@ -584,6 +584,7 @@ def admin_verify():
     return jsonify({'error': 'Invalid token'}), 401
 
 @app.route('/api/admin/decks/<int:deck_id>', methods=['DELETE'])
+@admin_required
 def admin_delete_deck(deck_id):
     try:
         Deck.delete(deck_id)
@@ -592,6 +593,7 @@ def admin_delete_deck(deck_id):
         return jsonify({'error': 'Failed to delete deck'}), 500
 
 @app.route('/api/admin/cards/<int:card_id>', methods=['DELETE'])
+@admin_required
 def admin_delete_card(card_id):
     try:
         Card.delete(card_id)
@@ -600,6 +602,7 @@ def admin_delete_card(card_id):
         return jsonify({'error': 'Failed to delete card'}), 500
 
 @app.route('/api/admin/decks/<int:deck_id>/update', methods=['PUT'])
+@admin_required
 def admin_update_deck(deck_id):
     if not request.json:
         return jsonify({'error': 'Invalid request'}), 400

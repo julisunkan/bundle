@@ -18,6 +18,107 @@ def escape_for_pdf(text):
     return text
 
 def generate_flashcards_pdf(cards, deck_name="Flashcards"):
+    """Generate a PDF with flashcards"""
+    if not cards or not isinstance(cards, list):
+        raise ValueError("Invalid cards data")
+    
+    if len(cards) > 100:
+        raise ValueError("Cannot generate PDF with more than 100 cards")
+    
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter,
+                           topMargin=0.75*inch, bottomMargin=0.75*inch,
+                           leftMargin=0.75*inch, rightMargin=0.75*inch)
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.HexColor('#4f46e5'),
+        alignment=TA_CENTER,
+        spaceAfter=30
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor('#1f2937'),
+        spaceAfter=10
+    )
+    
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        fontSize=11,
+        textColor=colors.HexColor('#374151'),
+        spaceAfter=12,
+        leading=16
+    )
+    
+    story = []
+    
+    # Title page
+    title = Paragraph(f"<b>{escape_for_pdf(deck_name)}</b>", title_style)
+    story.append(title)
+    story.append(Spacer(1, 0.3*inch))
+    
+    date_text = Paragraph(f"Generated: {datetime.now().strftime('%B %d, %Y')}", normal_style)
+    story.append(date_text)
+    story.append(Spacer(1, 0.2*inch))
+    
+    count_text = Paragraph(f"Total Cards: {len(cards)}", normal_style)
+    story.append(count_text)
+    story.append(PageBreak())
+    
+    # Add each flashcard
+    for i, card in enumerate(cards, 1):
+        # Card number
+        card_num = Paragraph(f"<b>Card {i} of {len(cards)}</b>", heading_style)
+        story.append(card_num)
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Question
+        question_heading = Paragraph("<b>Question:</b>", heading_style)
+        story.append(question_heading)
+        
+        question_text = escape_for_pdf(card.get('question', ''))
+        question = Paragraph(question_text, normal_style)
+        story.append(question)
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Multiple choice options if available
+        if 'choices' in card and card['choices']:
+            choices = card['choices']
+            if isinstance(choices, list) and len(choices) > 0:
+                choices_heading = Paragraph("<b>Options:</b>", heading_style)
+                story.append(choices_heading)
+                
+                for j, choice in enumerate(choices[:10], 1):  # Limit to 10 choices
+                    choice_text = escape_for_pdf(str(choice))
+                    choice_para = Paragraph(f"{chr(64+j)}. {choice_text}", normal_style)
+                    story.append(choice_para)
+                
+                story.append(Spacer(1, 0.2*inch))
+        
+        # Answer
+        answer_heading = Paragraph("<b>Answer:</b>", heading_style)
+        story.append(answer_heading)
+        
+        answer_text = escape_for_pdf(card.get('answer', ''))
+        answer = Paragraph(answer_text, normal_style)
+        story.append(answer)
+        
+        # Add page break between cards (except for the last card)
+        if i < len(cards):
+            story.append(PageBreak())
+    
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+def generate_flashcards_pdf(cards, deck_name="Flashcards"):
     """
     Generate a PDF from flashcards data
     
