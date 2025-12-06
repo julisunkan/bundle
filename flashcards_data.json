@@ -1,55 +1,201 @@
 {
   "decks": [
     {
-      "id": 17,
-      "name": "Physics Made Easy",
-      "category": "General",
-      "created_at": "2025-12-04T19:25:48.380413",
+      "id": 18,
+      "name": "General Mathematics",
+      "description": "AI-generated deck about: Algebra, Geometry, Trigonometry, Calculus, Linear Algebra, Differential Equations, Number Theory, Combinatorics, Probability, Statistics, Set Theory, Topology, Mathematical Logic, Discrete Mathematics, Real Analysis, Complex Analysis, Abstract Algebra, Graph Theory, Numerical Methods, Optimization",
+      "category": "Mathematics",
+      "created_at": "2025-12-06T12:45:27.343597",
       "cards": [
         {
-          "answer": "Lagrangian mechanics is based on the principle of least action, finding the path that minimizes the action integral. Unlike Newtonian mechanics, it focuses on energy rather than forces, providing a more general and often simpler approach to solving mechanics problems, especially for constrained systems.",
-          "question": "What is the central principle underlying Lagrangian mechanics, and how does it differ from Newtonian mechanics?"
+          "id": 1,
+          "question": "What is the fundamental purpose of Calculus?",
+          "answer": "Calculus is fundamentally concerned with the study of continuous change, focusing on concepts like limits, derivatives, and integrals. It provides tools to model and analyze phenomena where quantities vary infinitesimally.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T12:45:27.611743"
         },
         {
-          "answer": "Maxwell's equations are a set of four fundamental equations that describe the behavior of electric and magnetic fields. They unify electricity and magnetism, predict the existence of electromagnetic waves, and form the foundation for classical electrodynamics and optics.",
-          "question": "Describe the significance of Maxwell's equations in electromagnetism."
+          "id": 2,
+          "question": "How does Linear Algebra contribute to solving systems of equations?",
+          "answer": "Linear Algebra provides a framework for representing and manipulating systems of linear equations using matrices and vectors. Techniques like Gaussian elimination and matrix inversion allow for efficient solutions and analysis of the solution space.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T12:45:27.612664"
         },
         {
-          "answer": "The wavefunction, denoted as \u03c8, represents the quantum state of a particle. Its absolute square, |\u03c8|^2, gives the probability density of finding the particle at a specific location. The Schr\u00f6dinger equation describes how this wavefunction evolves over time.",
-          "question": "Explain the physical interpretation of the wavefunction in the Schr\u00f6dinger equation."
+          "id": 3,
+          "question": "What is the role of Differential Equations in modeling real-world phenomena?",
+          "answer": "Differential Equations model relationships between functions and their derivatives, representing rates of change. This allows for the description and prediction of dynamical systems in various fields like physics, engineering, and biology.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T12:45:27.614830"
         },
         {
-          "answer": "Perturbation theory is used to approximate solutions to the Schr\u00f6dinger equation when the Hamiltonian (representing the total energy) can be written as the sum of an exactly solvable part and a small perturbation. This allows us to find approximate energy levels and wavefunctions for complex systems where exact solutions are not possible.",
-          "question": "What is the purpose of using approximation methods like perturbation theory in quantum mechanics?"
+          "id": 4,
+          "question": "How does Number Theory explore the properties of integers?",
+          "answer": "Number Theory investigates the properties and relationships of integers, including prime numbers, divisibility, and modular arithmetic. It provides a foundation for cryptography and computer science.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T12:45:27.620786"
         },
         {
-          "answer": "Ensembles represent collections of identical systems in different possible states. The microcanonical ensemble describes isolated systems with fixed energy, volume, and number of particles. The canonical ensemble describes systems in thermal equilibrium with a heat bath at fixed temperature, volume, and number of particles. The grand canonical ensemble describes systems in equilibrium with a heat and particle reservoir, allowing for fluctuations in energy and particle number.",
-          "question": "Define and differentiate between the microcanonical, canonical, and grand canonical ensembles in statistical mechanics."
+          "id": 5,
+          "question": "What is the core objective of Combinatorics?",
+          "answer": "Combinatorics focuses on counting, arranging, and selecting objects from a finite set. It provides methods for determining the number of possible outcomes in various scenarios and is crucial in probability and algorithm analysis.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T12:45:27.621626"
         },
         {
-          "answer": "The fundamental postulates of special relativity are: (1) the laws of physics are the same for all observers in uniform motion and (2) the speed of light in a vacuum is the same for all observers, regardless of the motion of the light source. These postulates lead to the concepts of time dilation and length contraction, altering our classical understanding of space and time as absolute quantities.",
-          "question": "What is the fundamental postulate of special relativity, and how does it impact our understanding of space and time?"
+          "id": 6,
+          "question": "How does Probability Theory quantify uncertainty?",
+          "answer": "Probability Theory provides a mathematical framework for quantifying the likelihood of events occurring. It uses concepts like probability distributions and random variables to model and analyze random phenomena.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T12:45:27.622585"
         },
         {
-          "answer": "The metric tensor describes the geometry of spacetime. It defines distances and angles in curved spacetime, influenced by the presence of mass and energy. It is a fundamental quantity used in the Einstein field equations to relate the curvature of spacetime to the distribution of matter and energy.",
-          "question": "Explain the role of the metric tensor in general relativity."
+          "id": 7,
+          "question": "What is the significance of Set Theory in the foundations of mathematics?",
+          "answer": "Set Theory provides the fundamental language and axioms upon which much of modern mathematics is built. It defines sets, operations on sets, and relationships between sets, serving as a basis for defining numbers, functions, and other mathematical objects.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T12:45:27.623630"
         },
         {
-          "answer": "Complex analysis provides powerful techniques for solving differential equations, evaluating integrals, and analyzing functions with singularities. It's particularly crucial in quantum mechanics for representing wavefunctions and calculating probabilities, and in electromagnetism for analyzing alternating current circuits and electromagnetic waves.",
-          "question": "Why is complex analysis a crucial tool for physicists, particularly in quantum mechanics and electromagnetism?"
+          "id": 8,
+          "question": "How does Topology study the properties of spaces under continuous deformations?",
+          "answer": "Topology investigates properties of spaces that are preserved under continuous deformations, such as stretching, twisting, crumpling, and bending, but not tearing or gluing. It focuses on concepts like connectedness, compactness, and continuity without relying on specific metrics or coordinates.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T12:45:27.624712"
         },
         {
-          "answer": "The Standard Model is a theoretical framework that describes the fundamental particles and forces in the universe, excluding gravity. It classifies elementary particles into fermions (quarks and leptons) and bosons (force carriers) and explains their interactions through the strong, weak, and electromagnetic forces.",
-          "question": "What is the significance of the Standard Model in particle physics?"
+          "id": 9,
+          "question": "What is the primary goal of Real Analysis?",
+          "answer": "Real Analysis rigorously studies the properties of real numbers and real-valued functions. It provides a foundation for calculus, focusing on concepts like limits, continuity, differentiability, and integrability with formal definitions and proofs.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T12:45:27.625778"
+        },
+        {
+          "id": 10,
+          "question": "How does Abstract Algebra generalize algebraic structures?",
+          "answer": "Abstract Algebra studies algebraic structures such as groups, rings, and fields, abstracting away specific properties of numbers to focus on general axioms and their consequences. This allows for the study of common patterns and relationships across different mathematical objects.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T12:45:27.626803"
         }
       ]
     }
   ],
-  "next_deck_id": 18,
-  "next_card_id": 1,
-  "next_session_id": 1,
+  "next_deck_id": 19,
+  "next_card_id": 11,
+  "next_session_id": 11,
   "next_quiz_id": 1,
-  "study_sessions": [],
+  "study_sessions": [
+    {
+      "id": 1,
+      "card_id": 1,
+      "deck_id": 18,
+      "easiness_factor": 2.6,
+      "interval": 1,
+      "repetitions": 1,
+      "next_review": "2025-12-07T12:49:35.441342",
+      "last_reviewed": "2025-12-06T12:49:35.441356"
+    },
+    {
+      "id": 2,
+      "card_id": 2,
+      "deck_id": 18,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T12:45:27.612673",
+      "last_reviewed": null
+    },
+    {
+      "id": 3,
+      "card_id": 3,
+      "deck_id": 18,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T12:45:27.614839",
+      "last_reviewed": null
+    },
+    {
+      "id": 4,
+      "card_id": 4,
+      "deck_id": 18,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T12:45:27.620823",
+      "last_reviewed": null
+    },
+    {
+      "id": 5,
+      "card_id": 5,
+      "deck_id": 18,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T12:45:27.621635",
+      "last_reviewed": null
+    },
+    {
+      "id": 6,
+      "card_id": 6,
+      "deck_id": 18,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T12:45:27.622592",
+      "last_reviewed": null
+    },
+    {
+      "id": 7,
+      "card_id": 7,
+      "deck_id": 18,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T12:45:27.623636",
+      "last_reviewed": null
+    },
+    {
+      "id": 8,
+      "card_id": 8,
+      "deck_id": 18,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T12:45:27.624719",
+      "last_reviewed": null
+    },
+    {
+      "id": 9,
+      "card_id": 9,
+      "deck_id": 18,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T12:45:27.625785",
+      "last_reviewed": null
+    },
+    {
+      "id": 10,
+      "card_id": 10,
+      "deck_id": 18,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T12:45:27.626810",
+      "last_reviewed": null
+    }
+  ],
   "quiz_results": [],
   "badges": [
     {
@@ -58,8 +204,8 @@
       "description": "Study your first flashcard",
       "icon": "\ud83c\udfaf",
       "requirement": 1,
-      "earned": false,
-      "earned_at": null
+      "earned": true,
+      "earned_at": "2025-12-06T12:49:35.442253"
     },
     {
       "id": 2,
