@@ -41,10 +41,6 @@
         {
           "answer": "The Standard Model is a theoretical framework that describes the fundamental particles and forces in the universe, excluding gravity. It classifies elementary particles into fermions (quarks and leptons) and bosons (force carriers) and explains their interactions through the strong, weak, and electromagnetic forces.",
           "question": "What is the significance of the Standard Model in particle physics?"
-        },
-        {
-          "answer": "Fourier and Laplace transforms convert differential equations into algebraic equations, which are often easier to solve. The solution is then transformed back to the original domain. These transforms are particularly useful for analyzing linear, time-invariant systems and solving equations with specific initial conditions or forcing functions.",
-          "question": "Describe the utility of Fourier and Laplace transforms in solving differential equations encountered in physics."
         }
       ]
     }
