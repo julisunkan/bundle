@@ -92,7 +92,7 @@
     {
       "id": 19,
       "name": "Introduction to Windows Registry",
-      "description": "",
+      "description": "The Windows Registry is a central hierarchical database used by the Windows operating system to store configuration settings and options. It contains information, settings, and preferences for both the system and installed applications.",
       "category": "Computer Science",
       "created_at": "2025-12-06T13:01:18.165641",
       "cards": [
