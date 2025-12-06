@@ -2054,7 +2054,33 @@ textarea::placeholder, input::placeholder {
     margin-top: var(--spacing);
 }
 
-/* Responsive Design */
+/* Responsive Design - Tablet */
+@media (max-width: 768px) {
+    .decks-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+    
+    .features-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+    
+    .tab-btn {
+        min-width: 120px;
+        padding: 12px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .nav-btn, .back-btn {
+        padding: 12px 20px;
+        font-size: 0.9rem;
+    }
+    
+    header {
+        padding: var(--spacing-xl) var(--spacing);
+    }
+}
+
+/* Responsive Design - Mobile */
 @media (max-width: 639px) {
     header h1 {
         font-size: 1.75rem;
@@ -2072,6 +2098,7 @@ textarea::placeholder, input::placeholder {
     .nav-btn {
         width: 100%;
         justify-content: center;
+        padding: 12px 16px;
     }
 
     section {
@@ -2094,6 +2121,10 @@ textarea::placeholder, input::placeholder {
     .decks-grid {
         grid-template-columns: 1fr;
     }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
 
     .rating-buttons {
         display: flex;
@@ -2112,6 +2143,7 @@ textarea::placeholder, input::placeholder {
 
     .preview-actions button, .result-actions button, .action-btn {
         width: 100%;
+        min-width: unset;
     }
 
     .stats-bar {
@@ -2129,6 +2161,86 @@ textarea::placeholder, input::placeholder {
 
     .modal-content {
         padding: var(--spacing-lg);
+        margin: var(--spacing);
+        max-width: calc(100% - 2 * var(--spacing));
+    }
+    
+    .tab-btn {
+        min-width: unset;
+        flex: 1;
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        white-space: normal;
+    }
+    
+    .input-method-tabs {
+        gap: var(--spacing-xs);
+    }
+    
+    .primary-btn, .secondary-btn {
+        padding: 14px 24px;
+        font-size: 0.9rem;
+        min-height: 48px;
+        white-space: normal;
+    }
+}
+
+/* Responsive Design - Small Mobile */
+@media (max-width: 480px) {
+    header {
+        padding: var(--spacing-lg) var(--spacing);
+        margin-bottom: var(--spacing);
+    }
+    
+    header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .subtitle {
+        font-size: 0.875rem;
+    }
+    
+    .container {
+        padding: var(--spacing-sm);
+    }
+    
+    section {
+        padding: var(--spacing) var(--spacing-sm);
+        border-radius: var(--radius);
+    }
+    
+    h2 {
+        font-size: 1.25rem;
+    }
+    
+    .nav-btn, .back-btn {
+        padding: 10px 14px;
+        font-size: 0.85rem;
+    }
+    
+    .deck-card {
+        padding: var(--spacing);
+    }
+    
+    .feature-card {
+        padding: var(--spacing);
+    }
+    
+    .card-preview-enhanced {
+        padding: var(--spacing);
+    }
+    
+    textarea {
+        min-height: 150px;
+    }
+    
+    .file-upload {
+        padding: var(--spacing-lg) var(--spacing);
+    }
+    
+    .upload-btn {
+        padding: 12px 20px;
+        font-size: 0.9rem;
     }
 }
 
