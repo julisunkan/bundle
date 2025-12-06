@@ -403,7 +403,7 @@
             }
             
             try {
-                const response = await fetch(`/api/admin/cards/${cardId}`, {
+                const response = await fetch(`/api/admin/cards/${cardId}?deck_id=${currentDeckId}`, {
                     method: 'DELETE'
                 });
                 

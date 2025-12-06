@@ -702,6 +702,28 @@ def admin_delete_deck(deck_id):
 def admin_delete_card(card_id):
     try:
         Card.delete(card_id)
+        
+        deck_id = request.args.get('deck_id')
+        if deck_id:
+            json_file = 'flashcards_data.json'
+            if os.path.exists(json_file):
+                try:
+                    with open(json_file, 'r') as f:
+                        flash_data = json.load(f)
+                    
+                    for deck in flash_data.get('decks', []):
+                        if str(deck.get('id')) == str(deck_id):
+                            cards = deck.get('cards', [])
+                            if 0 < card_id <= len(cards):
+                                cards.pop(card_id - 1)
+                                deck['cards'] = cards
+                            break
+                    
+                    with open(json_file, 'w') as f:
+                        json.dump(flash_data, f, indent=2)
+                except Exception as e:
+                    print(f"Error removing card from JSON: {e}")
+        
         return jsonify({'message': 'Card deleted successfully'})
     except Exception as e:
         return jsonify({'error': 'Failed to delete card'}), 500
