@@ -71,7 +71,7 @@ def handle_decks():
     if request.method == 'GET':
         decks = Deck.get_all()
         return jsonify(decks)
-    
+
     elif request.method == 'POST':
         data = request.json
         deck_id = Deck.create(data['name'], data.get('description', ''), data.get('category', 'General'))
@@ -89,21 +89,21 @@ def handle_cards(deck_id):
     if request.method == 'GET':
         cards = Card.get_by_deck(deck_id)
         return jsonify(cards)
-    
+
     elif request.method == 'POST':
         if not request.json:
             return jsonify({'error': 'Invalid request'}), 400
-        
+
         data = request.json
         question = data.get('question', '').strip()
         answer = data.get('answer', '').strip()
-        
+
         if not question or not answer:
             return jsonify({'error': 'Question and answer are required'}), 400
-        
+
         if len(question) > 1000 or len(answer) > 2000:
             return jsonify({'error': 'Question or answer too long'}), 400
-        
+
         try:
             card_id = Card.create(
                 deck_id,
@@ -113,27 +113,28 @@ def handle_cards(deck_id):
             )
             return jsonify({'id': card_id, 'message': 'Card created successfully'})
         except Exception as e:
+            app.logger.error(f"Failed to create card: {e}")
             return jsonify({'error': 'Failed to create card'}), 500
 
 @app.route('/api/save-flashcards-json', methods=['POST'])
 def save_flashcards_json():
     if not request.json:
         return jsonify({'error': 'Invalid request'}), 400
-    
+
     data = request.json
     deck_id = data.get('deck_id')
     cards = data.get('cards', [])
-    
+
     if not deck_id or not cards:
         return jsonify({'error': 'Missing required fields'}), 400
-    
+
     try:
         deck = Deck.get_by_id(deck_id)
         if not deck:
             return jsonify({'error': 'Deck not found'}), 404
-        
+
         Card.clear_for_deck(deck_id)
-        
+
         for card in cards:
             Card.create(
                 deck_id,
@@ -141,9 +142,10 @@ def save_flashcards_json():
                 card.get('answer', ''),
                 card.get('choices')
             )
-        
+
         return jsonify({'message': 'Flashcards saved successfully', 'count': len(cards)})
     except Exception as e:
+        app.logger.error(f"Failed to save flashcards JSON: {e}")
         return jsonify({'error': f'Failed to save: {str(e)}'}), 500
 
 
@@ -151,79 +153,96 @@ def save_flashcards_json():
 def process_text():
     if not request.json:
         return jsonify({'error': 'Invalid request'}), 400
-    
+
     data = request.json
     text = clean_text(data.get('text', ''))
     action = data.get('action', 'flashcards')
-    
+
     if not text:
+        app.logger.warning("No text provided for processing.")
         return jsonify({'error': 'No text provided'}), 400
-    
+
+    # Minimum character count for card generation
     if len(text) < 50:
-        return jsonify({'error': 'Text too short. Please provide at least 50 characters.'}), 400
-    
+        app.logger.warning(f"Text too short for processing. Length: {len(text)}")
+        return jsonify({'error': 'Text is too short. Please provide at least 50 characters.'}), 400
+
     try:
         user_api_key = data.get('api_key')
-        
+
         if action == 'summary':
             result = generate_summary(text, user_api_key=user_api_key)
             return jsonify({'summary': result})
-        
+
         elif action == 'flashcards':
             num_cards = min(int(data.get('num_cards', 10)), 50)
             flashcards = generate_flashcards(text, num_cards, user_api_key=user_api_key)
             return jsonify({'flashcards': flashcards})
-        
+
         elif action == 'multiple_choice':
             num_questions = min(int(data.get('num_questions', 5)), 25)
             questions = generate_multiple_choice(text, num_questions, user_api_key=user_api_key)
             return jsonify({'questions': questions})
-        
+
         else:
+            app.logger.warning(f"Invalid action requested: {action}")
             return jsonify({'error': 'Invalid action'}), 400
     except Exception as e:
+        app.logger.error(f"Error processing text for action '{action}': {e}")
         return jsonify({'error': 'Failed to process text'}), 500
 
 @app.route('/api/upload-pdf', methods=['POST'])
 def upload_pdf():
     if 'file' not in request.files:
+        app.logger.error("No file part in the request for PDF upload.")
         return jsonify({'error': 'No file provided'}), 400
-    
+
     file = request.files['file']
-    
+
     if file.filename == '':
+        app.logger.error("No file selected for PDF upload.")
         return jsonify({'error': 'No file selected'}), 400
-    
+
     if not file or not allowed_file(file.filename):
+        app.logger.error(f"Invalid file type uploaded: {file.filename}")
         return jsonify({'error': 'Invalid file type. Only PDF files are allowed.'}), 400
-    
+
     if file.content_length and file.content_length > app.config['MAX_CONTENT_LENGTH']:
+        app.logger.error(f"File too large: {file.filename} ({file.content_length} bytes)")
         return jsonify({'error': 'File too large. Maximum size is 16MB.'}), 400
-    
+
     filename = secure_filename(file.filename)
     import uuid
     unique_filename = f"{uuid.uuid4()}_{filename}"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-    
+
     try:
         file.save(filepath)
-        
+
         if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
+            app.logger.error(f"File save failed or file is empty: {filepath}")
             return jsonify({'error': 'File upload failed'}), 500
-        
+
         if os.path.getsize(filepath) > 16 * 1024 * 1024:
+            app.logger.error(f"File too large after saving: {filepath}")
             os.remove(filepath)
             return jsonify({'error': 'File too large'}), 400
-        
+
+        app.logger.info(f"Processing PDF file: {filepath}")
         text = process_pdf_file(filepath)
-        
+        app.logger.info(f"Finished processing PDF file: {filepath}")
+
         os.remove(filepath)
-        
+
         if text and len(text.strip()) > 0:
-            return jsonify({'text': clean_text(text), 'message': 'PDF processed successfully'})
+            cleaned_text = clean_text(text)
+            app.logger.info(f"Successfully extracted text from PDF: {unique_filename}")
+            return jsonify({'text': cleaned_text, 'message': 'PDF processed successfully'})
         else:
+            app.logger.warning(f"Could not extract text from PDF: {unique_filename}. File may be scanned or empty.")
             return jsonify({'error': 'Could not extract text from PDF. File may be scanned or empty.'}), 400
     except Exception as e:
+        app.logger.error(f"Error processing PDF file {unique_filename}: {e}", exc_info=True)
         if os.path.exists(filepath):
             os.remove(filepath)
         return jsonify({'error': 'Error processing PDF. Please try again.'}), 500
@@ -231,28 +250,29 @@ def upload_pdf():
 @app.route('/api/test-gemini', methods=['POST'])
 def test_gemini():
     import google.generativeai as genai
-    
+
     if not request.json:
         return jsonify({'error': 'Invalid request'}), 400
-    
+
     api_key = request.json.get('api_key')
-    
+
     if not api_key:
         return jsonify({'error': 'No API key provided'}), 400
-    
+
     GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
-    
+
     try:
         genai.configure(api_key=api_key)
         test_model = genai.GenerativeModel('gemini-2.0-flash')
-        
+
         response = test_model.generate_content("Say hello")
-        
+
         if GEMINI_API_KEY:
             genai.configure(api_key=GEMINI_API_KEY)
-        
+
         return jsonify({'message': 'API key is valid', 'test_response': response.text})
     except Exception as e:
+        app.logger.error(f"Gemini API key test failed: {e}", exc_info=True)
         if GEMINI_API_KEY:
             genai.configure(api_key=GEMINI_API_KEY)
         return jsonify({'error': f'API key test failed: {str(e)}'}), 400
@@ -261,26 +281,27 @@ def test_gemini():
 def study_card(card_id):
     if not request.json:
         return jsonify({'error': 'Invalid request'}), 400
-    
+
     data = request.json
     quality = data.get('quality', 3)
-    
+
     try:
         quality = int(quality)
         if quality < 0 or quality > 5:
             return jsonify({'error': 'Quality must be between 0 and 5'}), 400
     except (ValueError, TypeError):
         return jsonify({'error': 'Invalid quality value'}), 400
-    
+
     try:
         StudySession.update(card_id, quality)
         newly_earned = Badge.check_and_award()
-        
+
         return jsonify({
             'message': 'Study session recorded',
             'badges_earned': newly_earned
         })
     except Exception as e:
+        app.logger.error(f"Failed to record study session for card {card_id}: {e}", exc_info=True)
         return jsonify({'error': 'Failed to record study session'}), 500
 
 @app.route('/api/decks/<int:deck_id>/due-cards', methods=['GET'])
@@ -296,27 +317,29 @@ def settings_page():
 def save_quiz_result():
     if not request.json:
         return jsonify({'error': 'Invalid request'}), 400
-    
+
     data = request.json
-    
+
     try:
         deck_id = int(data.get('deck_id', 0))
         score = int(data.get('score', 0))
         total = int(data.get('total', 0))
-        
+
         if deck_id <= 0 or score < 0 or total <= 0 or score > total:
             return jsonify({'error': 'Invalid quiz data'}), 400
-        
+
         QuizResult.save(deck_id, score, total)
         newly_earned = Badge.check_and_award()
-        
+
         return jsonify({
             'message': 'Quiz result saved',
             'badges_earned': newly_earned
         })
     except (ValueError, TypeError, KeyError) as e:
+        app.logger.error(f"Invalid request data for quiz results: {e}", exc_info=True)
         return jsonify({'error': 'Invalid request data'}), 400
     except Exception as e:
+        app.logger.error(f"Failed to save quiz result: {e}", exc_info=True)
         return jsonify({'error': 'Failed to save quiz result'}), 500
 
 @app.route('/api/decks/<int:deck_id>/quiz-results', methods=['GET'])
@@ -338,13 +361,13 @@ def get_badges():
 def export_deck(deck_id, format):
     deck = Deck.get_by_id(deck_id)
     cards = Card.get_by_deck(deck_id)
-    
+
     if not deck:
         return jsonify({'error': 'Deck not found'}), 404
-    
+
     # Sanitize filename
     safe_deck_name = "".join(c for c in deck['name'] if c.isalnum() or c in (' ', '-', '_')).strip()
-    
+
     if format == 'json':
         data = {
             'deck': deck,
@@ -352,7 +375,7 @@ def export_deck(deck_id, format):
         }
         from flask import Response
         import json as json_lib
-        
+
         response = Response(
             json_lib.dumps(data, indent=2),
             mimetype='application/json',
@@ -361,32 +384,32 @@ def export_deck(deck_id, format):
             }
         )
         return response
-    
+
     elif format == 'csv':
         output = StringIO()
         writer = csv.writer(output)
         writer.writerow(['Question', 'Answer'])
-        
+
         for card in cards:
             writer.writerow([card['question'], card['answer']])
-        
+
         output.seek(0)
         return output.getvalue(), 200, {
             'Content-Type': 'text/csv',
             'Content-Disposition': f'attachment; filename={safe_deck_name or "deck"}.csv'
         }
-    
+
     elif format == 'anki':
         output = StringIO()
         for card in cards:
             output.write(f"{card['question']}\t{card['answer']}\n")
-        
+
         output.seek(0)
         return output.getvalue(), 200, {
             'Content-Type': 'text/plain',
             'Content-Disposition': f'attachment; filename={safe_deck_name or "deck"}_anki.txt'
         }
-    
+
     elif format == 'pdf':
         # Convert cards to the format expected by PDF generator
         pdf_cards = []
@@ -399,12 +422,13 @@ def export_deck(deck_id, format):
                 try:
                     pdf_card['choices'] = json.loads(card['choices'])
                 except:
+                    app.logger.warning(f"Could not parse choices for card {card['id']} during PDF export.")
                     pass
             pdf_cards.append(pdf_card)
-        
+
         try:
             pdf_buffer = generate_flashcards_pdf(pdf_cards, deck['name'])
-            
+
             return send_file(
                 pdf_buffer,
                 mimetype='application/pdf',
@@ -412,93 +436,106 @@ def export_deck(deck_id, format):
                 download_name=f"{safe_deck_name or 'deck'}_flashcards.pdf"
             )
         except Exception as e:
-            print(f"PDF generation error: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            app.logger.error(f"PDF generation error for deck {deck_id}: {e}", exc_info=True)
             return jsonify({'error': f'Failed to generate PDF: {str(e)}'}), 500
-    
+
     return jsonify({'error': 'Invalid format'}), 400
 
 @app.route('/api/export-cards-pdf', methods=['POST'])
 def export_cards_pdf():
     """Export generated cards to PDF"""
     if not request.json:
+        app.logger.error("Invalid request for export_cards_pdf.")
         return jsonify({'error': 'Invalid request'}), 400
-    
+
     cards = request.json.get('cards', [])
     deck_name = request.json.get('deck_name', 'Flashcards')
-    
+
     # Validate input
     if not cards or not isinstance(cards, list):
+        app.logger.warning("No cards provided for PDF export.")
         return jsonify({'error': 'No cards provided'}), 400
-    
+
     if len(cards) > 100:
+        app.logger.warning(f"Attempted to export too many cards: {len(cards)}")
         return jsonify({'error': 'Cannot export more than 100 cards at once'}), 400
-    
+
     if not isinstance(deck_name, str):
+        app.logger.warning("Invalid deck_name type provided.")
         deck_name = 'Flashcards'
-    
+
     # Validate total payload size
     total_size = len(str(cards))
     if total_size > 1_000_000:  # 1MB limit for total payload
+        app.logger.warning(f"Payload too large for PDF export: {total_size} bytes")
         return jsonify({'error': 'Payload too large'}), 400
-    
+
     # Validate each card structure
     for i, card in enumerate(cards):
         if not isinstance(card, dict):
+            app.logger.warning(f"Card {i+1} is not a dictionary.")
             return jsonify({'error': f'Card {i+1} is invalid'}), 400
-        
+
         if 'question' not in card or 'answer' not in card:
+            app.logger.warning(f"Card {i+1} is missing 'question' or 'answer'.")
             return jsonify({'error': f'Card {i+1} is missing required fields'}), 400
-        
+
         if not isinstance(card['question'], str) or not isinstance(card['answer'], str):
+            app.logger.warning(f"Card {i+1} has invalid field types for 'question' or 'answer'.")
             return jsonify({'error': f'Card {i+1} has invalid field types'}), 400
-        
+
         # Trim and validate length
         question = card['question'].strip()
         answer = card['answer'].strip()
-        
+
         if not question or not answer:
+            app.logger.warning(f"Card {i+1} has empty question or answer after trimming.")
             return jsonify({'error': f'Card {i+1} has empty question or answer'}), 400
-        
+
         if len(question) > 10000 or len(answer) > 10000:
+            app.logger.warning(f"Card {i+1} fields are too long.")
             return jsonify({'error': f'Card {i+1} fields are too long (max 10,000 characters)'}), 400
-        
+
         # Update card with trimmed values
         card['question'] = question
         card['answer'] = answer
-        
+
         # Validate choices if present
         if 'choices' in card:
             if not isinstance(card['choices'], list):
+                app.logger.warning(f"Card {i+1} has invalid choices format (not a list).")
                 return jsonify({'error': f'Card {i+1} has invalid choices format'}), 400
-            
+
             if len(card['choices']) > 10:
+                app.logger.warning(f"Card {i+1} has too many choices ({len(card['choices'])}).")
                 return jsonify({'error': f'Card {i+1} has too many choices (max 10)'}), 400
-            
+
             trimmed_choices = []
-            for choice in card['choices']:
+            for choice_idx, choice in enumerate(card['choices']):
                 if not isinstance(choice, str):
+                    app.logger.warning(f"Card {i+1}, Choice {choice_idx+1} is not a string.")
                     return jsonify({'error': f'Card {i+1} has invalid choice format'}), 400
-                
+
                 trimmed_choice = choice.strip()
                 if not trimmed_choice:
+                    app.logger.warning(f"Card {i+1}, Choice {choice_idx+1} is empty after trimming.")
                     return jsonify({'error': f'Card {i+1} has empty choice'}), 400
-                
+
                 if len(trimmed_choice) > 5000:
+                    app.logger.warning(f"Card {i+1}, Choice {choice_idx+1} is too long.")
                     return jsonify({'error': f'Card {i+1} has choice that is too long (max 5,000 characters)'}), 400
-                
+
                 trimmed_choices.append(trimmed_choice)
-            
+
             card['choices'] = trimmed_choices
-    
+
     try:
         pdf_buffer = generate_flashcards_pdf(cards, deck_name)
-        
+
         # Sanitize filename
         safe_filename = "".join(c for c in deck_name if c.isalnum() or c in (' ', '-', '_')).strip()
         filename = f"{safe_filename or 'Flashcards'}_flashcards.pdf"
-        
+
         return send_file(
             pdf_buffer,
             mimetype='application/pdf',
@@ -506,8 +543,10 @@ def export_cards_pdf():
             download_name=filename
         )
     except ValueError as e:
+        app.logger.error(f"ValueError during PDF generation: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 400
     except Exception as e:
+        app.logger.error(f"Unexpected error during PDF generation: {e}", exc_info=True)
         return jsonify({'error': 'Failed to generate PDF. Please try again.'}), 500
 
 @app.route('/deck/<int:deck_id>')
@@ -562,13 +601,13 @@ def admin_page():
 def admin_login():
     if not request.json:
         return jsonify({'error': 'Invalid request'}), 400
-    
+
     password = request.json.get('password', '')
-    
+
     if password == ADMIN_PASSWORD:
         token = generate_admin_token()
         return jsonify({'token': token, 'message': 'Login successful'})
-    
+
     return jsonify({'error': 'Invalid password'}), 401
 
 @app.route('/api/admin/verify', methods=['GET'])
@@ -576,11 +615,11 @@ def admin_verify():
     auth_header = request.headers.get('Authorization', '')
     if not auth_header.startswith('Bearer '):
         return jsonify({'error': 'Unauthorized'}), 401
-    
+
     token = auth_header[7:]
     if verify_admin_token(token):
         return jsonify({'valid': True})
-    
+
     return jsonify({'error': 'Invalid token'}), 401
 
 @app.route('/api/admin/decks/<int:deck_id>', methods=['DELETE'])
@@ -589,6 +628,7 @@ def admin_delete_deck(deck_id):
         Deck.delete(deck_id)
         return jsonify({'message': 'Deck deleted successfully'})
     except Exception as e:
+        app.logger.error(f"Failed to delete deck {deck_id}: {e}", exc_info=True)
         return jsonify({'error': 'Failed to delete deck'}), 500
 
 @app.route('/api/admin/cards/<int:card_id>', methods=['DELETE'])
@@ -597,24 +637,25 @@ def admin_delete_card(card_id):
         Card.delete(card_id)
         return jsonify({'message': 'Card deleted successfully'})
     except Exception as e:
+        app.logger.error(f"Failed to delete card {card_id}: {e}", exc_info=True)
         return jsonify({'error': 'Failed to delete card'}), 500
 
 @app.route('/api/admin/decks/<int:deck_id>/update', methods=['PUT'])
 def admin_update_deck(deck_id):
     if not request.json:
         return jsonify({'error': 'Invalid request'}), 400
-    
+
     data = request.json
     description = data.get('description', '').strip()
     category = data.get('category', 'General').strip()
-    
+
     if len(description) > 500:
         return jsonify({'error': 'Description too long (max 500 characters)'}), 400
-    
+
     try:
         from models import get_data, save_data
         data_store = get_data()
-        
+
         deck_found = False
         for deck in data_store['decks']:
             if deck['id'] == deck_id:
@@ -622,20 +663,21 @@ def admin_update_deck(deck_id):
                 deck['category'] = category
                 deck_found = True
                 break
-        
+
         if not deck_found:
             return jsonify({'error': 'Deck not found'}), 404
-        
+
         save_data(data_store)
         return jsonify({'message': 'Deck updated successfully'})
     except Exception as e:
+        app.logger.error(f"Failed to update deck {deck_id}: {e}", exc_info=True)
         return jsonify({'error': 'Failed to update deck'}), 500
 
 @app.errorhandler(404)
 def not_found(error):
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Route not found'}), 404
-    
+
     from flask import redirect
     return redirect('/')
 
@@ -653,6 +695,15 @@ def keep_alive():
             print(f"[Keep-Alive] Ping failed: {e}")
 
 if __name__ == '__main__':
+    # Configure logging
+    log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
+    app.logger.setLevel(log_level)
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    if not app.logger.handlers:
+        app.logger.addHandler(handler)
+
     keep_alive_thread = threading.Thread(target=keep_alive, daemon=True)
     keep_alive_thread.start()
     print("[Keep-Alive] Self-ping started (every 5 minutes)")
