@@ -78,3 +78,80 @@ function showStatus(message, type = 'info') {
         statusEl.textContent = '';
     }, 5000);
 }
+
+async function generateDeck() {
+            const deckName = document.getElementById('genDeckName').value.trim();
+            const deckDescription = document.getElementById('genDeckDescription').value.trim();
+            const topic = document.getElementById('genTopic').value.trim();
+            const numCards = parseInt(document.getElementById('genNumCards').value) || 10;
+            const category = document.getElementById('genCategory').value;
+            const apiKey = document.getElementById('genApiKey').value.trim();
+            const statusEl = document.getElementById('genStatus');
+
+            if (!deckName) {
+                statusEl.textContent = '⚠ Please enter a deck name';
+                statusEl.style.color = '#ff8c00';
+                return;
+            }
+
+            if (!topic) {
+                statusEl.textContent = '⚠ Please describe the topic';
+                statusEl.style.color = '#ff8c00';
+                return;
+            }
+
+            statusEl.textContent = '⏳ Generating deck...';
+            statusEl.style.color = '#3b82f6';
+
+            try {
+                // Create deck
+                const deckResponse = await fetch('/api/decks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name: deckName, 
+                        description: deckDescription || `AI-generated deck about: ${topic}`,
+                        category: category 
+                    })
+                });
+
+                if (!deckResponse.ok) {
+                    const errorData = await deckResponse.json();
+                    throw new Error(errorData.error || 'Failed to create deck');
+                }
+
+                const deckData = await deckResponse.json();
+                const deckId = deckData.id;
+
+                // Generate cards
+                const cardsResponse = await fetch('/api/decks/' + deckId + '/generate-cards', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        topic: topic, 
+                        num_cards: numCards, 
+                        api_key: apiKey 
+                    })
+                });
+
+                if (!cardsResponse.ok) {
+                    const errorData = await cardsResponse.json();
+                    throw new Error(errorData.error || 'Failed to generate cards');
+                }
+
+                const cardsData = await cardsResponse.json();
+                statusEl.textContent = '✓ Deck and cards generated successfully!';
+                statusEl.style.color = '#10b981';
+
+                // Clear form
+                document.getElementById('genDeckName').value = '';
+                document.getElementById('genDeckDescription').value = '';
+                document.getElementById('genTopic').value = '';
+                document.getElementById('genNumCards').value = '10';
+                document.getElementById('genCategory').value = 'General';
+
+            } catch (error) {
+                statusEl.textContent = '✗ ' + error.message;
+                statusEl.style.color = '#ef4444';
+            }
+        }
