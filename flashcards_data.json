@@ -88,11 +88,100 @@
           "created_at": "2025-12-06T12:45:27.626803"
         }
       ]
+    },
+    {
+      "id": 19,
+      "name": "Introduction to Windows Registry",
+      "description": "",
+      "category": "Computer Science",
+      "created_at": "2025-12-06T13:01:18.165641",
+      "cards": [
+        {
+          "id": 11,
+          "question": "Explain the significance of the Windows Registry in the context of a Win32 system.",
+          "answer": "The Windows Registry serves as the central configuration database, storing crucial information about hardware, the operating system, installed applications, and user preferences. It's a critical component for a well-functioning system, analogous to the system's memory, and is essential for enabling features and maintaining system stability.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T13:01:18.455568"
+        },
+        {
+          "id": 12,
+          "question": "Describe the hierarchical structure of the Windows Registry and its key components.",
+          "answer": "The registry is organized as a hierarchical tree structure composed of keys and subkeys. Each key can contain data stored in values, which can be a default value or any number of named values. These values store data in various formats, with text and binary data types being the most common.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T13:01:18.460579"
+        },
+        {
+          "id": 13,
+          "question": "What is the role of the HKEY_CLASSES_ROOT key and how does it relate to OLE (Object Linking and Embedding)?",
+          "answer": "HKEY_CLASSES_ROOT stores information about OLE classes, including the CLSID (Class Identifier) of creatable OLE objects provided by OLE servers. This key provides the necessary information for the OLE system to locate and start the associated server, facilitating inter-process communication and object management.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T13:01:18.461734"
+        },
+        {
+          "id": 14,
+          "question": "Explain the purpose of REG files and the difference between REGEDIT and REGEDIT4 formats.",
+          "answer": "REG files are used for importing data into the registry, facilitating the configuration of settings and application parameters. REGEDIT is the older format, while REGEDIT4 introduced support for named values, allowing for more specific data entry in the registry keys.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T13:01:18.463891"
+        },
+        {
+          "id": 15,
+          "question": "What potential problems can RegClean identify and correct in the Windows Registry?",
+          "answer": "RegClean is a utility that identifies and corrects issues such as mismatched TypeLib GUIDs, missing CLSIDs for ProgIDs, useless NumMethods or BaseInterface keys, invalid ProgID keys, and conflicting local/remote keys. By resolving these issues, RegClean helps maintain the integrity and stability of the registry.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T13:01:18.465018"
+        },
+        {
+          "id": 16,
+          "question": "Describe how the 'New' menu in Windows Explorer can be extended by modifying the registry.",
+          "answer": "The 'New' menu is extended by adding a ShellNew subkey to the CLSID key for specific file extensions in HKEY_CLASSES_ROOT. The shell reads the value in the extension's key to determine the ProgID, looks it up, and adds the corresponding value to the 'New' menu, allowing users to create new files of that type directly from Explorer.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T13:01:18.466204"
+        },
+        {
+          "id": 17,
+          "question": "Explain how shell extensions can be utilized to extend the 'Find' menu in Windows Explorer, despite limitations with Visual Basic.",
+          "answer": "Shell extensions, implemented as specialized DLLs, can extend the 'Find' menu. While VB can't directly create these extensions, a custom DLL like FindExt.DLL can be used. By creating custom CLSIDs pointing to this DLL and registering them in the registry, custom commands can be added to the 'Find' menu, enabling users to execute specific applications or searches.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T13:01:18.467562"
+        },
+        {
+          "id": 18,
+          "question": "What is the significance of CLSIDs (Class Identifiers) and GUIDs (Globally Unique Identifiers) in registry modification, and how can they be generated programmatically?",
+          "answer": "CLSIDs and GUIDs are unique identifiers used to identify OLE objects and COM components, ensuring no naming conflicts occur across different applications and systems. They can be programmatically generated using the CoCreateGuid function from OLE32.DLL or the UuidCreate function from RPCRT4.DLL.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T13:01:18.469381"
+        },
+        {
+          "id": 19,
+          "question": "Discuss the key differences between Windows 95 and Windows NT in terms of registry function implementation and capabilities.",
+          "answer": "Windows 95 lacks security features like Get/SetKeySecurity present in Windows NT. Win95's RegDeleteKey deletes keys with subkeys, while NT's does not. Furthermore, Win95 lacks RegNotifyChangeKeyValue and RegRestoreKey support. RegQueryMultipleValues is only implemented on Win95 and Unicode data must be stored as REG_BINARY on Win95.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T13:01:18.470692"
+        },
+        {
+          "id": 20,
+          "question": "Explain how RegNotifyChangeKeyValue function can be used, and its limitations, to monitor changes within the Windows Registry.",
+          "answer": "RegNotifyChangeKeyValue allows applications to be notified when changes occur in specified registry keys or their subkeys. However, it is only implemented on Windows NT. A workaround for VB4, which is single-threaded, involves using a timer to periodically check for the signaled state of an event object associated with the registry key being monitored.",
+          "choices": null,
+          "difficulty": 0,
+          "created_at": "2025-12-06T13:01:18.471968"
+        }
+      ]
     }
   ],
-  "next_deck_id": 19,
-  "next_card_id": 11,
-  "next_session_id": 11,
+  "next_deck_id": 20,
+  "next_card_id": 21,
+  "next_session_id": 21,
   "next_quiz_id": 1,
   "study_sessions": [
     {
@@ -193,6 +282,106 @@
       "interval": 0,
       "repetitions": 0,
       "next_review": "2025-12-06T12:45:27.626810",
+      "last_reviewed": null
+    },
+    {
+      "id": 11,
+      "card_id": 11,
+      "deck_id": 19,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T13:01:18.455583",
+      "last_reviewed": null
+    },
+    {
+      "id": 12,
+      "card_id": 12,
+      "deck_id": 19,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T13:01:18.460589",
+      "last_reviewed": null
+    },
+    {
+      "id": 13,
+      "card_id": 13,
+      "deck_id": 19,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T13:01:18.461742",
+      "last_reviewed": null
+    },
+    {
+      "id": 14,
+      "card_id": 14,
+      "deck_id": 19,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T13:01:18.463902",
+      "last_reviewed": null
+    },
+    {
+      "id": 15,
+      "card_id": 15,
+      "deck_id": 19,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T13:01:18.465027",
+      "last_reviewed": null
+    },
+    {
+      "id": 16,
+      "card_id": 16,
+      "deck_id": 19,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T13:01:18.466212",
+      "last_reviewed": null
+    },
+    {
+      "id": 17,
+      "card_id": 17,
+      "deck_id": 19,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T13:01:18.467569",
+      "last_reviewed": null
+    },
+    {
+      "id": 18,
+      "card_id": 18,
+      "deck_id": 19,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T13:01:18.469390",
+      "last_reviewed": null
+    },
+    {
+      "id": 19,
+      "card_id": 19,
+      "deck_id": 19,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T13:01:18.470699",
+      "last_reviewed": null
+    },
+    {
+      "id": 20,
+      "card_id": 20,
+      "deck_id": 19,
+      "easiness_factor": 2.5,
+      "interval": 0,
+      "repetitions": 0,
+      "next_review": "2025-12-06T13:01:18.471974",
       "last_reviewed": null
     }
   ],
