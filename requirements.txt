@@ -41,3 +41,14 @@ python-dotenv
 reportlab
 requests
 Werkzeug
+Flask
+google-generativeai
+gunicorn
+pdfplumber
+Pillow
+PyPDF2
+pytesseract
+python-dotenv
+reportlab
+requests
+Werkzeug
