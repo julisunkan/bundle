@@ -1810,24 +1810,63 @@ textarea::placeholder, input::placeholder {
     display: none;
 }
 
-.footer-section p, .footer-section a {
+.footer-section p {
     color: rgba(255, 255, 255, 0.95);
     line-height: 1.8;
     font-size: 0.9375rem;
-    text-decoration: none;
-    transition: all var(--transition);
 }
 
 .footer-section a {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: 12px 20px;
     margin-bottom: var(--spacing-sm);
-    padding: var(--spacing-xs) 0;
+    margin-right: var(--spacing-xs);
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.15));
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
 }
 
 .footer-section a:hover {
+    transform: translateY(-4px) scale(1.04);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    box-shadow: 0 12px 30px rgba(255, 140, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.85);
     color: white;
-    transform: translateX(5px);
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.footer-section a:active {
+    transform: translateY(-2px) scale(1.02);
+}
+
+.footer-section a:nth-child(2) {
+    background: linear-gradient(135deg, rgba(255, 68, 68, 0.6), rgba(255, 68, 68, 0.3));
+}
+
+.footer-section a:nth-child(3) {
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.6), rgba(255, 140, 0, 0.3));
+}
+
+.footer-section a:nth-child(4) {
+    background: linear-gradient(135deg, rgba(0, 204, 102, 0.6), rgba(0, 204, 102, 0.3));
+}
+
+.footer-section a:nth-child(5) {
+    background: linear-gradient(135deg, rgba(139, 69, 19, 0.6), rgba(139, 69, 19, 0.3));
 }
 
 .footer-bottom {
