@@ -201,9 +201,9 @@ class Card:
         cursor.execute('''
             SELECT c.*, s.easiness_factor, s.interval, s.repetitions, s.next_review
             FROM cards c
-            JOIN study_sessions s ON c.id = s.card_id
-            WHERE c.deck_id = ? AND s.next_review <= CURRENT_TIMESTAMP
-            ORDER BY s.next_review
+            LEFT JOIN study_sessions s ON c.id = s.card_id
+            WHERE c.deck_id = ? AND (s.next_review IS NULL OR s.next_review <= CURRENT_TIMESTAMP)
+            ORDER BY COALESCE(s.next_review, c.created_at)
         ''', (deck_id,))
         cards = [dict(row) for row in cursor.fetchall()]
         for card in cards:
@@ -211,7 +211,6 @@ class Card:
                 try:
                     card['choices'] = json.loads(card['choices'])
                 except (json.JSONDecodeError, TypeError):
-                    # If choices is invalid JSON, set to None
                     card['choices'] = None
         conn.close()
         return cards
