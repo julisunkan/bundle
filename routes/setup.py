@@ -10,10 +10,10 @@ setup_bp = Blueprint('setup', __name__)
 
 @setup_bp.route('/setup', methods=['GET'])
 def setup_page():
+    import utils.firestore_manager as _fm
     from utils.credentials_store import is_firebase_configured
-    from utils.firestore_manager import _firebase_failed
     configured = is_firebase_configured()
-    return render_template('setup.html', already_configured=configured, firebase_failed=_firebase_failed)
+    return render_template('setup.html', already_configured=configured, firebase_failed=_fm._firebase_failed)
 
 
 @setup_bp.route('/setup', methods=['POST'])

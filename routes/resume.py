@@ -112,12 +112,18 @@ def generate_from_skills():
 
 @resume_bp.route('/list', methods=['GET'])
 def list_resumes():
-    return jsonify(resume_list())
+    try:
+        return jsonify(resume_list())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @resume_bp.route('/<resume_id>', methods=['GET'])
 def get_resume(resume_id):
-    r = resume_get(resume_id)
+    try:
+        r = resume_get(resume_id)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     if r is None:
         abort(404)
     return jsonify(r)
@@ -125,14 +131,20 @@ def get_resume(resume_id):
 
 @resume_bp.route('/<resume_id>', methods=['DELETE'])
 def delete_resume(resume_id):
-    if not resume_delete(resume_id):
-        abort(404)
+    try:
+        if not resume_delete(resume_id):
+            abort(404)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     return jsonify({'success': True})
 
 
 @resume_bp.route('/export/<resume_id>/<doc_type>', methods=['GET'])
 def export_resume(resume_id, doc_type):
-    r = resume_get(resume_id)
+    try:
+        r = resume_get(resume_id)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     if r is None:
         abort(404)
     if doc_type == 'resume':

@@ -12,7 +12,10 @@ VALID_STATUSES = {'Applied', 'Interview', 'Offer', 'Rejected'}
 
 @jobs_bp.route('/', methods=['GET'])
 def list_jobs():
-    return jsonify(job_list())
+    try:
+        return jsonify(job_list())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @jobs_bp.route('/', methods=['POST'])
@@ -25,16 +28,18 @@ def add_job():
     status = data.get('status', 'Applied')
     if status not in VALID_STATUSES:
         status = 'Applied'
-
-    j = job_create({
-        'company': company,
-        'position': position,
-        'status': status,
-        'job_description': data.get('job_description', ''),
-        'notes': data.get('notes', ''),
-        'applied_date': data.get('applied_date'),
-    })
-    return jsonify(j), 201
+    try:
+        j = job_create({
+            'company': company,
+            'position': position,
+            'status': status,
+            'job_description': data.get('job_description', ''),
+            'notes': data.get('notes', ''),
+            'applied_date': data.get('applied_date'),
+        })
+        return jsonify(j), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @jobs_bp.route('/<job_id>', methods=['PUT'])
@@ -42,7 +47,10 @@ def update_job(job_id):
     data = request.get_json(silent=True) or {}
     if 'status' in data and data['status'] not in VALID_STATUSES:
         data.pop('status')
-    j = job_update(job_id, data)
+    try:
+        j = job_update(job_id, data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     if j is None:
         abort(404)
     return jsonify(j)
@@ -50,8 +58,11 @@ def update_job(job_id):
 
 @jobs_bp.route('/<job_id>', methods=['DELETE'])
 def delete_job(job_id):
-    if not job_delete(job_id):
-        abort(404)
+    try:
+        if not job_delete(job_id):
+            abort(404)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     return jsonify({'success': True})
 
 
@@ -100,8 +111,11 @@ def get_stats():
             'offer_rate': round((offer / total * 100), 1) if total > 0 else 0,
         })
 
-    total = job_count()
-    by_status = job_count_by_status()
+    try:
+        total = job_count()
+        by_status = job_count_by_status()
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     applied = by_status.get('Applied', 0)
     interview = by_status.get('Interview', 0)
     offer = by_status.get('Offer', 0)

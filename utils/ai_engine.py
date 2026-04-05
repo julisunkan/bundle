@@ -1,8 +1,6 @@
 import os
 from groq import Groq
 
-_client = None
-
 
 def _get_api_key():
     """Get API key: env var first, then database settings."""

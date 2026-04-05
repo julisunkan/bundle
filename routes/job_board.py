@@ -39,7 +39,11 @@ def public_list():
     job_type = request.args.get('type', '').strip().lower()
     tag = request.args.get('tag', '').strip().lower()
 
-    posts = jobpost_list(status='published')
+    try:
+        posts = jobpost_list(status='published')
+    except Exception as e:
+        logger.warning('public_list Firebase error: %s', e)
+        posts = []
 
     if search:
         posts = [p for p in posts if
@@ -253,9 +257,13 @@ def live_search():
 @job_board_bp.get('/featured')
 def featured_posts():
     from utils.data_layer import jobpost_list
-    posts = jobpost_list(status='published', featured=True, limit=6)
-    if not posts:
-        posts = jobpost_list(status='published', limit=6)
+    try:
+        posts = jobpost_list(status='published', featured=True, limit=6)
+        if not posts:
+            posts = jobpost_list(status='published', limit=6)
+    except Exception as e:
+        logger.warning('featured_posts Firebase error: %s', e)
+        posts = []
     return jsonify(posts)
 
 
@@ -271,7 +279,11 @@ def export_jobs():
     search = data.get('search', '').strip().lower()
     job_type = data.get('job_type', '').strip().lower()
 
-    posts = jobpost_list(status='published')
+    try:
+        posts = jobpost_list(status='published')
+    except Exception as e:
+        logger.warning('export_jobs Firebase error: %s', e)
+        return jsonify({'error': 'Database unavailable: ' + str(e)}), 503
 
     if ids:
         id_set = {int(i) for i in ids if str(i).isdigit()}
@@ -405,11 +417,15 @@ def export_jobs():
 def admin_list():
     from utils.data_layer import jobpost_list, jobpost_count_by_status
     status = request.args.get('status', 'all')
-    if status == 'all':
-        posts = jobpost_list()
-    else:
-        posts = jobpost_list(status=status)
-    counts = jobpost_count_by_status()
+    try:
+        if status == 'all':
+            posts = jobpost_list()
+        else:
+            posts = jobpost_list(status=status)
+        counts = jobpost_count_by_status()
+    except Exception as e:
+        logger.warning('admin_list Firebase error: %s', e)
+        return jsonify({'error': 'Database unavailable: ' + str(e)}), 503
     return jsonify({'posts': posts, 'counts': counts})
 
 

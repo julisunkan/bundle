@@ -99,7 +99,10 @@ def create_app():
             return jsonify({'success': False, 'error': 'Please enter a valid email address.'}), 400
         if len(message) < 10:
             return jsonify({'success': False, 'error': 'Message is too short.'}), 400
-        message_create({'name': name, 'email': email, 'subject': subject, 'message': message})
+        try:
+            message_create({'name': name, 'email': email, 'subject': subject, 'message': message})
+        except Exception as e:
+            return jsonify({'success': False, 'error': 'Could not save message. Please try again later.'}), 503
         return jsonify({'success': True})
 
     @app.route('/about')
@@ -114,7 +117,10 @@ def create_app():
     def job_board_detail(post_id):
         from utils.data_layer import jobpost_get
         from types import SimpleNamespace
-        post = jobpost_get(post_id)
+        try:
+            post = jobpost_get(post_id)
+        except Exception:
+            abort(503)
         if post is None or post.get('status') != 'published':
             abort(404)
         post_obj = SimpleNamespace(**post)
