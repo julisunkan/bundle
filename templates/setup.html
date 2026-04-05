@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Setup — AI Resume Creator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 1rem;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 640px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .logo-text { font-size: 1.1rem; font-weight: 700; color: #f1f5f9; }
+        .logo-sub { font-size: 0.75rem; color: #94a3b8; }
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 1.75rem;
+            line-height: 1.5;
+        }
+        .already-configured {
+            background: #164e63;
+            border: 1px solid #0e7490;
+            border-radius: 0.5rem;
+            padding: 0.875rem 1rem;
+            margin-bottom: 1.5rem;
+            color: #a5f3fc;
+            font-size: 0.875rem;
+        }
+        .failed-notice {
+            background: #7f1d1d;
+            border: 1px solid #dc2626;
+            border-radius: 0.5rem;
+            padding: 0.875rem 1rem;
+            margin-bottom: 1.5rem;
+            color: #fca5a5;
+            font-size: 0.875rem;
+        }
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #cbd5e1;
+            margin-bottom: 0.5rem;
+        }
+        textarea {
+            width: 100%;
+            height: 240px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 0.5rem;
+            color: #e2e8f0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            padding: 0.875rem 1rem;
+            resize: vertical;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        textarea:focus { border-color: #4f46e5; }
+        .hint {
+            font-size: 0.775rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+            line-height: 1.4;
+        }
+        .hint a { color: #818cf8; text-decoration: none; }
+        .hint a:hover { text-decoration: underline; }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.875rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: #fff;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary {
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: #cbd5e1;
+            margin-top: 0.75rem;
+        }
+        .btn-secondary:hover { background: #334155; }
+        #msg {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            display: none;
+        }
+        #msg.success { background: #052e16; border: 1px solid #16a34a; color: #86efac; display: block; }
+        #msg.error { background: #450a0a; border: 1px solid #dc2626; color: #fca5a5; display: block; }
+        .steps {
+            margin-top: 1.75rem;
+            border-top: 1px solid #334155;
+            padding-top: 1.25rem;
+        }
+        .steps-title { font-size: 0.8rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+        .step { display: flex; gap: 0.75rem; margin-bottom: 0.625rem; font-size: 0.82rem; color: #94a3b8; align-items: flex-start; }
+        .step-num {
+            flex-shrink: 0;
+            width: 20px; height: 20px;
+            background: #334155;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 700; color: #818cf8;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="logo">
+        <div class="logo-icon">🤖</div>
+        <div>
+            <div class="logo-text">AI Resume Creator</div>
+            <div class="logo-sub">Setup Wizard</div>
+        </div>
+    </div>
+
+    <h1>Connect Firebase Database</h1>
+    <p class="subtitle">
+        Paste your Firebase service account JSON below to enable Firestore as the database.
+        This is a one-time setup. Credentials are stored securely and never in source code.
+    </p>
+
+    {% if already_configured %}
+    <div class="already-configured">
+        ✅ Firebase credentials are already configured. You can update them by pasting new credentials below.
+    </div>
+    {% endif %}
+
+    {% if firebase_failed and not already_configured %}
+    <div class="failed-notice">
+        ⚠️ Firebase connection failed or no credentials found. Paste your service account JSON to connect.
+    </div>
+    {% endif %}
+
+    <form id="setupForm" onsubmit="handleSubmit(event)">
+        <label for="credentials">Firebase Service Account JSON</label>
+        <textarea
+            id="credentials"
+            name="credentials"
+            placeholder='{"type": "service_account", "project_id": "your-project", ...}'
+            spellcheck="false"
+            autocorrect="off"
+            autocomplete="off"
+        ></textarea>
+        <p class="hint">
+            Get this from
+            <a href="https://console.firebase.google.com" target="_blank" rel="noopener">Firebase Console</a>
+            → Project Settings → Service Accounts → Generate New Private Key.
+            The file you download is a <code>.json</code> — paste its entire contents here.
+        </p>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn">Connect Firebase</button>
+        {% if already_configured %}
+        <a href="/" class="btn btn-secondary" style="text-align:center; text-decoration:none; display:block;">
+            Skip — continue to app
+        </a>
+        {% endif %}
+        <div id="msg"></div>
+    </form>
+
+    <div class="steps">
+        <div class="steps-title">How to get your credentials</div>
+        <div class="step">
+            <div class="step-num">1</div>
+            <div>Open <strong>Firebase Console</strong> and select (or create) your project.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div>Go to <strong>Project Settings</strong> (gear icon) → <strong>Service Accounts</strong> tab.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div>Click <strong>"Generate New Private Key"</strong> and download the JSON file.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">4</div>
+            <div>Open the downloaded file in a text editor, copy all the text, and paste it above.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function handleSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const msg = document.getElementById('msg');
+    const raw = document.getElementById('credentials').value.trim();
+
+    msg.className = '';
+    msg.style.display = 'none';
+    msg.textContent = '';
+
+    if (!raw) {
+        msg.className = 'error';
+        msg.textContent = 'Please paste your Firebase service account JSON.';
+        return;
+    }
+
+    let creds;
+    try {
+        creds = JSON.parse(raw);
+    } catch (err) {
+        msg.className = 'error';
+        msg.textContent = 'Invalid JSON — check for missing brackets or commas and try again.';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Connecting…';
+
+    try {
+        const res = await fetch('/setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ credentials: creds }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            msg.className = 'success';
+            msg.textContent = data.message || 'Firebase connected successfully!';
+            setTimeout(() => { window.location.href = data.redirect || '/'; }, 1500);
+        } else {
+            msg.className = 'error';
+            msg.textContent = data.error || 'Failed to save credentials.';
+            btn.disabled = false;
+            btn.textContent = 'Connect Firebase';
+        }
+    } catch (err) {
+        msg.className = 'error';
+        msg.textContent = 'Network error — please try again.';
+        btn.disabled = false;
+        btn.textContent = 'Connect Firebase';
+    }
+}
+</script>
+</body>
+</html>

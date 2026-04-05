@@ -419,10 +419,10 @@ def import_settings_json():
 @admin_bp.route('/api/firebase/status', methods=['GET'])
 @admin_required
 def firebase_status():
-    from utils.credentials_store import get_firebase_credentials
-    creds = get_firebase_credentials()
+    from utils.credentials_store import get_firebase_credentials, is_firebase_configured
+    creds = get_firebase_credentials() or {}
     return jsonify({
-        'configured': True,
+        'configured': is_firebase_configured(),
         'project_id': creds.get('project_id', ''),
         'client_email': creds.get('client_email', ''),
     })
@@ -431,13 +431,41 @@ def firebase_status():
 @admin_bp.route('/api/firebase/save-credentials', methods=['POST'])
 @admin_required
 def firebase_save_credentials():
-    return jsonify({'success': True, 'message': 'Firebase credentials are hardcoded and always active.'})
+    data = request.get_json(silent=True) or {}
+    creds_raw = data.get('credentials', '')
+    if isinstance(creds_raw, str):
+        try:
+            creds = json.loads(creds_raw)
+        except Exception:
+            return jsonify({'success': False, 'error': 'Invalid JSON — please paste the full service account JSON.'}), 400
+    elif isinstance(creds_raw, dict):
+        creds = creds_raw
+    else:
+        return jsonify({'success': False, 'error': 'credentials field is required.'}), 400
+
+    required = ('type', 'project_id', 'private_key', 'client_email')
+    missing = [k for k in required if not creds.get(k)]
+    if missing:
+        return jsonify({'success': False, 'error': f'Missing required fields: {", ".join(missing)}'}), 400
+
+    from utils.credentials_store import save_firebase_credentials
+    from utils.firestore_manager import reset_firebase_app, startup_check
+    if not save_firebase_credentials(creds):
+        return jsonify({'success': False, 'error': 'Failed to save credentials to database.'}), 500
+
+    reset_firebase_app()
+    startup_check()
+    return jsonify({'success': True, 'message': f'Firebase credentials saved for project "{creds.get("project_id")}".'})
 
 
 @admin_bp.route('/api/firebase/clear-credentials', methods=['POST'])
 @admin_required
 def firebase_clear_credentials():
-    return jsonify({'success': False, 'error': 'Firebase credentials are hardcoded and cannot be cleared.'})
+    from utils.credentials_store import clear_firebase_credentials
+    from utils.firestore_manager import reset_firebase_app
+    clear_firebase_credentials()
+    reset_firebase_app()
+    return jsonify({'success': True, 'message': 'Firebase credentials cleared. The app will run without a database until new credentials are added.'})
 
 
 @admin_bp.route('/api/firebase/test', methods=['POST'])
@@ -478,7 +506,7 @@ def firebase_export():
                 for r in rows if r.key not in sensitive
             ]
             results['settings'] = export_collection('settings', setting_rows)
-        return jsonify({'success': True, 'results': results, 'total': sum(results.values())})
+        return jsonify({'success': True, 'results': results, 'total': sum(v for v in results.values() if isinstance(v, int))})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 

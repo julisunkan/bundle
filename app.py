@@ -23,6 +23,9 @@ def create_app():
 
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+    from utils.firestore_manager import startup_check
+    startup_check()
+
     from routes.resume import resume_bp
     from routes.jobs import jobs_bp
     from routes.interview import interview_bp
@@ -30,6 +33,7 @@ def create_app():
     from routes.linkedin import linkedin_bp
     from routes.admin import admin_bp
     from routes.job_board import job_board_bp
+    from routes.setup import setup_bp
 
     app.register_blueprint(resume_bp, url_prefix='/api/resume')
     app.register_blueprint(jobs_bp, url_prefix='/api/jobs')
@@ -38,6 +42,7 @@ def create_app():
     app.register_blueprint(linkedin_bp, url_prefix='/api/linkedin')
     app.register_blueprint(admin_bp, url_prefix='/julisunkan')
     app.register_blueprint(job_board_bp)
+    app.register_blueprint(setup_bp)
 
     @app.route('/')
     def index():
