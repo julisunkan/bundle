@@ -1,0 +1,172 @@
+[2026-04-05 18:54:34 +0000] [3720] [INFO] Starting gunicorn 25.3.0
+[2026-04-05 18:54:34 +0000] [3720] [INFO] Listening at:  (3720)
+[2026-04-05 18:54:34 +0000] [3720] [INFO] Using worker: sync
+[2026-04-05 18:54:34 +0000] [3731] [INFO] Booting worker with pid: 3731
+[2026-04-05 18:54:34 +0000] [3731] [WARNING] Reloader is on. Use in development only!
+[2026-04-05 18:54:34 +0000] [3720] [INFO] Control socket listening at /home/runner/.gunicorn/gunicorn.ctl
+INFO:utils.credentials_store:Firebase credentials seeded into credentials.db
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): oauth2.googleapis.com:443
+DEBUG:urllib3.connectionpool:https://oauth2.googleapis.com:443 "POST /token HTTP/1.1" 200 None
+ERROR:app:Exception on /julisunkan/api/firebase/status [GET]
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_cors/extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 22, in decorated
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 422, in firebase_status
+    from utils.firestore_manager import _HARDCODED_CREDENTIALS
+ImportError: cannot import name '_HARDCODED_CREDENTIALS' from 'utils.firestore_manager' (/home/runner/workspace/utils/firestore_manager.py)
+ERROR:app:Exception on /julisunkan/api/firebase/status [GET]
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_cors/extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 22, in decorated
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 422, in firebase_status
+    from utils.firestore_manager import _HARDCODED_CREDENTIALS
+ImportError: cannot import name '_HARDCODED_CREDENTIALS' from 'utils.firestore_manager' (/home/runner/workspace/utils/firestore_manager.py)
+ERROR:app:Exception on /julisunkan/api/firebase/status [GET]
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_cors/extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 22, in decorated
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 422, in firebase_status
+    from utils.firestore_manager import _HARDCODED_CREDENTIALS
+ImportError: cannot import name '_HARDCODED_CREDENTIALS' from 'utils.firestore_manager' (/home/runner/workspace/utils/firestore_manager.py)
+[2026-04-05 18:57:18 +0000] [3731] [INFO] Worker exiting (pid: 3731)
+[2026-04-05 18:57:18 +0000] [4379] [INFO] Booting worker with pid: 4379
+[2026-04-05 18:57:18 +0000] [3720] [INFO] Control socket listening at /home/runner/.gunicorn/gunicorn.ctl
+[2026-04-05 18:57:18 +0000] [4379] [WARNING] Reloader is on. Use in development only!
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): oauth2.googleapis.com:443
+DEBUG:urllib3.connectionpool:https://oauth2.googleapis.com:443 "POST /token HTTP/1.1" 200 None
+ERROR:app:Exception on /julisunkan/api/firebase/status [GET]
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_cors/extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 22, in decorated
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 422, in firebase_status
+    from utils.firestore_manager import _HARDCODED_CREDENTIALS
+ImportError: cannot import name '_HARDCODED_CREDENTIALS' from 'utils.firestore_manager' (/home/runner/workspace/utils/firestore_manager.py)
+ERROR:app:Exception on /julisunkan/api/firebase/status [GET]
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_cors/extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 22, in decorated
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 422, in firebase_status
+    from utils.firestore_manager import _HARDCODED_CREDENTIALS
+ImportError: cannot import name '_HARDCODED_CREDENTIALS' from 'utils.firestore_manager' (/home/runner/workspace/utils/firestore_manager.py)
+ERROR:app:Exception on /julisunkan/api/settings [GET]
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_cors/extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 22, in decorated
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes/admin.py", line 68, in get_settings
+    rows = Setting.query.order_by(Setting.key).all()
+                                  ^^^^^^^^^^^
+AttributeError: type object 'Setting' has no attribute 'key'
+[2026-04-05 19:01:10 +0000] [4379] [INFO] Worker reloading: /home/runner/workspace/routes/admin.py modified
+[2026-04-05 19:01:10 +0000] [4379] [INFO] Worker exiting (pid: 4379)
+[2026-04-05 19:01:11 +0000] [4627] [INFO] Booting worker with pid: 4627
+[2026-04-05 19:01:11 +0000] [4627] [WARNING] Reloader is on. Use in development only!
+[2026-04-05 19:01:11 +0000] [3720] [INFO] Control socket listening at /home/runner/.gunicorn/gunicorn.ctl
+[2026-04-05 19:01:16 +0000] [4627] [INFO] Worker reloading: /home/runner/workspace/routes/admin.py modified
+[2026-04-05 19:01:16 +0000] [4627] [INFO] Worker exiting (pid: 4627)
+[2026-04-05 19:01:16 +0000] [4630] [INFO] Booting worker with pid: 4630
+[2026-04-05 19:01:16 +0000] [3720] [INFO] Control socket listening at /home/runner/.gunicorn/gunicorn.ctl
+[2026-04-05 19:01:16 +0000] [4630] [WARNING] Reloader is on. Use in development only!
+[2026-04-05 19:01:18 +0000] [4630] [INFO] Worker reloading: /home/runner/workspace/routes/admin.py modified
+[2026-04-05 19:01:18 +0000] [4630] [INFO] Worker exiting (pid: 4630)
+[2026-04-05 19:01:18 +0000] [4645] [INFO] Booting worker with pid: 4645
+[2026-04-05 19:01:18 +0000] [3720] [INFO] Control socket listening at /home/runner/.gunicorn/gunicorn.ctl
+[2026-04-05 19:01:18 +0000] [4645] [WARNING] Reloader is on. Use in development only!
+[2026-04-05 19:01:22 +0000] [3720] [INFO] Handling signal: term
+[2026-04-05 19:01:22 +0000] [4645] [INFO] Worker exiting (pid: 4645)
+[2026-04-05 19:01:22 +0000] [3720] [INFO] Shutting down: Master

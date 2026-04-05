@@ -1,0 +1,46 @@
+$ git push
+Enumerating objects: 522, done.
+Counting objects: 100% (522/522), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (383/383), done.
+Writing objects: 100% (502/502), 1.40 MiB | 16.08 MiB/s, done.
+Total 502 (delta 41), reused 425 (delta 24), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (41/41), completed with 12 local objects.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote:
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote:
+remote:     - Push cannot contain secrets
+remote:
+remote:
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:
+remote:
+remote:       —— Google Cloud Service Account Credentials ——————————
+remote:        locations:
+remote:          - commit: 71210970db799a1ca53e4aa170c91a43ac0b3364
+remote:            path: attached_assets/Pasted--type-service-account-project-id-resume-app-db-private-_1775413301462.txt:1
+remote:
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/julisunkan/bundle/security/secret-scanning/unblock-secret/3BwzXwBUf1OGVcUsRPSpRxa74bl
+remote:
+remote:
+remote:       —— Google Cloud Service Account Credentials ——————————
+remote:        locations:
+remote:          - commit: 71210970db799a1ca53e4aa170c91a43ac0b3364
+remote:            path: utils/firestore_manager.py:7
+remote:
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/julisunkan/bundle/security/secret-scanning/unblock-secret/3BwxjBxWt9AR5H6i2VDxrhfege0
+remote:
+remote:
+remote:
+To https://github.com/julisunkan/bundle.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/julisunkan/bundle.git'
+
+Julius@INBook_X1_Pro MINGW64 ~/Desktop/bundle (main)
+$

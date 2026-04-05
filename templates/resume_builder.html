@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+{% block title %}Resume Builder - AI Resume & Cover Letter Creator{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-title page-title-gradient">📄 Resume Builder</div>
+    <div class="page-subtitle">Upload your resume, paste a job description, and let AI do the heavy lifting.</div>
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('optimize')">🔧 Optimize Resume</button>
+    <button class="tab-btn" onclick="switchTab('student')">🎓 Student Mode</button>
+    <button class="tab-btn" onclick="switchTab('section')">✏️ Section Editor</button>
+    <button class="tab-btn" onclick="switchTab('saved')">💾 Saved Resumes</button>
+</div>
+
+<!-- TAB: Optimize -->
+<div class="tab-content active" id="tab-optimize">
+    <div class="grid grid-2">
+        <div class="card card-blue">
+            <div class="card-header">
+                <div class="card-title">📎 Your Resume</div>
+            </div>
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📎</div>
+                <div class="upload-text">Click or drag & drop to upload</div>
+                <div class="upload-subtext">PDF and DOCX supported — max 10 MB</div>
+            </div>
+            <input type="file" id="fileInput" accept=".pdf,.docx" style="display:none">
+            <p id="uploadStatus" style="font-size:13px;margin-top:10px;min-height:18px;"></p>
+            <div class="form-group" style="margin-top:14px;">
+                <label class="form-label">Or paste resume text</label>
+                <textarea class="form-control" id="resumeText" rows="10" placeholder="Paste your full resume here..."></textarea>
+            </div>
+        </div>
+        <div class="card card-green">
+            <div class="card-header">
+                <div class="card-title">💼 Job Description</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Resume Label (optional)</label>
+                <input type="text" class="form-control" id="resumeLabel" placeholder="e.g. Google SWE — May 2025">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Paste the job description</label>
+                <textarea class="form-control" id="jobDescription" rows="13" placeholder="Paste the full job posting here..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-lg" onclick="runOptimize()">✦ Optimize My Resume</button>
+        <button class="btn btn-secondary btn-lg" onclick="runAnalyzeOnly()">📊 Analyze Match Only</button>
+    </div>
+    <div id="resumeAlert" style="display:none;margin-bottom:16px;"></div>
+
+    <div id="analyzeResults" style="display:none;" class="animate-fade-up">
+        <div class="grid grid-2">
+            <div class="card card-yellow">
+                <div class="card-title" style="margin-bottom:16px;">🎯 Match Score</div>
+                <div class="score-ring" id="scoreRing">
+                    <div class="score-number" id="scoreValue">0%</div>
+                    <div class="score-label">Match</div>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="scoreBar" style="width:0%"></div></div>
+            </div>
+            <div class="card card-red">
+                <div class="card-title" style="margin-bottom:12px;">⚠️ Missing Keywords</div>
+                <div class="tag-list" id="missingKeywords"></div>
+                <div class="card-title" style="margin:18px 0 10px;">💡 Suggestions</div>
+                <div id="suggestions" style="font-size:14px;color:var(--text-muted);line-height:1.8;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="optimizeResults" style="display:none;" class="animate-fade-up">
+        <div class="card card-blue">
+            <div class="card-header">
+                <div class="card-title">✅ Optimized Resume</div>
+                <button class="btn btn-success btn-sm" onclick="downloadDoc('resume')">⬇ PDF</button>
+            </div>
+            <div class="result-box" id="optimizedText"></div>
+        </div>
+
+        {% from '_macros.html' import ad_slot %}
+        {% if ads.results.enabled and ads.results.slot and ads.publisher_id %}
+        <div class="ad-slot ad-slot-results">
+            <span class="ad-label">Advertisement</span>
+            <ins class="adsbygoogle"
+                style="display:block"
+                data-ad-client="{{ ads.publisher_id }}"
+                data-ad-slot="{{ ads.results.slot }}"
+                data-ad-format="auto"
+                data-full-width-responsive="true"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        </div>
+        {% endif %}
+
+        <div class="card card-green">
+            <div class="card-header">
+                <div class="card-title">✉️ Cover Letter</div>
+                <button class="btn btn-success btn-sm" onclick="downloadDoc('cover_letter')">⬇ PDF</button>
+            </div>
+            <div class="result-box" id="coverLetterText"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TAB: Student Mode -->
+<div class="tab-content" id="tab-student">
+    <div class="card card-brown" style="max-width:720px;">
+        <div class="card-title" style="margin-bottom:8px;">🎓 Student / No-Experience Mode</div>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:22px;">Generate a professional, polished resume from just your skills and education — no work history needed.</p>
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input type="text" class="form-control" id="stuName" placeholder="Jane Doe">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Education</label>
+                <input type="text" class="form-control" id="stuEducation" placeholder="B.S. CS, State Univ, 2025. GPA: 3.8">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Skills *</label>
+            <textarea class="form-control" id="stuSkills" rows="4" placeholder="Python, JavaScript, React, SQL, Machine Learning, Git, Agile..."></textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Projects / Achievements / Notes</label>
+            <textarea class="form-control" id="stuNotes" rows="4" placeholder="Hackathon winner, open-source contributions, personal projects, volunteer work..."></textarea>
+        </div>
+        <button class="btn btn-brown btn-lg" onclick="generateFromSkills()">✦ Generate My Resume</button>
+        <div id="studentMsg" style="display:none;margin-top:12px;"></div>
+        <div id="stuResult" style="margin-top:24px;display:none;">
+            <div class="card-title" style="margin-bottom:10px;">Generated Resume</div>
+            <div class="result-box" id="stuResultText"></div>
+        </div>
+    </div>
+</div>
+
+<!-- TAB: Section Editor -->
+<div class="tab-content" id="tab-section">
+    <div class="card card-yellow" style="max-width:820px;">
+        <div class="card-title" style="margin-bottom:8px;">✏️ Resume Section Editor</div>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:22px;">Paste any section of your resume and rewrite it to be stronger and more targeted.</p>
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="form-label">Section Name</label>
+                <input type="text" class="form-control" id="secName" placeholder="e.g. Work Experience, Summary, Skills">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Target Job Description (optional)</label>
+                <textarea class="form-control" id="secJobDesc" rows="3" placeholder="Paste job posting to tailor the rewrite..."></textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Section Content *</label>
+            <textarea class="form-control" id="secText" rows="8" placeholder="Paste the resume section you want to improve..."></textarea>
+        </div>
+        <button class="btn btn-warning btn-lg" onclick="rewriteSection()">⚡ Rewrite Section</button>
+        <div id="sectionMsg" style="display:none;margin-top:12px;"></div>
+        <div id="secResult" style="margin-top:24px;display:none;">
+            <div class="card-title" style="margin-bottom:10px;">Rewritten Section</div>
+            <div class="result-box" id="secResultText"></div>
+            <button class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="copyText('secResultText')">📋 Copy</button>
+        </div>
+    </div>
+</div>
+
+<!-- TAB: Saved Resumes -->
+<div class="tab-content" id="tab-saved">
+    <div id="savedConfirm" style="display:none;margin-bottom:14px;"></div>
+    <div id="savedList">
+        <div class="card" style="text-align:center;color:var(--text-muted);padding:40px;">
+            <div class="spinner"></div>
+            <p style="margin-top:12px;">Loading saved resumes...</p>
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Processing with AI...</div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let currentResumeId = null;
+
+function switchTab(tab) {
+    const tabs = ['optimize','student','section','saved'];
+    document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', tabs[i] === tab));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-'+tab).classList.add('active');
+    if (tab === 'saved') loadSavedResumes();
+}
+
+const fileInput = document.getElementById('fileInput');
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+async function handleFile(file) {
+    if (!file) return;
+    const status = document.getElementById('uploadStatus');
+    status.style.color = 'var(--yellow)';
+    status.textContent = '⏳ Extracting text from ' + file.name + '...';
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        const res = await fetch('/api/resume/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.error) { status.style.color='var(--red-light)'; status.textContent = '❌ ' + data.error; return; }
+        document.getElementById('resumeText').value = data.text;
+        status.style.color = 'var(--green-light)';
+        status.textContent = '✅ Text extracted from ' + file.name;
+    } catch(e) { status.style.color='var(--red-light)'; status.textContent = '❌ Upload failed: ' + e.message; }
+}
+
+function showLoading(msg) {
+    document.getElementById('loadingText').textContent = msg || 'Processing with AI...';
+    document.getElementById('loadingOverlay').classList.add('active');
+}
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
+
+async function runAnalyzeOnly() {
+    const resumeText = document.getElementById('resumeText').value.trim();
+    const jobDescription = document.getElementById('jobDescription').value.trim();
+    if (!resumeText || !jobDescription) { showAlert('Please provide both resume and job description.'); return; }
+    showLoading('Analyzing match score...');
+    try {
+        const res = await fetch('/api/resume/analyze', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ resume_text: resumeText, job_description: jobDescription }) });
+        const data = await res.json();
+        hideLoading();
+        if (data.error) { showAlert('Error: ' + data.error, 'error'); return; }
+        showAnalysis(data);
+    } catch(e) { hideLoading(); showAlert('Request failed: ' + e.message, 'error'); }
+}
+
+async function runOptimize() {
+    const resumeText = document.getElementById('resumeText').value.trim();
+    const jobDescription = document.getElementById('jobDescription').value.trim();
+    if (!resumeText || !jobDescription) { showAlert('Please provide both resume and job description.'); return; }
+    const label = document.getElementById('resumeLabel').value.trim() || 'Optimized Resume';
+    showLoading('Optimizing your resume — this may take 20–40 seconds...');
+    try {
+        const res = await fetch('/api/resume/optimize', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ resume_text: resumeText, job_description: jobDescription, label }) });
+        const data = await res.json();
+        hideLoading();
+        if (data.error) { showAlert('Error: ' + data.error, 'error'); return; }
+        currentResumeId = data.id;
+        showAnalysis({ score: data.match_score, missing_keywords: data.missing_keywords, suggestions: data.suggestions });
+        document.getElementById('optimizedText').textContent = data.optimized_text;
+        document.getElementById('coverLetterText').textContent = data.cover_letter;
+        document.getElementById('optimizeResults').style.display = 'block';
+        document.getElementById('optimizeResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch(e) { hideLoading(); showAlert('Request failed: ' + e.message, 'error'); }
+}
+
+function showAnalysis(data) {
+    const score = Math.round(data.score || 0);
+    document.getElementById('scoreValue').textContent = score + '%';
+    setTimeout(() => { document.getElementById('scoreBar').style.width = score + '%'; }, 100);
+    const ring = document.getElementById('scoreRing');
+    ring.style.borderColor = score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--yellow)' : 'var(--red)';
+
+    const keywords = Array.isArray(data.missing_keywords) ? data.missing_keywords : [];
+    document.getElementById('missingKeywords').innerHTML = keywords.length
+        ? keywords.map(k => `<span class="tag tag-yellow">${k}</span>`).join('')
+        : '<span style="color:var(--green-light);font-size:13px;">✅ No missing keywords — great match!</span>';
+
+    const suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
+    document.getElementById('suggestions').innerHTML = suggestions.map(s => `<p style="margin-bottom:8px;padding-left:12px;border-left:2px solid var(--yellow);">• ${s}</p>`).join('');
+    document.getElementById('analyzeResults').style.display = 'block';
+    document.getElementById('analyzeResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function downloadDoc(type) {
+    if (!currentResumeId) { showAlert('Please optimize your resume first.'); return; }
+    window.location.href = `/api/resume/export/${currentResumeId}/${type}`;
+}
+
+function showAlert(msg, type='warning') {
+    const isOk = type === 'success';
+    const el = document.getElementById('resumeAlert');
+    el.style.display = 'block';
+    el.innerHTML = `<div style="padding:10px 14px;border-radius:8px;font-size:13px;
+        background:${isOk ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'};
+        border:1px solid ${isOk ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'};
+        color:${isOk ? 'var(--green-light,#6ee7b7)' : 'var(--red-light,#fca5a5)'};">${msg}</div>`;
+    if (isOk) setTimeout(() => { el.style.display = 'none'; el.innerHTML = ''; }, 4000);
+}
+
+function showMsg(divId, msg, ok) {
+    const el = document.getElementById(divId);
+    if (!el) return;
+    const isOk = ok === true;
+    el.style.display = 'block';
+    el.innerHTML = `<div style="padding:10px 14px;border-radius:8px;font-size:13px;
+        background:${isOk ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'};
+        border:1px solid ${isOk ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'};
+        color:${isOk ? 'var(--green-light,#6ee7b7)' : 'var(--red-light,#fca5a5)'};">${msg}</div>`;
+    if (isOk) setTimeout(() => { el.style.display = 'none'; el.innerHTML = ''; }, 4000);
+}
+
+function inlineConfirm(divId, msg, callback) {
+    const el = document.getElementById(divId);
+    if (!el) return;
+    el.style.display = 'block';
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+        background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);
+        border-radius:8px;font-size:13px;flex-wrap:wrap;">
+        <span style="flex:1;color:var(--red-light,#fca5a5);">⚠️ ${msg}</span>
+        <button class="btn btn-danger btn-sm" id="${divId}_yes">Confirm</button>
+        <button class="btn btn-secondary btn-sm" id="${divId}_no">Cancel</button>
+    </div>`;
+    document.getElementById(divId + '_yes').onclick = () => { el.style.display='none'; el.innerHTML=''; callback(); };
+    document.getElementById(divId + '_no').onclick = () => { el.style.display='none'; el.innerHTML=''; };
+}
+
+async function generateFromSkills() {
+    const name = document.getElementById('stuName').value.trim();
+    const skills = document.getElementById('stuSkills').value.trim();
+    if (!name || !skills) { showMsg('studentMsg', 'Please enter your name and skills.'); return; }
+    document.getElementById('studentMsg').style.display = 'none';
+    showLoading('Generating your resume...');
+    try {
+        const res = await fetch('/api/resume/generate-from-skills', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, skills, education: document.getElementById('stuEducation').value, experience_notes: document.getElementById('stuNotes').value }) });
+        const data = await res.json();
+        hideLoading();
+        if (data.error) { showMsg('studentMsg', 'Error: ' + data.error); return; }
+        document.getElementById('stuResultText').textContent = data.resume_text;
+        document.getElementById('stuResult').style.display = 'block';
+    } catch(e) { hideLoading(); showMsg('studentMsg', 'Error: ' + e.message); }
+}
+
+async function rewriteSection() {
+    const sectionText = document.getElementById('secText').value.trim();
+    const sectionName = document.getElementById('secName').value.trim() || 'Section';
+    if (!sectionText) { showMsg('sectionMsg', 'Please enter section content.'); return; }
+    document.getElementById('sectionMsg').style.display = 'none';
+    showLoading('Rewriting section with AI...');
+    try {
+        const res = await fetch('/api/resume/rewrite-section', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ section_text: sectionText, section_name: sectionName, job_description: document.getElementById('secJobDesc').value }) });
+        const data = await res.json();
+        hideLoading();
+        if (data.error) { showMsg('sectionMsg', 'Error: ' + data.error); return; }
+        document.getElementById('secResultText').textContent = data.rewritten;
+        document.getElementById('secResult').style.display = 'block';
+    } catch(e) { hideLoading(); showMsg('sectionMsg', 'Error: ' + e.message); }
+}
+
+function copyText(id) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector(`#${id} + button`) || document.querySelector('[onclick*="copyText"]');
+        const orig = btn ? btn.textContent : '';
+        if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = orig, 2000); }
+    });
+}
+
+async function loadSavedResumes() {
+    const container = document.getElementById('savedList');
+    try {
+        const res = await fetch('/api/resume/list');
+        const resumes = await res.json();
+        if (!resumes.length) {
+            container.innerHTML = '<div class="card" style="text-align:center;color:var(--text-muted);padding:40px;">No saved resumes yet.<br><a href="#" onclick="switchTab(\'optimize\')" style="color:var(--blue-light);">Optimize a resume to save it →</a></div>';
+            return;
+        }
+        const scoreColor = s => s >= 70 ? 'var(--green-light)' : s >= 40 ? 'var(--yellow-light)' : 'var(--red-light)';
+        container.innerHTML = `<div class="grid grid-2 stagger">${resumes.map(r => `
+            <div class="card card-blue" style="margin-bottom:0;">
+                <div class="card-header">
+                    <div class="card-title" style="font-size:15px;">${r.label}</div>
+                    <span style="color:${scoreColor(r.match_score)};font-weight:700;font-size:18px;">${Math.round(r.match_score)}%</span>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Saved ${r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-success btn-sm" onclick="window.location.href='/api/resume/export/${r.id}/resume'">⬇ Resume PDF</button>
+                    <button class="btn btn-secondary btn-sm" onclick="window.location.href='/api/resume/export/${r.id}/cover_letter'">⬇ Cover Letter</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteResume(${r.id})">🗑 Delete</button>
+                </div>
+            </div>`).join('')}</div>`;
+    } catch(e) { container.innerHTML = '<div class="card" style="color:var(--red-light);">Failed to load resumes.</div>'; }
+}
+
+async function deleteResume(id) {
+    const container = document.getElementById('savedList');
+    const confirmDiv = document.getElementById('savedConfirm');
+    inlineConfirm('savedConfirm', 'Delete this resume permanently? This cannot be undone.', async () => {
+        await fetch('/api/resume/' + id, { method: 'DELETE' });
+        loadSavedResumes();
+    });
+}
+</script>
+{% endblock %}

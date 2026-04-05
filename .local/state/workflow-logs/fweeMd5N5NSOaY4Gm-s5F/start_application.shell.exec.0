@@ -1,0 +1,16 @@
+[2026-04-05 18:33:06 +0000] [1287] [INFO] Starting gunicorn 25.3.0
+[2026-04-05 18:33:06 +0000] [1287] [INFO] Listening at:  (1287)
+[2026-04-05 18:33:06 +0000] [1287] [INFO] Using worker: sync
+[2026-04-05 18:33:06 +0000] [1299] [INFO] Booting worker with pid: 1299
+[2026-04-05 18:33:06 +0000] [1299] [WARNING] Reloader is on. Use in development only!
+[2026-04-05 18:33:06 +0000] [1287] [INFO] Control socket listening at /home/runner/.gunicorn/gunicorn.ctl
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): oauth2.googleapis.com:443
+DEBUG:urllib3.connectionpool:https://oauth2.googleapis.com:443 "POST /token HTTP/1.1" 200 None
+[2026-04-05 18:51:02 +0000] [1299] [INFO] Worker reloading: /home/runner/workspace/utils/firestore_manager.py modified
+[2026-04-05 18:51:02 +0000] [1299] [INFO] Worker exiting (pid: 1299)
+[2026-04-05 18:51:02 +0000] [3497] [INFO] Booting worker with pid: 3497
+[2026-04-05 18:51:02 +0000] [1287] [INFO] Control socket listening at /home/runner/.gunicorn/gunicorn.ctl
+[2026-04-05 18:51:02 +0000] [3497] [WARNING] Reloader is on. Use in development only!
+[2026-04-05 18:54:33 +0000] [1287] [INFO] Handling signal: term
+[2026-04-05 18:54:33 +0000] [3497] [INFO] Worker exiting (pid: 3497)
+[2026-04-05 18:54:34 +0000] [1287] [INFO] Shutting down: Master

@@ -1,0 +1,2678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — AI Resume & Cover Letter Creator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg:       #0d0d1a;
+            --bg2:      #13131f;
+            --bg3:      #0a0a14;
+            --bg4:      #1a1a2e;
+            --border:   #1f1f38;
+            --border-l: #2a2a48;
+            --primary:  #5b50f0;
+            --primary-l:#818cf8;
+            --primary-d:#3730a3;
+            --text:     #e2e8f0;
+            --text-2:   #94a3b8;
+            --muted:    #64748b;
+            --success:  #10b981;
+            --warning:  #f59e0b;
+            --danger:   #ef4444;
+            --sidebar-w:232px;
+        }
+
+        html, body { height: 100%; overflow: hidden; }
+
+        /* ── SCROLLBAR ─────────────────────────────────────────── */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-l); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+        * { scrollbar-width: thin; scrollbar-color: var(--border-l) transparent; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+        }
+
+        /* ── SIDEBAR ───────────────────────────────────────────── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-brand {
+            padding: 20px 18px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            flex-shrink: 0;
+        }
+        .brand-logo {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--primary) 0%, #a78bfa 100%);
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: 16px;
+            color: #fff;
+        }
+        .brand-text  { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.2; }
+        .brand-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            padding: 14px 18px 5px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 8px 10px 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-2);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .nav-item i {
+            width: 17px;
+            text-align: center;
+            font-size: 13px;
+            flex-shrink: 0;
+            opacity: 0.7;
+            transition: opacity 0.15s;
+        }
+        .nav-item:hover {
+            background: rgba(91,80,240,0.09);
+            color: var(--text);
+        }
+        .nav-item:hover i { opacity: 1; }
+        .nav-item.active {
+            background: rgba(91,80,240,0.14);
+            color: var(--primary-l);
+            font-weight: 600;
+        }
+        .nav-item.active i { opacity: 1; color: var(--primary-l); }
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 6px; bottom: 6px;
+            width: 3px;
+            background: var(--primary-l);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .nav-sep {
+            height: 1px;
+            background: var(--border);
+            margin: 6px 4px;
+        }
+
+        .sidebar-footer {
+            padding: 10px 10px 12px;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .back-link {
+            display: flex; align-items: center; gap: 9px;
+            color: var(--text-2); font-size: 13px; font-weight: 500;
+            text-decoration: none; padding: 9px 10px; border-radius: 8px;
+            transition: background 0.15s, color 0.15s;
+        }
+        .back-link i { width: 17px; text-align: center; font-size: 13px; opacity: 0.7; }
+        .back-link:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+
+        /* ── MAIN ──────────────────────────────────────────────── */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .topbar {
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            padding: 0 28px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .topbar-left { display: flex; align-items: center; gap: 10px; }
+        .topbar-breadcrumb {
+            display: flex; align-items: center; gap: 7px;
+            font-size: 13px; color: var(--muted);
+        }
+        .topbar-breadcrumb span.sep { opacity: 0.4; }
+        .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
+        .topbar-right { display: flex; align-items: center; gap: 10px; }
+        .badge-admin {
+            background: rgba(91,80,240,0.15);
+            color: var(--primary-l);
+            padding: 4px 11px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex; align-items: center; gap: 6px;
+            border: 1px solid rgba(91,80,240,0.2);
+        }
+        .badge-admin i { font-size: 11px; }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 26px 28px;
+            background: var(--bg);
+        }
+
+        /* ── PANELS ───────────────────────────────────────────── */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* ── CARDS ────────────────────────────────────────────── */
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: var(--text);
+        }
+        .card-title i {
+            width: 28px; height: 28px;
+            background: rgba(91,80,240,0.12);
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px;
+            color: var(--primary-l);
+            flex-shrink: 0;
+        }
+
+        /* ── STATS ────────────────────────────────────────────── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), #a78bfa);
+            opacity: 0.6;
+        }
+        .stat-val { font-size: 30px; font-weight: 700; color: var(--primary-l); line-height: 1; }
+        .stat-lbl { font-size: 12px; color: var(--muted); margin-top: 5px; font-weight: 500; }
+
+        /* JOB BOARD STATS */
+        .jb-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+        .stat-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-value { font-size: 26px; font-weight: 700; color: var(--primary-l); }
+        .stat-label { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 500; }
+
+        /* ── FORMS ────────────────────────────────────────────── */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-group { margin-bottom: 14px; }
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-2);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        input[type="text"], input[type="password"], input[type="number"],
+        input[type="url"], input[type="email"], select, textarea {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--bg3);
+            border: 1px solid var(--border-l);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(91,80,240,0.13);
+        }
+        textarea { resize: vertical; min-height: 80px; }
+        .input-row { display: flex; gap: 8px; }
+        .input-row input { flex: 1; }
+
+        /* ── BUTTONS ──────────────────────────────────────────── */
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; border: none;
+            font-family: inherit;
+            transition: all 0.15s;
+            white-space: nowrap;
+            line-height: 1;
+        }
+        .btn-primary  { background: var(--primary); color: #fff; }
+        .btn-primary:hover  { background: var(--primary-d); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(91,80,240,0.35); }
+        .btn-secondary { background: rgba(91,80,240,0.1); color: var(--primary-l); border: 1px solid rgba(91,80,240,0.25); }
+        .btn-secondary:hover { background: rgba(91,80,240,0.18); }
+        .btn-success  { background: var(--success); color: #fff; }
+        .btn-success:hover  { background: #059669; }
+        .btn-danger   { background: transparent; color: var(--danger); border: 1px solid rgba(239,68,68,0.4); }
+        .btn-danger:hover   { background: rgba(239,68,68,0.08); }
+        .btn-sm { padding: 5px 11px; font-size: 12px; border-radius: 6px; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+        /* ── TABLE ────────────────────────────────────────────── */
+        .tbl-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th {
+            text-align: left;
+            padding: 10px 13px;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            background: rgba(255,255,255,0.015);
+        }
+        td { padding: 11px 13px; border-bottom: 1px solid rgba(31,31,56,0.8); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(91,80,240,0.04); }
+        .tbl-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+
+        /* ── BADGE ────────────────────────────────────────────── */
+        .badge {
+            display: inline-flex; align-items: center;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: 11px; font-weight: 600;
+        }
+        .badge-applied   { background: rgba(91,80,240,0.15); color: var(--primary-l); }
+        .badge-interview { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .badge-offer     { background: rgba(16,185,129,0.15); color: var(--success); }
+        .badge-rejected  { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+        /* ── ALERT ────────────────────────────────────────────── */
+        .alert {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 14px;
+            display: none;
+        }
+        .alert-ok  { background: rgba(16,185,129,0.1);  border: 1px solid rgba(16,185,129,0.3);  color: #6ee7b7; }
+        .alert-err { background: rgba(239,68,68,0.1);   border: 1px solid rgba(239,68,68,0.3);   color: #fca5a5; }
+        .alert-show { display: block; }
+
+        /* ── SECTION DIVIDER ──────────────────────────────────── */
+        .section-title {
+            font-size: 11px; font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 20px 0 10px;
+        }
+
+        /* ── MODAL ────────────────────────────────────────────── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.78); z-index: 200;
+            align-items: flex-start; justify-content: center;
+            padding: 40px 20px; overflow-y: auto;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: var(--bg2);
+            border: 1px solid var(--border-l);
+            border-radius: 14px;
+            padding: 26px;
+            width: 100%; max-width: 560px;
+            margin: auto;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+        }
+        .modal-lg { max-width: 760px; }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .modal-title { font-size: 15px; font-weight: 700; }
+        .modal-close {
+            background: rgba(255,255,255,0.05); border: none;
+            color: var(--muted); cursor: pointer;
+            font-size: 14px; line-height: 1;
+            padding: 6px 8px; border-radius: 6px;
+            transition: all 0.15s;
+        }
+        .modal-close:hover { color: var(--text); background: rgba(255,255,255,0.1); }
+
+        /* ── CHECKBOX ─────────────────────────────────────────── */
+        input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer; }
+
+        /* ── STATUS PILL ──────────────────────────────────────── */
+        .pill { display: inline-flex; align-items: center; gap: 6px; }
+        .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .dot-green  { background: var(--success); box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+        .dot-red    { background: var(--danger); }
+        .dot-yellow { background: var(--warning); }
+
+        .text-muted { color: var(--muted); }
+        .text-truncate { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
+
+        /* ── AD PLACEMENTS ────────────────────────────────────── */
+        .placement-row {
+            display: flex; align-items: flex-start; gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .placement-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .placement-icon {
+            width: 36px; height: 36px;
+            background: rgba(91,80,240,0.1);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; flex-shrink: 0;
+        }
+        .placement-info { flex: 1; min-width: 0; }
+        .placement-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+        .placement-desc { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+
+        .toggle-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background: #2a2a46; border-radius: 22px; transition: .2s; }
+        .slider:before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: #64748b; border-radius: 50%; transition: .2s; }
+        .toggle input:checked + .slider { background: rgba(91,80,240,0.5); }
+        .toggle input:checked + .slider:before { transform: translateX(18px); background: var(--primary-l); }
+        .toggle-label { font-size: 13px; color: var(--muted); }
+        .slot-input-wrap { display: flex; gap: 8px; }
+        .slot-input-wrap input { flex: 1; }
+
+        /* ── TAB BAR ──────────────────────────────────────────── */
+        .tab-bar {
+            display: flex; gap: 6px;
+            margin-bottom: 14px;
+            flex-wrap: wrap; align-items: center;
+        }
+        .tab-bar .spacer { flex: 1; }
+
+        /* ── RESPONSIVE ───────────────────────────────────────── */
+        @media (max-width: 680px) {
+            .sidebar { display: none; }
+            .form-row { grid-template-columns: 1fr; }
+            .jb-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-logo"><i class="fa-solid fa-shield-halved"></i></div>
+        <div>
+            <div class="brand-text">Admin Panel</div>
+            <div class="brand-sub">AI Resume Creator</div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="sidebar-section-label">General</div>
+        <button class="nav-item active" onclick="show('overview')"><i class="fa-solid fa-chart-pie"></i> Overview</button>
+        <button class="nav-item" onclick="show('settings')"><i class="fa-solid fa-sliders"></i> Settings</button>
+        <button class="nav-item" onclick="show('ai')"><i class="fa-solid fa-microchip"></i> AI Config</button>
+
+        <div class="nav-sep"></div>
+        <div class="sidebar-section-label">Content</div>
+        <button class="nav-item" onclick="show('resumes')"><i class="fa-solid fa-file-lines"></i> Resumes</button>
+        <button class="nav-item" onclick="show('jobs')"><i class="fa-solid fa-briefcase"></i> Job Applications</button>
+        <button class="nav-item" onclick="show('jobboard')"><i class="fa-solid fa-globe"></i> Job Board</button>
+        <button class="nav-item" onclick="show('messages')" id="nav-messages"><i class="fa-solid fa-envelope"></i> Messages <span id="msgBadge" style="display:none;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px;margin-left:2px;"></span></button>
+
+        <div class="nav-sep"></div>
+        <div class="sidebar-section-label">Advanced</div>
+        <button class="nav-item" onclick="show('monetization')"><i class="fa-solid fa-coins"></i> Monetization</button>
+        <button class="nav-item" onclick="show('security')"><i class="fa-solid fa-lock"></i> Security</button>
+        <button class="nav-item" onclick="show('database')"><i class="fa-solid fa-database"></i> Database</button>
+        <button class="nav-item" onclick="show('firebase')"><i class="fa-brands fa-google"></i> Firebase</button>
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/" class="back-link" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Website</a>
+        <button class="nav-item" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-breadcrumb">
+                <span style="color:var(--muted);font-size:12px;">Admin</span>
+                <span class="sep">/</span>
+            </div>
+            <div class="topbar-title" id="topbarTitle">Overview</div>
+        </div>
+        <div class="topbar-right">
+            <span class="badge-admin"><i class="fa-solid fa-shield-halved"></i> Authenticated</span>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <!-- ── OVERVIEW ── -->
+        <div class="panel active" id="panel-overview">
+            <div class="stats-row" id="overviewStats">
+                <div class="stat"><div class="stat-val" id="ov-resumes">—</div><div class="stat-lbl">Saved Resumes</div></div>
+                <div class="stat"><div class="stat-val" id="ov-jobs">—</div><div class="stat-lbl">Job Applications</div></div>
+                <div class="stat"><div class="stat-val" id="ov-interviews" style="color:var(--warning)">—</div><div class="stat-lbl">Interviews</div></div>
+                <div class="stat"><div class="stat-val" id="ov-offers" style="color:var(--success)">—</div><div class="stat-lbl">Offers</div></div>
+                <div class="stat" onclick="show('messages')" style="cursor:pointer;"><div class="stat-val" id="ov-messages" style="color:#818cf8;">—</div><div class="stat-lbl">Messages <span id="ov-unread" style="display:none;font-size:11px;color:#ef4444;font-weight:700;"></span></div></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">🤖</span> AI Engine Status</div>
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                    <span id="aiStatusPill" class="pill"><span class="dot dot-yellow"></span> Checking...</span>
+                    <button class="btn btn-secondary btn-sm" onclick="testGroq()">Test Connection</button>
+                </div>
+                <div id="aiStatusMsg" style="font-size:13px;color:var(--muted);margin-top:10px;"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">🔗</span> Quick Links</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                    <a href="/resume-builder" target="_blank" class="btn btn-secondary btn-sm">Resume Builder</a>
+                    <a href="/job-tracker" target="_blank" class="btn btn-secondary btn-sm">Job Tracker</a>
+                    <a href="/interview-prep" target="_blank" class="btn btn-secondary btn-sm">Interview Prep</a>
+                    <a href="/career-chat" target="_blank" class="btn btn-secondary btn-sm">Career Chat</a>
+                    <a href="/linkedin-optimizer" target="_blank" class="btn btn-secondary btn-sm">LinkedIn Optimizer</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── SETTINGS ── -->
+        <div class="panel" id="panel-settings">
+            <div id="settingsAlert" class="alert"></div>
+            <div class="card">
+                <div class="card-title"><span class="icon">🏷️</span> App Branding</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>App Name</label>
+                        <input type="text" id="s-app_name" placeholder="AI Resume & Cover Letter Creator">
+                    </div>
+                    <div class="form-group">
+                        <label>App Tagline</label>
+                        <input type="text" id="s-app_tagline" placeholder="Your AI job assistant">
+                    </div>
+                </div>
+                <div class="toggle-wrap" style="margin-top:14px;">
+                    <label class="toggle" style="margin:0;">
+                        <input type="checkbox" id="s-hide_footer_toggle" onchange="document.getElementById('s-hide_footer').value=this.checked?'1':'0';saveSettings(['hide_footer'])">
+                        <span class="slider"></span>
+                    </label>
+                    <input type="hidden" id="s-hide_footer" value="0">
+                    <span class="toggle-label">Hide footer on all pages</span>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings(['app_name','app_tagline','hide_footer'])">Save Branding</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">🌐</span> Website Identity</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">These values are used in meta tags, the footer, and contact info across the site.</p>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Site URL (for canonical tags)</label>
+                        <input type="url" id="s-site_url" placeholder="https://yourdomain.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Email</label>
+                        <input type="email" id="s-contact_email" placeholder="hello@yourdomain.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Meta Description (SEO)</label>
+                    <textarea id="s-meta_description" rows="2" placeholder="AI-powered resume builder, cover letter generator and career assistant."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Meta Keywords (SEO)</label>
+                    <input type="text" id="s-meta_keywords" placeholder="resume builder, cover letter, AI, job application, career">
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings(['site_url','contact_email','meta_description','meta_keywords'])">Save Website Identity</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">🔍</span> SEO &amp; Search Console</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Verify your site with Google Search Console. Find the verification code in your Search Console property settings under <em>HTML tag</em> method — paste just the content value.</p>
+                <div class="form-group" style="max-width:420px;">
+                    <label>Google Search Console Verification Code</label>
+                    <input type="text" id="s-google_search_console" placeholder="abc123def456...">
+                    <small style="color:var(--muted);font-size:12px;">Only the code from <code style="background:rgba(255,255,255,.07);padding:1px 4px;border-radius:3px;">&lt;meta name="google-site-verification" content="<strong>HERE</strong>"&gt;</code></small>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings(['google_search_console'])">Save Verification Code</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">📣</span> Social Media Links</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Displayed as links in the site footer. Leave blank to hide.</p>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Twitter / X URL</label>
+                        <input type="url" id="s-twitter_url" placeholder="https://twitter.com/yourhandle">
+                    </div>
+                    <div class="form-group">
+                        <label>LinkedIn URL</label>
+                        <input type="url" id="s-linkedin_url" placeholder="https://linkedin.com/company/yourpage">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Facebook URL</label>
+                        <input type="url" id="s-facebook_url" placeholder="https://facebook.com/yourpage">
+                    </div>
+                    <div class="form-group">
+                        <label>Instagram URL</label>
+                        <input type="url" id="s-instagram_url" placeholder="https://instagram.com/yourhandle">
+                    </div>
+                </div>
+                <div class="form-group" style="max-width:380px;">
+                    <label>YouTube URL</label>
+                    <input type="url" id="s-youtube_url" placeholder="https://youtube.com/@yourchannel">
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings(['twitter_url','linkedin_url','facebook_url','instagram_url','youtube_url'])">Save Social Links</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">⚡</span> Performance</div>
+                <div class="form-group" style="max-width:260px;">
+                    <label>Max Upload Size (MB)</label>
+                    <input type="number" id="s-max_upload_mb" min="1" max="50" placeholder="10">
+                </div>
+                <div class="toggle-wrap" style="margin-top:14px;">
+                    <label class="toggle" style="margin:0;">
+                        <input type="checkbox" id="s-use_fake_stats_toggle" onchange="document.getElementById('s-use_fake_stats').value=this.checked?'1':'0';saveSettings(['use_fake_stats'])">
+                        <span class="slider"></span>
+                    </label>
+                    <input type="hidden" id="s-use_fake_stats" value="0">
+                    <span class="toggle-label">Show demo stats on dashboard (inflated numbers)</span>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings(['max_upload_mb','use_fake_stats'])">Save</button>
+            </div>
+        </div>
+
+        <!-- ── AI CONFIG ── -->
+        <div class="panel" id="panel-ai">
+            <div id="aiAlert" class="alert"></div>
+            <div class="card">
+                <div class="card-title"><span class="icon">🔑</span> Groq API Key</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Get a free API key at <a href="https://console.groq.com" target="_blank" style="color:var(--primary-l);">console.groq.com</a></p>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <div class="input-row">
+                        <input type="password" id="s-groq_api_key" placeholder="gsk_...">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleApiKey()">👁</button>
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="saveGroqKey()">Save API Key</button>
+                    <button class="btn btn-secondary" onclick="testGroq(true)">Test Connection</button>
+                </div>
+                <div id="groqTestResult" style="margin-top:12px;font-size:13px;display:none;"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">🧠</span> Model Settings</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>AI Model</label>
+                        <select id="s-ai_model">
+                            <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Recommended)</option>
+                            <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Fastest)</option>
+                            <option value="llama-3.1-70b-versatile">llama-3.1-70b-versatile</option>
+                            <option value="compound-beta">compound-beta</option>
+                            <option value="compound-beta-mini">compound-beta-mini</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Tokens per Response</label>
+                        <input type="number" id="s-ai_max_tokens" min="256" max="8192" step="256" placeholder="4096">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings(['ai_model','ai_max_tokens'])">Save Model Settings</button>
+            </div>
+        </div>
+
+        <!-- ── RESUMES ── -->
+        <div class="panel" id="panel-resumes">
+            <div id="resumesAlert" class="alert" style="display:none;margin-bottom:10px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+                <input type="text" id="resumeSearch" placeholder="Search resumes..." style="max-width:240px;" oninput="filterResumes()">
+                <button class="btn btn-danger btn-sm" onclick="bulkDeleteResumes()">Delete Selected</button>
+            </div>
+            <div class="card" style="padding:0;overflow:hidden;">
+                <div class="tbl-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="resumeSelectAll" onchange="toggleAll('resume')"></th>
+                                <th>#</th>
+                                <th>Label</th>
+                                <th>Match Score</th>
+                                <th>Saved</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resumesTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── JOBS ── -->
+        <div class="panel" id="panel-jobs">
+            <div id="jobsAlert" class="alert" style="display:none;margin-bottom:10px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+                <input type="text" id="jobSearch" placeholder="Search jobs..." style="max-width:240px;" oninput="filterJobs()">
+                <button class="btn btn-danger btn-sm" onclick="bulkDeleteJobs()">Delete Selected</button>
+            </div>
+            <div class="card" style="padding:0;overflow:hidden;">
+                <div class="tbl-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="jobSelectAll" onchange="toggleAll('job')"></th>
+                                <th>#</th>
+                                <th>Company</th>
+                                <th>Position</th>
+                                <th>Status</th>
+                                <th>Applied</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobsTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── JOB BOARD ── -->
+        <div class="panel" id="panel-jobboard">
+            <div id="jbAlert" class="alert"></div>
+
+            <div class="jb-stats" id="jbStatsRow">
+                <div class="stat-card"><div class="stat-value" id="jbCountDraft">—</div><div class="stat-label">Drafts</div></div>
+                <div class="stat-card"><div class="stat-value" id="jbCountPublished">—</div><div class="stat-label">Published</div></div>
+                <div class="stat-card"><div class="stat-value" id="jbCountArchived">—</div><div class="stat-label">Archived</div></div>
+                <div class="stat-card"><div class="stat-value" id="jbCountTotal">—</div><div class="stat-label">Total</div></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">🔄</span> Fetch New Jobs</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Pull fresh job postings from external sources. Duplicates are automatically skipped. New posts are saved as drafts.</p>
+                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px;">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="src_remotive" checked> Remotive <span style="font-size:11px;color:var(--muted);">(remote tech)</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="src_arbeitnow" checked> Arbeitnow <span style="font-size:11px;color:var(--muted);">(global)</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="src_remoteok" checked> RemoteOK <span style="font-size:11px;color:var(--muted);">(remote)</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="src_adzuna"> Adzuna <span style="font-size:11px;color:var(--muted);">(requires API key)</span>
+                    </label>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+                    <input type="text" id="jbFetchSearch" placeholder='Keyword e.g. "python developer"' style="max-width:260px;">
+                    <select id="jbFetchLimit" style="max-width:140px;">
+                        <option value="10">10 per source</option>
+                        <option value="15" selected>15 per source</option>
+                        <option value="20">20 per source</option>
+                        <option value="30">30 per source</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="fetchJobsNow()" id="fetchBtn">🔄 Fetch Jobs</button>
+                </div>
+                <div style="border-top:1px solid var(--border);padding-top:12px;">
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Adzuna API (optional — for premium listings)</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <input type="text" id="s-adzuna_app_id" placeholder="Adzuna App ID" style="max-width:200px;">
+                        <input type="text" id="s-adzuna_app_key" placeholder="Adzuna App Key" style="max-width:200px;">
+                        <button class="btn btn-secondary btn-sm" onclick="saveSettings(['adzuna_app_id','adzuna_app_key'])">Save Keys</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-bar">
+                <button class="btn btn-sm" id="tab-draft" onclick="loadJobBoard('draft')" style="background:rgba(79,70,229,.2);color:#818cf8;">Drafts</button>
+                <button class="btn btn-secondary btn-sm" id="tab-published" onclick="loadJobBoard('published')">Published</button>
+                <button class="btn btn-secondary btn-sm" id="tab-archived" onclick="loadJobBoard('archived')">Archived</button>
+                <button class="btn btn-secondary btn-sm" id="tab-all" onclick="loadJobBoard('all')">All</button>
+                <div class="spacer"></div>
+                <button class="btn btn-danger btn-sm" onclick="bulkJobBoardAction('delete')">Delete Selected</button>
+                <button class="btn btn-secondary btn-sm" onclick="bulkJobBoardAction('publish')">Publish Selected</button>
+            </div>
+
+            <div class="card" style="padding:0;overflow:hidden;">
+                <div class="tbl-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="jbSelectAll" onchange="jbToggleAll()"></th>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Company</th>
+                                <th>Source</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>AI</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jbTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── MONETIZATION ── -->
+        <div class="panel" id="panel-monetization">
+            <div id="monetizationAlert" class="alert"></div>
+            <div class="card">
+                <div class="card-title"><span class="icon">📊</span> Google Analytics</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+                    Enter your Google Analytics Measurement ID to track site traffic.
+                    Get your ID at <a href="https://analytics.google.com" target="_blank" style="color:var(--primary-l);">analytics.google.com</a>.
+                </p>
+                <div class="form-group" style="max-width:320px;">
+                    <label>Measurement ID (e.g. G-XXXXXXXXXX)</label>
+                    <input type="text" id="s-analytics_id" placeholder="G-XXXXXXXXXX">
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings(['analytics_id'])">Save Analytics ID</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">💰</span> Google AdSense</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+                    Enter your AdSense Publisher ID to enable monetization.
+                    Get your ID at <a href="https://adsense.google.com" target="_blank" style="color:var(--primary-l);">adsense.google.com</a>.
+                </p>
+                <div class="form-group" style="max-width:380px;">
+                    <label>Publisher ID (e.g. ca-pub-XXXXXXXXXXXXXXXX)</label>
+                    <input type="text" id="s-adsense_publisher_id" placeholder="ca-pub-XXXXXXXXXXXXXXXX">
+                </div>
+                <div class="form-group" style="margin-top:12px;">
+                    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:400;">
+                        <label class="toggle" style="margin:0;">
+                            <input type="checkbox" id="s-adsense_auto_ads_toggle" onchange="document.getElementById('s-adsense_auto_ads').value=this.checked?'1':'0';saveSettings(['adsense_publisher_id','adsense_auto_ads'])">
+                            <span class="slider"></span>
+                        </label>
+                        <span>Enable Auto Ads (AdSense automatically places ads)</span>
+                    </label>
+                    <input type="hidden" id="s-adsense_auto_ads" value="0">
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings(['adsense_publisher_id','adsense_auto_ads'])">Save AdSense Settings</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">📍</span> Ad Placements</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Control where ads appear. Each placement requires a unique Ad Unit Slot ID from your AdSense account.</p>
+
+                <div class="placement-row">
+                    <div style="font-size:22px;flex-shrink:0;width:32px;text-align:center;padding-top:2px;">🏷️</div>
+                    <div class="placement-info">
+                        <div class="placement-name">Top Banner — All Pages</div>
+                        <div class="placement-desc">Full-width banner at the top of every page, below the navigation bar.</div>
+                        <div class="toggle-wrap">
+                            <label class="toggle">
+                                <input type="checkbox" id="ad_top_banner_enabled" onchange="saveAdPlacement('top_banner')">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="toggle-label" id="lbl_top_banner">Disabled</span>
+                        </div>
+                        <div class="slot-input-wrap">
+                            <input type="text" id="ad_top_banner_slot" placeholder="Ad Unit Slot ID (e.g. 1234567890)" oninput="clearPlacementTimer('top_banner')">
+                            <button class="btn btn-secondary btn-sm" onclick="saveAdPlacement('top_banner')">Save</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="placement-row">
+                    <div style="font-size:22px;flex-shrink:0;width:32px;text-align:center;padding-top:2px;">📄</div>
+                    <div class="placement-info">
+                        <div class="placement-name">Between Resume & Cover Letter</div>
+                        <div class="placement-desc">Displayed between Optimized Resume and Cover Letter results after AI processes the submission.</div>
+                        <div class="toggle-wrap">
+                            <label class="toggle">
+                                <input type="checkbox" id="ad_results_enabled" onchange="saveAdPlacement('results')">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="toggle-label" id="lbl_results">Disabled</span>
+                        </div>
+                        <div class="slot-input-wrap">
+                            <input type="text" id="ad_results_slot" placeholder="Ad Unit Slot ID (e.g. 1234567890)" oninput="clearPlacementTimer('results')">
+                            <button class="btn btn-secondary btn-sm" onclick="saveAdPlacement('results')">Save</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="placement-row">
+                    <div style="font-size:22px;flex-shrink:0;width:32px;text-align:center;padding-top:2px;">📌</div>
+                    <div class="placement-info">
+                        <div class="placement-name">Sidebar — Dashboard</div>
+                        <div class="placement-desc">Sticky vertical ad unit shown in the right sidebar of the Dashboard page.</div>
+                        <div class="toggle-wrap">
+                            <label class="toggle">
+                                <input type="checkbox" id="ad_sidebar_enabled" onchange="saveAdPlacement('sidebar')">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="toggle-label" id="lbl_sidebar">Disabled</span>
+                        </div>
+                        <div class="slot-input-wrap">
+                            <input type="text" id="ad_sidebar_slot" placeholder="Ad Unit Slot ID (e.g. 1234567890)" oninput="clearPlacementTimer('sidebar')">
+                            <button class="btn btn-secondary btn-sm" onclick="saveAdPlacement('sidebar')">Save</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="placementsAlert" class="alert" style="margin-top:14px;margin-bottom:0;"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">📄</span> ads.txt File</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+                    The <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">ads.txt</code> file is required by Google AdSense.
+                    Served at <a href="/ads.txt" target="_blank" style="color:var(--primary-l);">/ads.txt</a>.
+                </p>
+                <div class="form-group">
+                    <label>Upload ads.txt file</label>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <input type="file" id="adsTxtFile" accept=".txt,text/plain" style="flex:1;min-width:0;padding:7px 10px;font-size:13px;cursor:pointer;">
+                        <button class="btn btn-secondary btn-sm" onclick="uploadAdsTxt()">Upload File</button>
+                    </div>
+                </div>
+                <div class="section-title">— or paste content manually —</div>
+                <div class="form-group">
+                    <label>ads.txt content</label>
+                    <textarea id="adsTxtContent" rows="4" placeholder="google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0" style="font-family:monospace;font-size:12px;"></textarea>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                    <button class="btn btn-primary" onclick="saveAdsTxtContent()">Save Content</button>
+                    <a href="/ads.txt" target="_blank" class="btn btn-secondary btn-sm">Preview /ads.txt ↗</a>
+                </div>
+                <div id="adsTxtAlert" class="alert" style="margin-top:12px;margin-bottom:0;"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">📋</span> AdSense Compliance Checklist</div>
+                <div style="display:flex;flex-direction:column;gap:9px;font-size:13px;">
+                    <div style="display:flex;align-items:center;gap:10px;color:var(--success);">✅ <span>Privacy Policy — <a href="/privacy-policy" target="_blank" style="color:var(--primary-l);">/privacy-policy</a></span></div>
+                    <div style="display:flex;align-items:center;gap:10px;color:var(--success);">✅ <span>Terms of Service — <a href="/terms-of-service" target="_blank" style="color:var(--primary-l);">/terms-of-service</a></span></div>
+                    <div style="display:flex;align-items:center;gap:10px;color:var(--success);">✅ <span>Cookie Policy — <a href="/cookie-policy" target="_blank" style="color:var(--primary-l);">/cookie-policy</a></span></div>
+                    <div style="display:flex;align-items:center;gap:10px;color:var(--success);">✅ <span>Contact page — <a href="/contact" target="_blank" style="color:var(--primary-l);">/contact</a></span></div>
+                    <div style="display:flex;align-items:center;gap:10px;color:var(--success);">✅ <span>About page — <a href="/about" target="_blank" style="color:var(--primary-l);">/about</a></span></div>
+                    <div style="display:flex;align-items:center;gap:10px;color:var(--success);">✅ <span>Cookie consent banner on all pages</span></div>
+                    <div style="display:flex;align-items:center;gap:10px;color:var(--success);">✅ <span>Footer with legal links on all pages</span></div>
+                    <div style="display:flex;align-items:center;gap:10px;color:var(--warning);">⚠️ <span>Apply for AdSense at <a href="https://adsense.google.com/start/" target="_blank" style="color:var(--primary-l);">adsense.google.com/start</a> once site has content</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── MESSAGES ── -->
+        <div class="panel" id="panel-messages">
+            <div id="msgAlert" class="alert" style="display:none;margin-bottom:12px;"></div>
+            <div class="tab-bar">
+                <span style="font-size:13px;color:var(--muted);" id="msgSummary">Loading…</span>
+                <div class="spacer"></div>
+                <button class="btn btn-secondary btn-sm" onclick="loadMessages()">↻ Refresh</button>
+                <button class="btn btn-sm" style="background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);" onclick="bulkDeleteMessages()">🗑 Delete Selected</button>
+            </div>
+            <div class="card" style="padding:0;overflow:hidden;">
+                <table id="msgTable">
+                    <thead>
+                        <tr>
+                            <th style="width:32px;"><input type="checkbox" id="msgSelectAll" onchange="toggleMsgSelect(this.checked)"></th>
+                            <th>From</th>
+                            <th>Subject</th>
+                            <th>Date</th>
+                            <th style="width:120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="msgTbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Message detail modal -->
+            <div id="msgModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;">
+                <div style="background:#12121f;border:1px solid #1e1e3a;border-radius:14px;max-width:620px;width:100%;max-height:85vh;overflow-y:auto;padding:28px;position:relative;">
+                    <button onclick="closeMsgModal()" style="position:absolute;top:14px;right:18px;background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;">✕</button>
+                    <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#64748b;letter-spacing:.07em;margin-bottom:4px;" id="mdSubject"></div>
+                    <div style="font-size:18px;font-weight:700;color:#e2e8f0;margin-bottom:16px;" id="mdFrom"></div>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px;font-size:13px;color:#64748b;">
+                        <span>📧 <a id="mdEmail" href="#" style="color:#818cf8;"></a></span>
+                        <span>🕐 <span id="mdDate"></span></span>
+                    </div>
+                    <div style="background:#0f0f1a;border:1px solid #1e1e3a;border-radius:8px;padding:16px;font-size:14px;color:#cbd5e1;line-height:1.7;white-space:pre-wrap;" id="mdBody"></div>
+                    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+                        <a id="mdReplyBtn" href="#" class="btn btn-sm" style="background:#4f46e5;color:#fff;">✉ Reply via Email</a>
+                        <button id="mdToggleRead" class="btn btn-secondary btn-sm" onclick="toggleMsgRead()"></button>
+                        <button class="btn btn-sm" style="background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);" onclick="deleteMsgFromModal()">🗑 Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── SECURITY ── -->
+        <div class="panel" id="panel-security">
+            <div id="secAlert" class="alert"></div>
+            <div class="card" style="max-width:480px;">
+                <div class="card-title"><span class="icon">🔑</span> Change Admin Password</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Default password is <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;">admin123</code> — change it immediately.</p>
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPw" placeholder="Current password">
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPw" placeholder="Min. 6 characters">
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmPw" placeholder="Repeat new password">
+                </div>
+                <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+            </div>
+
+            <div class="card" style="max-width:480px;">
+                <div class="card-title"><span class="icon">⚠️</span> Danger Zone</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Permanently delete all user-generated content from the database.</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-danger btn-sm" onclick="nukeResumes()">Delete All Resumes</button>
+                    <button class="btn btn-danger btn-sm" onclick="nukeJobs()">Delete All Jobs</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── DATABASE ── -->
+        <div class="panel" id="panel-database">
+            <div id="dbAlert" class="alert"></div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">🗄️</span> Database Engine</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Select which database the application uses. Changes take effect after restarting the server.</p>
+                <div class="form-group" style="max-width:260px;">
+                    <label>Active Database</label>
+                    <select id="db-type" onchange="toggleMysqlFields()">
+                        <option value="sqlite">SQLite (internal, default)</option>
+                        <option value="mysql">MySQL (external)</option>
+                        <option value="firebase">Firebase / Firestore (cloud)</option>
+                    </select>
+                </div>
+                <div id="mysqlFields" style="display:none;">
+                    <div class="section-title">MySQL Connection</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Host</label>
+                            <input type="text" id="db-mysql_host" placeholder="localhost">
+                        </div>
+                        <div class="form-group">
+                            <label>Port</label>
+                            <input type="number" id="db-mysql_port" placeholder="3306" style="max-width:120px;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Database Name</label>
+                            <input type="text" id="db-mysql_database" placeholder="resume_app">
+                        </div>
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="db-mysql_user" placeholder="root">
+                        </div>
+                    </div>
+                    <div class="form-group" style="max-width:300px;">
+                        <label>Password</label>
+                        <div class="input-row">
+                            <input type="password" id="db-mysql_password" placeholder="••••••••">
+                            <button class="btn btn-secondary btn-sm" onclick="toggleDbPw()">👁</button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="db-use_ssl" style="width:15px;height:15px;">
+                            Use SSL/TLS (required by some cloud hosts)
+                        </label>
+                    </div>
+                    <button class="btn btn-secondary" style="margin-bottom:14px;" onclick="testMysqlConn()">🔌 Test Connection</button>
+                    <div id="mysqlTestResult" style="font-size:13px;margin-bottom:12px;display:none;white-space:pre-wrap;line-height:1.6;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);"></div>
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;padding:10px 12px;border-radius:8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);">
+                        <strong style="color:var(--warning);">⚠ Connection requirements:</strong><br>
+                        Your MySQL host must allow connections from this server's IP. Some providers (e.g. PythonAnywhere, PlanetScale, Railway) only permit connections from specific IPs or their own network. Check your host's firewall or allowlist settings if you see a timeout error.
+                    </div>
+                </div>
+                <div id="dbFirebaseNote" style="display:none;padding:12px 14px;border-radius:8px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);font-size:13px;color:var(--text);margin-bottom:14px;">
+                    <strong style="color:#f97316;">🔥 Firebase selected</strong><br>
+                    <span style="color:var(--muted);">All resumes, jobs, and contact messages will be stored in and read from Firestore. App settings always stay in the local SQLite database.<br>
+                    Make sure you have configured and tested your Firebase credentials in the <a href="#" onclick="show('firebase');return false;" style="color:var(--primary-l);">Firebase panel</a> before applying.</span>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="saveDbConfig()">💾 Save Configuration</button>
+                    <button class="btn btn-secondary" onclick="applyDbConfig()" title="Saves config and restarts the application">⚡ Save &amp; Apply (Restart)</button>
+                </div>
+                <p style="font-size:12px;color:var(--muted);margin-top:10px;">Tip: Use "Save &amp; Apply" to immediately restart the app and activate the new database.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">📤</span> Export</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;"><strong>Full Database</strong> — SQL dump of every table. Use to back up or migrate the entire database.</p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+                    <a href="/julisunkan/api/database/export/sqlite" class="btn btn-secondary">⬇ Export as SQLite SQL</a>
+                    <a href="/julisunkan/api/database/export/mysql" class="btn btn-secondary">⬇ Export as MySQL SQL</a>
+                </div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:10px;"><strong>Settings Only</strong> — JSON file with just the settings table (API keys &amp; sensitive fields redacted).</p>
+                <a href="/julisunkan/api/settings/export-json" class="btn btn-secondary">⬇ Export Settings as JSON</a>
+                <p style="font-size:12px;color:var(--muted);margin-top:12px;">
+                    <strong>SQLite export</strong> — compatible with <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;">sqlite3</code> CLI.<br>
+                    <strong>MySQL export</strong> — compatible with <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;">mysql</code> CLI and phpMyAdmin.<br>
+                    <strong>JSON export</strong> — re-import via the Import section below; API keys must be re-entered manually.
+                </p>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">📥</span> Import</div>
+                <div id="importAlert" class="alert"></div>
+
+                <div style="margin-bottom:20px;">
+                    <div style="font-weight:600;font-size:13px;color:var(--text);margin-bottom:6px;">Settings JSON Import</div>
+                    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Upload a settings JSON file (exported from this panel). Merges into existing settings — sensitive keys (API keys, passwords) are always skipped and must be set manually.</p>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <input type="file" id="importSettingsFile" accept=".json,application/json" style="flex:1;min-width:0;padding:7px 10px;font-size:13px;cursor:pointer;">
+                        <button class="btn btn-primary btn-sm" onclick="importSettingsJson()">⬆ Import JSON</button>
+                    </div>
+                </div>
+
+                <div class="section-title">— Full SQL Import —</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Upload a <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;">.sql</code> file to restore data. Runs SQL statements against the current active database. Errors for individual statements are reported but do not halt the import.</p>
+                <div style="padding:10px 12px;border-radius:8px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);font-size:12px;color:var(--warning);margin-bottom:12px;">
+                    ⚠ <strong>Use with caution.</strong> This runs raw SQL against your live database. Take an export first as a backup before importing.
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <input type="file" id="importSqlFile" accept=".sql,text/plain" style="flex:1;min-width:0;padding:7px 10px;font-size:13px;cursor:pointer;">
+                    <button class="btn btn-danger btn-sm" onclick="importSqlDump()">⬆ Import SQL</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">ℹ️</span> Current Status</div>
+                <div id="dbStatusInfo" style="font-size:13px;color:var(--muted);">Loading...</div>
+            </div>
+        </div>
+
+        <!-- ── FIREBASE ── -->
+        <div class="panel" id="panel-firebase">
+            <div id="fbAlert" class="alert"></div>
+
+            <!-- Status bar -->
+            <div class="card" id="fbStatusCard">
+                <div class="card-title"><span class="icon">🔥</span> Firebase / Firestore Status</div>
+                <div id="fbStatusBody" style="font-size:13px;color:var(--muted);">Loading...</div>
+            </div>
+
+            <!-- Auto-Sync -->
+            <div class="card">
+                <div class="card-title"><span class="icon">🔄</span> Automatic Sync (SQLite ↔ Firebase)</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+                    When Firebase credentials are configured, <strong>every write to SQLite is automatically mirrored to Firebase</strong> in the background.
+                    On each app startup, any empty SQLite tables are automatically restored from Firebase — so no data is ever lost across redeployments or restarts.
+                </p>
+                <div id="syncStatusBadge" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:16px;background:rgba(100,116,139,0.1);border:1px solid var(--border);color:var(--muted);">
+                    <span id="syncDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;"></span>
+                    <span id="syncStatusText">Checking...</span>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="syncPush()" id="btnSyncPush">
+                        ⬆ Push All to Firebase Now
+                    </button>
+                    <button class="btn btn-secondary" onclick="syncRestore()" id="btnSyncRestore">
+                        ⬇ Restore from Firebase
+                    </button>
+                </div>
+                <p style="font-size:12px;color:var(--muted);margin-top:10px;">
+                    <strong>Push:</strong> copies all local data to Firebase (overwrites). &nbsp;
+                    <strong>Restore:</strong> pulls from Firebase into any empty local tables (safe, non-destructive).
+                </p>
+            </div>
+
+            <!-- Set as Default DB -->
+            <div class="card">
+                <div class="card-title"><span class="icon">⚡</span> Use Firebase as Default Database</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+                    When enabled, all resumes, jobs, and contact messages will be stored in and read from Firestore. App settings (API keys, admin password, etc.) always stay in the local SQLite database.
+                </p>
+                <div id="fbDefaultStatus" style="font-size:13px;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);margin-bottom:14px;">
+                    Checking...
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" id="btnSetFirebaseDefault" onclick="setFirebaseDefault()">🔥 Set Firebase as Default</button>
+                    <button class="btn btn-secondary" id="btnUnsetFirebaseDefault" onclick="unsetFirebaseDefault()" style="display:none;">↩ Switch Back to SQLite</button>
+                </div>
+                <p style="font-size:12px;color:var(--muted);margin-top:10px;">Changes take effect immediately — no restart required.</p>
+            </div>
+
+            <!-- Setup Instructions -->
+            <div class="card">
+                <div class="card-title"><span class="icon">📋</span> Setup Instructions</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Follow these steps to connect your app to Google Cloud Firestore. This takes about 5 minutes.</p>
+
+                <div style="display:flex;flex-direction:column;gap:16px;">
+
+                    <div style="display:flex;gap:14px;align-items:flex-start;">
+                        <div style="width:28px;height:28px;border-radius:50%;background:rgba(79,70,229,0.2);border:2px solid var(--primary);color:var(--primary-l);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+                        <div>
+                            <div style="font-weight:600;font-size:13px;margin-bottom:4px;">Create a Firebase Project</div>
+                            <div style="font-size:13px;color:var(--muted);line-height:1.6;">
+                                Go to <a href="https://console.firebase.google.com" target="_blank" style="color:var(--primary-l);">console.firebase.google.com</a> and click <strong>Add project</strong>.<br>
+                                Enter a project name (e.g. <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;">resume-app-db</code>), then follow the wizard. You can disable Google Analytics if you don't need it.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:14px;align-items:flex-start;">
+                        <div style="width:28px;height:28px;border-radius:50%;background:rgba(79,70,229,0.2);border:2px solid var(--primary);color:var(--primary-l);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+                        <div>
+                            <div style="font-weight:600;font-size:13px;margin-bottom:4px;">Enable Cloud Firestore</div>
+                            <div style="font-size:13px;color:var(--muted);line-height:1.6;">
+                                In the left sidebar of Firebase Console, click <strong>Build → Firestore Database</strong>.<br>
+                                Click <strong>Create database</strong>, choose <strong>Start in production mode</strong>, and select your preferred region (e.g. <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;">us-east1</code>). Click <strong>Enable</strong>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:14px;align-items:flex-start;">
+                        <div style="width:28px;height:28px;border-radius:50%;background:rgba(79,70,229,0.2);border:2px solid var(--primary);color:var(--primary-l);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+                        <div>
+                            <div style="font-weight:600;font-size:13px;margin-bottom:4px;">Generate a Service Account Key</div>
+                            <div style="font-size:13px;color:var(--muted);line-height:1.6;">
+                                Go to <strong>Project Settings</strong> (gear icon ⚙️ next to <em>Project Overview</em>).<br>
+                                Click the <strong>Service accounts</strong> tab.<br>
+                                Click <strong>Generate new private key</strong> → <strong>Generate key</strong>.<br>
+                                A <code style="background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;">.json</code> file will download — this is your service account key.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:14px;align-items:flex-start;">
+                        <div style="width:28px;height:28px;border-radius:50%;background:rgba(79,70,229,0.2);border:2px solid var(--primary);color:var(--primary-l);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</div>
+                        <div>
+                            <div style="font-weight:600;font-size:13px;margin-bottom:4px;">Paste the Key Below &amp; Save</div>
+                            <div style="font-size:13px;color:var(--muted);line-height:1.6;">
+                                Open the downloaded JSON file in any text editor, select all (<kbd>Ctrl+A</kbd>), copy (<kbd>Ctrl+C</kbd>), and paste it into the textarea in the <strong>Credentials</strong> section below. Click <strong>Save Credentials</strong>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:14px;align-items:flex-start;">
+                        <div style="width:28px;height:28px;border-radius:50%;background:rgba(79,70,229,0.2);border:2px solid var(--primary);color:var(--primary-l);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">5</div>
+                        <div>
+                            <div style="font-weight:600;font-size:13px;margin-bottom:4px;">Update Firestore Security Rules</div>
+                            <div style="font-size:13px;color:var(--muted);line-height:1.6;">
+                                In Firebase Console → <strong>Firestore Database → Rules</strong>, replace the content with the following (allows server-side SDK only — no public access):<br>
+                                <pre style="background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;padding:10px;margin-top:8px;font-size:12px;overflow-x:auto;white-space:pre;">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}</pre>
+                                Click <strong>Publish</strong>. Your server uses the Admin SDK which bypasses these rules — this blocks any client-side access.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:14px;align-items:flex-start;">
+                        <div style="width:28px;height:28px;border-radius:50%;background:rgba(16,185,129,0.2);border:2px solid var(--success);color:var(--success);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✓</div>
+                        <div>
+                            <div style="font-weight:600;font-size:13px;margin-bottom:4px;">Test Connection &amp; Sync Data</div>
+                            <div style="font-size:13px;color:var(--muted);line-height:1.6;">
+                                Click <strong>Test Connection</strong> below. Once successful, use the <strong>Export to Firestore</strong> section to push your current database data into Firestore collections.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Credentials -->
+            <div class="card">
+                <div class="card-title"><span class="icon">🔑</span> Service Account Credentials</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+                    Paste the full contents of your Firebase service account JSON file here. It will be stored securely in your database and never exposed in exports.
+                </p>
+                <div class="form-group">
+                    <label>Service Account JSON</label>
+                    <textarea id="fbCredsInput" rows="8" placeholder='{"type": "service_account", "project_id": "...", ...}' style="font-family:monospace;font-size:12px;resize:vertical;"></textarea>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="fbSaveCreds()">💾 Save Credentials</button>
+                    <button class="btn btn-secondary" onclick="fbTest()">🔌 Test Connection</button>
+                    <button class="btn btn-danger btn-sm" onclick="fbClearCreds()" style="margin-left:auto;">🗑 Clear Credentials</button>
+                </div>
+            </div>
+
+            <!-- Export -->
+            <div class="card">
+                <div class="card-title"><span class="icon">📤</span> Export Local Data → Firestore</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+                    Push data from your local database into Firestore collections. Existing Firestore documents with the same ID will be overwritten. Sensitive fields (API keys, passwords) are always excluded.
+                </p>
+                <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="fb-exp-resumes" checked style="width:15px;height:15px;accent-color:var(--primary);">
+                        Resumes
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="fb-exp-jobs" checked style="width:15px;height:15px;accent-color:var(--primary);">
+                        Job Applications
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="fb-exp-settings" style="width:15px;height:15px;accent-color:var(--primary);">
+                        Settings (non-sensitive)
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="fb-exp-messages" style="width:15px;height:15px;accent-color:var(--primary);">
+                        Contact Messages
+                    </label>
+                </div>
+                <div id="fbExportProgress" style="display:none;font-size:13px;color:var(--muted);margin-bottom:10px;"></div>
+                <button class="btn btn-primary" onclick="fbExport()">⬆ Export to Firestore</button>
+            </div>
+
+            <!-- Import -->
+            <div class="card">
+                <div class="card-title"><span class="icon">📥</span> Import Firestore Data → Local DB</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+                    Pull records from Firestore into your local database. Only records whose ID doesn't already exist locally will be added (no overwrites). Useful for restoring from Firestore or migrating between environments.
+                </p>
+                <div style="padding:10px 12px;border-radius:8px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);font-size:12px;color:var(--warning);margin-bottom:14px;">
+                    ⚠ Import only adds missing records — it will not update or overwrite existing local data.
+                </div>
+                <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="fb-imp-resumes" checked style="width:15px;height:15px;accent-color:var(--primary);">
+                        Resumes
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                        <input type="checkbox" id="fb-imp-jobs" checked style="width:15px;height:15px;accent-color:var(--primary);">
+                        Job Applications
+                    </label>
+                </div>
+                <div id="fbImportProgress" style="display:none;font-size:13px;color:var(--muted);margin-bottom:10px;"></div>
+                <button class="btn btn-primary" onclick="fbImport()">⬇ Import from Firestore</button>
+            </div>
+
+        </div>
+
+    </div><!-- /.content -->
+</div><!-- /.main -->
+
+<!-- ── MODALS (outside .main so they overlay correctly) ── -->
+
+<!-- RESUME EDIT MODAL -->
+<div class="modal-overlay" id="resumeModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Edit Resume</div>
+            <button class="modal-close" onclick="closeModal('resumeModal')">✕</button>
+        </div>
+        <input type="hidden" id="editResumeId">
+        <div class="form-group"><label>Label</label><input type="text" id="editResumeLabel"></div>
+        <div class="form-group"><label>Match Score (%)</label><input type="number" id="editResumeScore" min="0" max="100" style="max-width:120px;"></div>
+        <div class="form-group"><label>Optimized Resume Text</label><textarea id="editResumeText" rows="7"></textarea></div>
+        <div class="form-group"><label>Cover Letter Text</label><textarea id="editResumeCover" rows="5"></textarea></div>
+        <div class="form-group"><label>Suggestions</label><textarea id="editResumeSuggestions" rows="3"></textarea></div>
+        <button class="btn btn-primary" onclick="saveResume()">Save Changes</button>
+    </div>
+</div>
+
+<!-- JOB EDIT MODAL -->
+<div class="modal-overlay" id="jobModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Edit Job Application</div>
+            <button class="modal-close" onclick="closeModal('jobModal')">✕</button>
+        </div>
+        <input type="hidden" id="editJobId">
+        <div class="form-row">
+            <div class="form-group"><label>Company</label><input type="text" id="editJobCompany"></div>
+            <div class="form-group"><label>Position</label><input type="text" id="editJobPosition"></div>
+        </div>
+        <div class="form-group">
+            <label>Status</label>
+            <select id="editJobStatus"><option>Applied</option><option>Interview</option><option>Offer</option><option>Rejected</option></select>
+        </div>
+        <div class="form-group"><label>Notes</label><textarea id="editJobNotes" rows="3"></textarea></div>
+        <div class="form-group"><label>Job Description</label><textarea id="editJobJd" rows="4"></textarea></div>
+        <button class="btn btn-primary" onclick="saveJob()">Save Changes</button>
+    </div>
+</div>
+
+<!-- JOB BOARD EDIT MODAL -->
+<div class="modal-overlay" id="jbModal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <div class="modal-title">Edit Job Post</div>
+            <button class="modal-close" onclick="closeModal('jbModal')">✕</button>
+        </div>
+        <div class="form-row" style="margin-bottom:0;">
+            <div class="form-group"><label>Job Title</label><input type="text" id="jbEditTitle"></div>
+            <div class="form-group"><label>Company</label><input type="text" id="jbEditCompany"></div>
+            <div class="form-group"><label>Location</label><input type="text" id="jbEditLocation"></div>
+            <div class="form-group"><label>Job Type</label>
+                <select id="jbEditType">
+                    <option value="remote">Remote</option>
+                    <option value="full-time">Full-time</option>
+                    <option value="part-time">Part-time</option>
+                    <option value="contract">Contract</option>
+                    <option value="freelance">Freelance</option>
+                    <option value="internship">Internship</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Salary / Compensation</label><input type="text" id="jbEditSalary" placeholder="e.g. $80k–$120k"></div>
+            <div class="form-group"><label>Apply URL</label><input type="text" id="jbEditUrl" placeholder="https://..."></div>
+        </div>
+        <div class="form-group"><label>Tags (comma-separated)</label><input type="text" id="jbEditTags" placeholder="Python, Remote, Backend"></div>
+        <div class="form-group">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <label style="margin-bottom:0;">Description</label>
+                <button class="btn btn-secondary btn-sm" onclick="rewriteJobPost()" id="rewriteBtn">✦ Rewrite with AI</button>
+            </div>
+            <textarea id="jbEditDesc" rows="12" style="font-family:inherit;font-size:13px;line-height:1.7;"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-success" onclick="saveJobPost('published')">✅ Save & Publish</button>
+            <button class="btn btn-secondary" onclick="saveJobPost('draft')">💾 Save as Draft</button>
+            <button class="btn btn-secondary" onclick="saveJobPost('archived')">📦 Archive</button>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-left:auto;cursor:pointer;">
+                <input type="checkbox" id="jbEditFeatured"> ⭐ Featured
+            </label>
+        </div>
+        <div id="jbEditAlert" class="alert" style="margin-top:10px;margin-bottom:0;"></div>
+        <input type="hidden" id="jbEditId">
+    </div>
+</div>
+
+<script>
+// ── State ───────────────────────────────────────────────────────────────────
+let currentPanel = 'overview';
+let allResumes = [];
+let allJobs = [];
+let settings = {};
+
+// ── Navigation ──────────────────────────────────────────────────────────────
+const panelOrder = ['overview','settings','ai','resumes','jobs','jobboard','messages','monetization','security','database','firebase'];
+const panelTitles = { overview:'Overview', settings:'App Settings', ai:'AI Configuration', resumes:'Manage Resumes', jobs:'Job Applications', jobboard:'Job Board Manager', messages:'Contact Messages', monetization:'Monetization & Analytics', security:'Security', database:'Database', firebase:'Firebase / Firestore' };
+
+function show(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-'+name).classList.add('active');
+    document.querySelectorAll('.nav-item')[panelOrder.indexOf(name)].classList.add('active');
+    document.getElementById('topbarTitle').textContent = panelTitles[name];
+    currentPanel = name;
+    if (name === 'resumes') loadResumes();
+    if (name === 'jobs') loadJobs();
+    if (name === 'jobboard') loadJobBoard('draft');
+    if (['settings','ai','security','monetization'].includes(name)) loadSettings();
+    if (name === 'monetization') loadAdsTxt();
+    if (name === 'database') loadDbConfig();
+    if (name === 'messages') loadMessages();
+    if (name === 'firebase') loadFirebaseStatus();
+}
+
+// ── Settings ────────────────────────────────────────────────────────────────
+async function loadSettings() {
+    const res = await fetch('/julisunkan/api/settings');
+    settings = await res.json();
+    for (const [k,v] of Object.entries(settings)) {
+        const el = document.getElementById('s-'+k);
+        if (el) el.value = v;
+    }
+    // Handle auto ads toggle (backed by hidden input)
+    const autoAdsChk = document.getElementById('s-adsense_auto_ads_toggle');
+    if (autoAdsChk) autoAdsChk.checked = (settings['adsense_auto_ads'] || '0') === '1';
+    // Handle hide footer toggle
+    const hideFooterChk = document.getElementById('s-hide_footer_toggle');
+    if (hideFooterChk) hideFooterChk.checked = (settings['hide_footer'] || '0') === '1';
+    // Handle fake stats toggle
+    const fakeStatsChk = document.getElementById('s-use_fake_stats_toggle');
+    if (fakeStatsChk) fakeStatsChk.checked = (settings['use_fake_stats'] || '0') === '1';
+    loadAdPlacements(settings);
+}
+
+async function importSettingsJson() {
+    const file = document.getElementById('importSettingsFile').files[0];
+    if (!file) { showAlert('importAlert', 'Please select a JSON file first.', false); return; }
+    const fd = new FormData();
+    fd.append('file', file);
+    showAlert('importAlert', '⏳ Importing settings...', true);
+    const res = await fetch('/julisunkan/api/settings/import-json', { method:'POST', body: fd });
+    const data = await res.json();
+    showAlert('importAlert', data.success ? '✅ ' + data.message : '❌ ' + (data.error || 'Import failed.'), data.success);
+    if (data.success) { document.getElementById('importSettingsFile').value = ''; loadSettings(); }
+}
+
+async function importSqlDump() {
+    const file = document.getElementById('importSqlFile').files[0];
+    if (!file) { showAlert('importAlert', 'Please select a .sql file first.', false); return; }
+    inlineConfirm('importAlert', 'This will run SQL directly against your live database. Make sure you have a backup.', async () => {
+        const fd = new FormData();
+        fd.append('file', file);
+        showAlert('importAlert', '⏳ Importing SQL dump...', true);
+        const res = await fetch('/julisunkan/api/database/import-sql', { method:'POST', body: fd });
+        const data = await res.json();
+        let msg = data.success ? '✅ ' + data.message : '❌ ' + (data.error || 'Import failed.');
+        if (data.errors && data.errors.length) msg += ' (' + data.errors.length + ' statement errors)';
+        showAlert('importAlert', msg, data.success);
+        if (data.success) document.getElementById('importSqlFile').value = '';
+    });
+}
+
+function loadAdPlacements(s) {
+    ['top_banner','results','sidebar'].forEach(p => {
+        const enabledKey = 'ad_' + p + '_enabled';
+        const slotKey = 'ad_' + p + '_slot';
+        const cb = document.getElementById(enabledKey);
+        const slotEl = document.getElementById(slotKey);
+        const lbl = document.getElementById('lbl_' + p);
+        if (cb) {
+            const isEnabled = (s[enabledKey] || '0') === '1';
+            cb.checked = isEnabled;
+            if (lbl) lbl.textContent = isEnabled ? 'Enabled' : 'Disabled';
+        }
+        if (slotEl) slotEl.value = s[slotKey] || '';
+    });
+}
+
+function clearPlacementTimer(p) {}
+
+async function saveAdPlacement(p) {
+    const enabledKey = 'ad_' + p + '_enabled';
+    const slotKey = 'ad_' + p + '_slot';
+    const cb = document.getElementById(enabledKey);
+    const slotEl = document.getElementById(slotKey);
+    const lbl = document.getElementById('lbl_' + p);
+    const payload = {};
+    payload[enabledKey] = (cb && cb.checked) ? '1' : '0';
+    payload[slotKey] = slotEl ? slotEl.value.trim() : '';
+    if (lbl) lbl.textContent = (cb && cb.checked) ? 'Enabled' : 'Disabled';
+    const res = await fetch('/julisunkan/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    showAlert('placementsAlert', data.success ? '✅ Placement saved.' : '❌ Error saving placement.', data.success);
+}
+
+async function saveSettings(keys) {
+    const payload = {};
+    for (const k of keys) {
+        const el = document.getElementById('s-'+k);
+        if (el) payload[k] = el.value;
+    }
+    const res = await fetch('/julisunkan/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    const alertMap = { settings:'settingsAlert', ai:'aiAlert', monetization:'monetizationAlert', security:'secAlert' };
+    showAlert(alertMap[currentPanel] || 'settingsAlert', data.success ? 'Settings saved successfully.' : 'Error saving settings.', data.success);
+}
+
+async function saveGroqKey() {
+    const key = document.getElementById('s-groq_api_key').value.trim();
+    if (!key || key === '••••••••') { showAlert('aiAlert', 'Please enter a valid API key.', false); return; }
+    const res = await fetch('/julisunkan/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ groq_api_key: key }) });
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById('s-groq_api_key').value = '••••••••';
+        showAlert('aiAlert', '✅ API key saved successfully.', true);
+    } else {
+        showAlert('aiAlert', 'Error saving API key.', false);
+    }
+}
+
+function toggleApiKey() {
+    const inp = document.getElementById('s-groq_api_key');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+async function testGroq(fromAiPanel) {
+    const resultEl = fromAiPanel ? document.getElementById('groqTestResult') : document.getElementById('aiStatusMsg');
+    if (fromAiPanel) { resultEl.style.display = 'block'; resultEl.textContent = 'Testing...'; resultEl.style.color = 'var(--muted)'; }
+    else { document.getElementById('aiStatusPill').innerHTML = '<span class="dot dot-yellow"></span> Testing...'; }
+    const res = await fetch('/julisunkan/api/settings/test-groq', { method:'POST' });
+    const data = await res.json();
+    if (data.success) {
+        if (fromAiPanel) { resultEl.textContent = '✅ Connection OK — Model responded: "' + data.response + '"'; resultEl.style.color = 'var(--success)'; }
+        else { document.getElementById('aiStatusPill').innerHTML = '<span class="dot dot-green"></span> Connected'; resultEl.textContent = 'Groq API is working correctly.'; }
+    } else {
+        if (fromAiPanel) { resultEl.textContent = '❌ ' + data.error; resultEl.style.color = 'var(--danger)'; }
+        else { document.getElementById('aiStatusPill').innerHTML = '<span class="dot dot-red"></span> Not Connected'; resultEl.textContent = data.error; }
+    }
+}
+
+// ── Password ─────────────────────────────────────────────────────────────────
+async function changePassword() {
+    const current = document.getElementById('currentPw').value;
+    const newPw = document.getElementById('newPw').value;
+    const confirm = document.getElementById('confirmPw').value;
+    if (!current || !newPw) { showAlert('secAlert', 'All fields are required.', false); return; }
+    if (newPw !== confirm) { showAlert('secAlert', 'New passwords do not match.', false); return; }
+    if (newPw.length < 6) { showAlert('secAlert', 'Password must be at least 6 characters.', false); return; }
+    const verRes = await fetch('/julisunkan/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: current }) });
+    const verData = await verRes.json();
+    if (!verData.success) { showAlert('secAlert', 'Current password is incorrect.', false); return; }
+    const res = await fetch('/julisunkan/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ admin_password: newPw }) });
+    const data = await res.json();
+    if (data.success) {
+        showAlert('secAlert', '✅ Password updated successfully.', true);
+        document.getElementById('currentPw').value='';
+        document.getElementById('newPw').value='';
+        document.getElementById('confirmPw').value='';
+    } else {
+        showAlert('secAlert', 'Error updating password.', false);
+    }
+}
+
+// ── Resumes ──────────────────────────────────────────────────────────────────
+async function loadResumes() {
+    const res = await fetch('/julisunkan/api/resumes');
+    allResumes = await res.json();
+    renderResumes(allResumes);
+}
+
+function renderResumes(list) {
+    const tbody = document.getElementById('resumesTbody');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">No resumes saved yet.</td></tr>'; return; }
+    tbody.innerHTML = list.map(r => `
+        <tr>
+            <td><input type="checkbox" class="resume-cb" data-id="${r.id}"></td>
+            <td class="text-muted">${r.id}</td>
+            <td><strong>${r.label || 'Unnamed'}</strong></td>
+            <td><span style="color:${scoreColor(r.match_score)}">${r.match_score != null ? Math.round(r.match_score)+'%' : '—'}</span></td>
+            <td class="text-muted">${r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</td>
+            <td>
+                <div class="tbl-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="openResumeModal(${r.id})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteResume(${r.id})">Del</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function scoreColor(s) {
+    if (!s) return 'var(--muted)';
+    return s >= 70 ? 'var(--success)' : s >= 40 ? 'var(--warning)' : 'var(--danger)';
+}
+
+function filterResumes() {
+    const q = document.getElementById('resumeSearch').value.toLowerCase();
+    renderResumes(allResumes.filter(r => (r.label||'').toLowerCase().includes(q)));
+}
+
+function openResumeModal(id) {
+    const r = allResumes.find(x => x.id===id);
+    if (!r) return;
+    document.getElementById('editResumeId').value = id;
+    document.getElementById('editResumeLabel').value = r.label || '';
+    document.getElementById('editResumeScore').value = r.match_score || '';
+    document.getElementById('editResumeText').value = r.optimized_text || '';
+    document.getElementById('editResumeCover').value = r.cover_letter || '';
+    document.getElementById('editResumeSuggestions').value = r.suggestions || '';
+    document.getElementById('resumeModal').classList.add('open');
+}
+
+async function saveResume() {
+    const id = document.getElementById('editResumeId').value;
+    const payload = {
+        label: document.getElementById('editResumeLabel').value,
+        match_score: parseFloat(document.getElementById('editResumeScore').value) || 0,
+        optimized_text: document.getElementById('editResumeText').value,
+        cover_letter: document.getElementById('editResumeCover').value,
+        suggestions: document.getElementById('editResumeSuggestions').value,
+    };
+    await fetch('/julisunkan/api/resumes/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    closeModal('resumeModal');
+    loadResumes();
+}
+
+async function deleteResume(id) {
+    inlineConfirm('resumesAlert', 'Delete this resume permanently?', async () => {
+        await fetch('/julisunkan/api/resumes/'+id, { method:'DELETE' });
+        loadResumes();
+    });
+}
+
+async function bulkDeleteResumes() {
+    const ids = [...document.querySelectorAll('.resume-cb:checked')].map(c => parseInt(c.dataset.id));
+    if (!ids.length) { showAlert('resumesAlert', 'Select at least one resume.', false); return; }
+    inlineConfirm('resumesAlert', `Delete ${ids.length} resume(s) permanently?`, async () => {
+        await fetch('/julisunkan/api/resumes/bulk-delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ids }) });
+        loadResumes();
+    });
+}
+
+async function nukeResumes() {
+    inlineConfirm('resumesAlert', 'This will permanently delete ALL resumes. This cannot be undone.', async () => {
+        const ids = allResumes.map(r => r.id);
+        if (ids.length) await fetch('/julisunkan/api/resumes/bulk-delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ids }) });
+        loadResumes();
+        showAlert('secAlert', `Deleted ${ids.length} resumes.`, true);
+    });
+}
+
+// ── Jobs ──────────────────────────────────────────────────────────────────────
+async function loadJobs() {
+    const res = await fetch('/julisunkan/api/jobs');
+    allJobs = await res.json();
+    renderJobs(allJobs);
+}
+
+function renderJobs(list) {
+    const tbody = document.getElementById('jobsTbody');
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">No job applications yet.</td></tr>'; return; }
+    const statusClass = { Applied:'badge-applied', Interview:'badge-interview', Offer:'badge-offer', Rejected:'badge-rejected' };
+    tbody.innerHTML = list.map(j => `
+        <tr>
+            <td><input type="checkbox" class="job-cb" data-id="${j.id}"></td>
+            <td class="text-muted">${j.id}</td>
+            <td><strong>${j.company}</strong></td>
+            <td><span class="text-truncate">${j.position}</span></td>
+            <td><span class="badge ${statusClass[j.status]||'badge-applied'}">${j.status}</span></td>
+            <td class="text-muted">${j.applied_date ? new Date(j.applied_date).toLocaleDateString() : '—'}</td>
+            <td>
+                <div class="tbl-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="openJobModal(${j.id})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteJob(${j.id})">Del</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterJobs() {
+    const q = document.getElementById('jobSearch').value.toLowerCase();
+    renderJobs(allJobs.filter(j => j.company.toLowerCase().includes(q) || j.position.toLowerCase().includes(q)));
+}
+
+function openJobModal(id) {
+    const j = allJobs.find(x => x.id===id);
+    if (!j) return;
+    document.getElementById('editJobId').value = id;
+    document.getElementById('editJobCompany').value = j.company || '';
+    document.getElementById('editJobPosition').value = j.position || '';
+    document.getElementById('editJobStatus').value = j.status || 'Applied';
+    document.getElementById('editJobNotes').value = j.notes || '';
+    document.getElementById('editJobJd').value = j.job_description || '';
+    document.getElementById('jobModal').classList.add('open');
+}
+
+async function saveJob() {
+    const id = document.getElementById('editJobId').value;
+    const payload = {
+        company: document.getElementById('editJobCompany').value,
+        position: document.getElementById('editJobPosition').value,
+        status: document.getElementById('editJobStatus').value,
+        notes: document.getElementById('editJobNotes').value,
+        job_description: document.getElementById('editJobJd').value,
+    };
+    await fetch('/julisunkan/api/jobs/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    closeModal('jobModal');
+    loadJobs();
+}
+
+async function deleteJob(id) {
+    inlineConfirm('jobsAlert', 'Delete this job application? This cannot be undone.', async () => {
+        await fetch('/julisunkan/api/jobs/'+id, { method:'DELETE' });
+        loadJobs();
+    });
+}
+
+async function bulkDeleteJobs() {
+    const ids = [...document.querySelectorAll('.job-cb:checked')].map(c => parseInt(c.dataset.id));
+    if (!ids.length) { showAlert('jobsAlert', 'Select at least one job.', false); return; }
+    inlineConfirm('jobsAlert', `Delete ${ids.length} job(s) permanently?`, async () => {
+        await fetch('/julisunkan/api/jobs/bulk-delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ids }) });
+        loadJobs();
+    });
+}
+
+async function nukeJobs() {
+    inlineConfirm('jobsAlert', 'Delete ALL job applications? This cannot be undone.', async () => {
+        const ids = allJobs.map(j => j.id);
+        if (ids.length) await fetch('/julisunkan/api/jobs/bulk-delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ids }) });
+        loadJobs();
+        showAlert('secAlert', `Deleted ${ids.length} job applications.`, true);
+    });
+}
+
+// ── Job Board ────────────────────────────────────────────────────────────────
+let jbCurrentStatus = 'draft';
+let jbAllPosts = [];
+
+async function loadJobBoard(status) {
+    jbCurrentStatus = status;
+    ['draft','published','archived','all'].forEach(s => {
+        const btn = document.getElementById('tab-' + s);
+        if (btn) {
+            if (s === status) {
+                btn.className = 'btn btn-sm';
+                btn.style.cssText = 'background:rgba(79,70,229,.2);color:#818cf8;';
+            } else {
+                btn.className = 'btn btn-secondary btn-sm';
+                btn.style.cssText = '';
+            }
+        }
+    });
+    const res = await fetch('/api/jobboard/admin/posts?status=' + status);
+    const data = await res.json();
+    jbAllPosts = data.posts;
+    const c = data.counts;
+    document.getElementById('jbCountDraft').textContent = c.draft;
+    document.getElementById('jbCountPublished').textContent = c.published;
+    document.getElementById('jbCountArchived').textContent = c.archived;
+    document.getElementById('jbCountTotal').textContent = c.total;
+    renderJobBoardTable(jbAllPosts);
+}
+
+function renderJobBoardTable(posts) {
+    const tbody = document.getElementById('jbTbody');
+    if (!posts.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px;">
+            No ${jbCurrentStatus === 'all' ? '' : jbCurrentStatus} posts found.
+            ${jbCurrentStatus === 'draft' ? '<br><small>Use "Fetch Jobs" above to pull from external sources.</small>' : ''}
+        </td></tr>`;
+        return;
+    }
+    tbody.innerHTML = posts.map(p => {
+        const tags = Array.isArray(p.tags) ? p.tags.slice(0,2).join(', ') : '';
+        const statusColor = {draft:'var(--warning)',published:'var(--success)',archived:'var(--muted)'}[p.status]||'var(--muted)';
+        return `<tr>
+            <td><input type="checkbox" class="jb-check" data-id="${p.id}"></td>
+            <td style="color:var(--muted);font-size:12px;">${p.id}</td>
+            <td style="max-width:220px;">
+                <div style="font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escHtmlAdmin(p.title)}">${escHtmlAdmin(p.title)}</div>
+                ${tags ? `<div style="font-size:11px;color:var(--muted);">${escHtmlAdmin(tags)}</div>` : ''}
+            </td>
+            <td style="font-size:13px;">${escHtmlAdmin(p.company||'—')}</td>
+            <td><span style="font-size:11px;background:rgba(100,116,139,.1);color:#94a3b8;padding:2px 8px;border-radius:8px;">${escHtmlAdmin(p.source)}</span></td>
+            <td style="font-size:12px;color:var(--muted);">${escHtmlAdmin(p.job_type||'—')}</td>
+            <td><span style="font-size:12px;color:${statusColor};font-weight:600;">${p.status}</span></td>
+            <td style="text-align:center;">${p.ai_rewritten ? '<span title="AI Rewritten" style="color:#a78bfa;">✦</span>' : '<span style="color:#1e1e3a;">—</span>'}</td>
+            <td>
+                <div class="tbl-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="openJbEdit(${p.id})">Edit</button>
+                    ${p.status !== 'published' ? `<button class="btn btn-success btn-sm" onclick="jbQuickAction(${p.id},'published')">Publish</button>` : ''}
+                    ${p.status === 'published' ? `<button class="btn btn-secondary btn-sm" onclick="jbQuickAction(${p.id},'draft')">Unpublish</button>` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="jbDelete(${p.id})">Del</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function jbToggleAll() {
+    const checked = document.getElementById('jbSelectAll').checked;
+    document.querySelectorAll('.jb-check').forEach(c => c.checked = checked);
+}
+
+async function jbQuickAction(id, status) {
+    await fetch('/api/jobboard/admin/posts/' + id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({status}) });
+    loadJobBoard(jbCurrentStatus);
+}
+
+async function jbDelete(id) {
+    inlineConfirm('jbAlert', 'Delete this job post permanently?', async () => {
+        await fetch('/api/jobboard/admin/posts/' + id, { method:'DELETE' });
+        loadJobBoard(jbCurrentStatus);
+    });
+}
+
+async function bulkJobBoardAction(action) {
+    const ids = [...document.querySelectorAll('.jb-check:checked')].map(c => parseInt(c.dataset.id));
+    if (!ids.length) { showAlert('jbAlert', 'No posts selected.', false); return; }
+    if (action === 'delete') {
+        inlineConfirm('jbAlert', `Delete ${ids.length} post(s) permanently?`, async () => {
+            const res = await fetch('/api/jobboard/admin/posts/bulk', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action, ids}) });
+            const data = await res.json();
+            showAlert('jbAlert', data.success ? `✅ ${data.affected} post(s) deleted.` : '❌ Error: ' + data.error, data.success);
+            loadJobBoard(jbCurrentStatus);
+        });
+        return;
+    }
+    const res = await fetch('/api/jobboard/admin/posts/bulk', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action, ids}) });
+    const data = await res.json();
+    showAlert('jbAlert', data.success ? `✅ ${data.affected} post(s) ${action}d.` : '❌ Error: ' + data.error, data.success);
+    loadJobBoard(jbCurrentStatus);
+}
+
+async function openJbEdit(id) {
+    const res = await fetch('/api/jobboard/admin/posts/' + id);
+    const p = await res.json();
+    document.getElementById('jbEditId').value = id;
+    document.getElementById('jbEditTitle').value = p.title || '';
+    document.getElementById('jbEditCompany').value = p.company || '';
+    document.getElementById('jbEditLocation').value = p.location || '';
+    document.getElementById('jbEditType').value = p.job_type || 'remote';
+    document.getElementById('jbEditSalary').value = p.salary || '';
+    document.getElementById('jbEditUrl').value = p.apply_url || '';
+    const tags = Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags || '');
+    document.getElementById('jbEditTags').value = tags;
+    document.getElementById('jbEditDesc').value = p.description_raw || p.description || '';
+    document.getElementById('jbEditFeatured').checked = !!p.featured;
+    document.getElementById('jbEditAlert').textContent = '';
+    document.getElementById('jbModal').classList.add('open');
+}
+
+async function saveJobPost(status) {
+    const id = document.getElementById('jbEditId').value;
+    const payload = {
+        title: document.getElementById('jbEditTitle').value,
+        company: document.getElementById('jbEditCompany').value,
+        location: document.getElementById('jbEditLocation').value,
+        job_type: document.getElementById('jbEditType').value,
+        salary: document.getElementById('jbEditSalary').value,
+        apply_url: document.getElementById('jbEditUrl').value,
+        tags: document.getElementById('jbEditTags').value,
+        description: document.getElementById('jbEditDesc').value,
+        featured: document.getElementById('jbEditFeatured').checked,
+        status,
+    };
+    const res = await fetch('/api/jobboard/admin/posts/' + id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.success) {
+        closeModal('jbModal');
+        loadJobBoard(jbCurrentStatus);
+        showAlert('jbAlert', '✅ Post saved as ' + status + '.', true);
+    } else {
+        showAlert('jbEditAlert', '❌ Error saving post.', false);
+    }
+}
+
+async function rewriteJobPost() {
+    const id = document.getElementById('jbEditId').value;
+    const btn = document.getElementById('rewriteBtn');
+    btn.textContent = '⏳ Rewriting...';
+    btn.disabled = true;
+    const res = await fetch('/api/jobboard/admin/posts/' + id + '/rewrite', { method:'POST' });
+    const data = await res.json();
+    btn.textContent = '✦ Rewrite with AI';
+    btn.disabled = false;
+    if (data.success) {
+        document.getElementById('jbEditDesc').value = data.description;
+        showAlert('jbEditAlert', '✅ Description rewritten by AI. Review before publishing.', true);
+    } else {
+        showAlert('jbEditAlert', '❌ ' + (data.error || 'Rewrite failed.'), false);
+    }
+}
+
+async function fetchJobsNow() {
+    const btn = document.getElementById('fetchBtn');
+    btn.textContent = '⏳ Fetching...';
+    btn.disabled = true;
+    const sources = [];
+    if (document.getElementById('src_remotive').checked) sources.push('remotive');
+    if (document.getElementById('src_arbeitnow').checked) sources.push('arbeitnow');
+    if (document.getElementById('src_remoteok').checked) sources.push('remoteok');
+    if (document.getElementById('src_adzuna').checked) sources.push('adzuna');
+    if (!sources.length) { showAlert('jbAlert', 'Select at least one source.', false); btn.textContent='🔄 Fetch Jobs'; btn.disabled=false; return; }
+    const payload = {
+        sources,
+        search: document.getElementById('jbFetchSearch').value.trim(),
+        limit_per_source: parseInt(document.getElementById('jbFetchLimit').value),
+    };
+    try {
+        const res = await fetch('/api/jobboard/admin/fetch', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (data.success) {
+            showAlert('jbAlert', `✅ Fetched ${data.total} posts — ${data.added} new, ${data.skipped} duplicates skipped.`, true);
+            loadJobBoard('draft');
+        } else {
+            showAlert('jbAlert', '❌ Fetch error: ' + data.error, false);
+        }
+    } catch(e) {
+        showAlert('jbAlert', '❌ Network error: ' + e.message, false);
+    }
+    btn.textContent = '🔄 Fetch Jobs';
+    btn.disabled = false;
+}
+
+function escHtmlAdmin(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── ads.txt ───────────────────────────────────────────────────────────────────
+async function loadAdsTxt() {
+    try {
+        const res = await fetch('/julisunkan/api/ads-txt');
+        const data = await res.json();
+        document.getElementById('adsTxtContent').value = data.content || '';
+    } catch(e) {}
+}
+
+async function saveAdsTxtContent() {
+    const content = document.getElementById('adsTxtContent').value;
+    const res = await fetch('/julisunkan/api/ads-txt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+    });
+    const data = await res.json();
+    const alertEl = document.getElementById('adsTxtAlert');
+    alertEl.textContent = data.success ? '✅ ads.txt saved. Accessible at /ads.txt' : '❌ Error: ' + (data.error || 'Unknown error');
+    alertEl.className = 'alert alert-show ' + (data.success ? 'alert-ok' : 'alert-err');
+    setTimeout(() => alertEl.classList.remove('alert-show'), 5000);
+}
+
+async function uploadAdsTxt() {
+    const fileInput = document.getElementById('adsTxtFile');
+    const file = fileInput.files[0];
+    const alertEl = document.getElementById('adsTxtAlert');
+    if (!file) {
+        alertEl.textContent = 'Please select a file first.';
+        alertEl.className = 'alert alert-show alert-err';
+        setTimeout(() => alertEl.classList.remove('alert-show'), 4000);
+        return;
+    }
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch('/julisunkan/api/ads-txt', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.success) {
+        alertEl.textContent = '✅ ads.txt uploaded. Accessible at /ads.txt';
+        alertEl.className = 'alert alert-show alert-ok';
+        fileInput.value = '';
+        loadAdsTxt();
+    } else {
+        alertEl.textContent = '❌ Upload failed: ' + (data.error || 'Unknown error');
+        alertEl.className = 'alert alert-show alert-err';
+    }
+    setTimeout(() => alertEl.classList.remove('alert-show'), 5000);
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function toggleAll(type) {
+    const checked = document.getElementById(type+'SelectAll').checked;
+    document.querySelectorAll('.'+type+'-cb').forEach(cb => cb.checked = checked);
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+}
+
+function showAlert(id, msg, ok) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = 'block';
+    el.className = 'alert alert-show ' + (ok ? 'alert-ok' : 'alert-err');
+    if (ok) setTimeout(() => { el.classList.remove('alert-show'); el.style.display='none'; }, 4000);
+}
+
+function inlineConfirm(divId, msg, callback) {
+    const el = document.getElementById(divId);
+    if (!el) return;
+    el.style.display = 'block';
+    el.className = 'alert alert-show alert-err';
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="flex:1;">⚠️ ${msg}</span>
+        <button class="btn btn-danger btn-sm" id="${divId}_yes">Confirm</button>
+        <button class="btn btn-secondary btn-sm" id="${divId}_no">Cancel</button>
+    </div>`;
+    document.getElementById(divId+'_yes').onclick = () => {
+        el.style.display='none'; el.innerHTML='';
+        callback();
+    };
+    document.getElementById(divId+'_no').onclick = () => {
+        el.style.display='none'; el.innerHTML='';
+    };
+}
+
+async function doLogout() {
+    await fetch('/julisunkan/logout', { method:'POST' });
+    window.location.href = '/julisunkan';
+}
+
+// ── Database ──────────────────────────────────────────────────────────────────
+async function loadDbConfig() {
+    try {
+        const res = await fetch('/julisunkan/api/database/config');
+        const cfg = await res.json();
+        document.getElementById('db-type').value = cfg.db_type || 'sqlite';
+        document.getElementById('db-mysql_host').value = cfg.mysql_host || 'localhost';
+        document.getElementById('db-mysql_port').value = cfg.mysql_port || 3306;
+        document.getElementById('db-mysql_database').value = cfg.mysql_database || '';
+        document.getElementById('db-mysql_user').value = cfg.mysql_user || '';
+        document.getElementById('db-mysql_password').value = cfg.mysql_password ? '••••••••' : '';
+        toggleMysqlFields();
+        const info = document.getElementById('dbStatusInfo');
+        const activeDb = cfg.active_db || cfg.db_type || 'sqlite';
+        if (activeDb === 'firebase' || cfg.db_type === 'firebase') {
+            info.innerHTML = `<span style="color:#f97316">●</span> Active: <strong>Firebase / Firestore</strong> — all resumes, jobs, and messages read from &amp; written to Firestore. Settings remain in local SQLite.`;
+        } else if (activeDb === 'mysql') {
+            info.innerHTML = `<span style="color:var(--success)">●</span> Active: <strong>MySQL</strong> — ${escHtmlAdmin(cfg.mysql_host)}:${cfg.mysql_port}/${escHtmlAdmin(cfg.mysql_database)}`;
+        } else if (cfg.fallback_warning) {
+            info.innerHTML = `<span style="color:var(--warning)">●</span> <strong>Fallback: SQLite</strong> — MySQL (${escHtmlAdmin(cfg.mysql_host)}) was unreachable at startup. The app is using the local SQLite database. Fix the MySQL connection and use "Save &amp; Apply" to retry.`;
+        } else {
+            info.innerHTML = `<span style="color:var(--primary-l)">●</span> Active: <strong>SQLite</strong> — resume_app.db (local file)`;
+        }
+    } catch(e) {
+        document.getElementById('dbStatusInfo').textContent = 'Could not load database config.';
+    }
+}
+
+function toggleMysqlFields() {
+    const val = document.getElementById('db-type').value;
+    document.getElementById('mysqlFields').style.display = val === 'mysql' ? 'block' : 'none';
+    const fbNote = document.getElementById('dbFirebaseNote');
+    if (fbNote) fbNote.style.display = val === 'firebase' ? 'block' : 'none';
+}
+
+function toggleDbPw() {
+    const el = document.getElementById('db-mysql_password');
+    el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+async function testMysqlConn() {
+    const payload = {
+        mysql_host: document.getElementById('db-mysql_host').value,
+        mysql_port: parseInt(document.getElementById('db-mysql_port').value) || 3306,
+        mysql_database: document.getElementById('db-mysql_database').value,
+        mysql_user: document.getElementById('db-mysql_user').value,
+        mysql_password: document.getElementById('db-mysql_password').value,
+        use_ssl: document.getElementById('db-use_ssl').checked,
+    };
+    const resultEl = document.getElementById('mysqlTestResult');
+    resultEl.style.display = 'block';
+    resultEl.textContent = '⏳ Testing connection (up to 8s)...';
+    resultEl.style.color = 'var(--muted)';
+    resultEl.style.borderColor = 'var(--border)';
+    try {
+        const res = await fetch('/julisunkan/api/database/test-mysql', {
+            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            resultEl.textContent = '✅ ' + data.message;
+            resultEl.style.color = 'var(--success)';
+            resultEl.style.borderColor = 'rgba(16,185,129,0.3)';
+        } else {
+            resultEl.textContent = '❌ ' + data.error;
+            resultEl.style.color = 'var(--danger)';
+            resultEl.style.borderColor = 'rgba(239,68,68,0.3)';
+        }
+    } catch(e) {
+        resultEl.textContent = '❌ Network error: ' + e.message;
+        resultEl.style.color = 'var(--danger)';
+        resultEl.style.borderColor = 'rgba(239,68,68,0.3)';
+    }
+}
+
+async function saveDbConfig() {
+    const payload = {
+        db_type: document.getElementById('db-type').value,
+        mysql_host: document.getElementById('db-mysql_host').value,
+        mysql_port: parseInt(document.getElementById('db-mysql_port').value) || 3306,
+        mysql_database: document.getElementById('db-mysql_database').value,
+        mysql_user: document.getElementById('db-mysql_user').value,
+        mysql_password: document.getElementById('db-mysql_password').value,
+    };
+    const res = await fetch('/julisunkan/api/database/config', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    showAlert('dbAlert', data.success ? '✅ Configuration saved. Restart the app to apply.' : '❌ Save failed.', data.success);
+    if (data.success) loadDbConfig();
+}
+
+async function applyDbConfig() {
+    await saveDbConfig();
+    showAlert('dbAlert', '⏳ Saved. Restarting application...', true);
+    try {
+        await fetch('/julisunkan/api/database/restart', { method: 'POST' });
+    } catch(e) {}
+    setTimeout(() => location.reload(), 3500);
+}
+
+// ── Messages ─────────────────────────────────────────────────────────────────
+
+let allMessages = [];
+let currentMsgId = null;
+
+function _fmtMsgDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const diff = Math.floor((Date.now() - d) / 86400000);
+    if (diff === 0) return 'Today ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+    if (diff === 1) return 'Yesterday';
+    if (diff < 7)  return diff + 'd ago';
+    return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+async function loadMessages() {
+    try {
+        const res = await fetch('/julisunkan/api/messages');
+        allMessages = await res.json();
+        renderMessages(allMessages);
+        const unread = allMessages.filter(m => !m.is_read).length;
+        document.getElementById('msgSummary').textContent =
+            `${allMessages.length} message${allMessages.length !== 1 ? 's' : ''} · ${unread} unread`;
+        updateMsgBadge(unread);
+    } catch(e) {
+        document.getElementById('msgSummary').textContent = 'Failed to load messages.';
+    }
+}
+
+function updateMsgBadge(unread) {
+    const badge = document.getElementById('msgBadge');
+    const ovUnread = document.getElementById('ov-unread');
+    if (unread > 0) {
+        badge.textContent = unread;
+        badge.style.display = 'inline';
+        ovUnread.textContent = `(${unread} new)`;
+        ovUnread.style.display = 'inline';
+    } else {
+        badge.style.display = 'none';
+        ovUnread.style.display = 'none';
+    }
+}
+
+function renderMessages(msgs) {
+    const tbody = document.getElementById('msgTbody');
+    if (!msgs.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">No messages yet. Messages submitted via the contact form will appear here.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = msgs.map(m => {
+        const unreadDot = m.is_read ? '' : `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4444;margin-right:6px;flex-shrink:0;"></span>`;
+        const nameStyle = m.is_read ? 'color:var(--muted);' : 'font-weight:600;color:var(--text);';
+        return `<tr style="cursor:pointer;" onclick="openMsg(${m.id})">
+            <td onclick="event.stopPropagation()"><input type="checkbox" class="msg-cb" data-id="${m.id}"></td>
+            <td style="${nameStyle}">${unreadDot}${esc(m.name)} <span style="color:var(--muted);font-size:12px;">&lt;${esc(m.email)}&gt;</span></td>
+            <td style="${nameStyle}font-size:13px;">${esc(m.subject)}</td>
+            <td style="font-size:12px;color:var(--muted);white-space:nowrap;">${_fmtMsgDate(m.created_at)}</td>
+            <td>
+                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openMsg(${m.id})">View</button>
+                <button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#fca5a5;border:1px solid rgba(239,68,68,.25);" onclick="event.stopPropagation();deleteMsg(${m.id})">✕</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function openMsg(id) {
+    const m = allMessages.find(x => x.id === id);
+    if (!m) return;
+    currentMsgId = id;
+    document.getElementById('mdSubject').textContent = m.subject;
+    document.getElementById('mdFrom').textContent = m.name;
+    document.getElementById('mdEmail').textContent = m.email;
+    document.getElementById('mdEmail').href = `mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject)}`;
+    document.getElementById('mdReplyBtn').href = `mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject)}`;
+    document.getElementById('mdDate').textContent = m.created_at ? new Date(m.created_at).toLocaleString() : '';
+    document.getElementById('mdBody').textContent = m.message;
+    document.getElementById('mdToggleRead').textContent = m.is_read ? '◯ Mark Unread' : '✓ Mark Read';
+    const modal = document.getElementById('msgModal');
+    modal.style.display = 'flex';
+    if (!m.is_read) {
+        try {
+            await fetch(`/julisunkan/api/messages/${id}/read`, { method: 'POST' });
+            m.is_read = true;
+            const unread = allMessages.filter(x => !x.is_read).length;
+            updateMsgBadge(unread);
+            renderMessages(allMessages);
+        } catch(e) {}
+    }
+}
+
+function closeMsgModal() {
+    document.getElementById('msgModal').style.display = 'none';
+    currentMsgId = null;
+}
+
+async function toggleMsgRead() {
+    if (!currentMsgId) return;
+    const m = allMessages.find(x => x.id === currentMsgId);
+    if (!m) return;
+    const endpoint = m.is_read ? 'unread' : 'read';
+    try {
+        await fetch(`/julisunkan/api/messages/${currentMsgId}/${endpoint}`, { method: 'POST' });
+        m.is_read = !m.is_read;
+        document.getElementById('mdToggleRead').textContent = m.is_read ? '◯ Mark Unread' : '✓ Mark Read';
+        const unread = allMessages.filter(x => !x.is_read).length;
+        updateMsgBadge(unread);
+        renderMessages(allMessages);
+    } catch(e) {}
+}
+
+async function deleteMsg(id) {
+    if (!confirm('Delete this message?')) return;
+    try {
+        await fetch(`/julisunkan/api/messages/${id}`, { method: 'DELETE' });
+        allMessages = allMessages.filter(m => m.id !== id);
+        renderMessages(allMessages);
+        const unread = allMessages.filter(m => !m.is_read).length;
+        updateMsgBadge(unread);
+        document.getElementById('msgSummary').textContent =
+            `${allMessages.length} message${allMessages.length !== 1 ? 's' : ''} · ${unread} unread`;
+    } catch(e) {}
+}
+
+async function deleteMsgFromModal() {
+    if (!currentMsgId) return;
+    closeMsgModal();
+    await deleteMsg(currentMsgId);
+}
+
+function toggleMsgSelect(checked) {
+    document.querySelectorAll('.msg-cb').forEach(cb => cb.checked = checked);
+}
+
+async function bulkDeleteMessages() {
+    const ids = [...document.querySelectorAll('.msg-cb:checked')].map(cb => parseInt(cb.dataset.id));
+    if (!ids.length) { alert('Select messages to delete first.'); return; }
+    if (!confirm(`Delete ${ids.length} message(s)?`)) return;
+    try {
+        await fetch('/julisunkan/api/messages/bulk-delete', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ ids })
+        });
+        allMessages = allMessages.filter(m => !ids.includes(m.id));
+        renderMessages(allMessages);
+        const unread = allMessages.filter(m => !m.is_read).length;
+        updateMsgBadge(unread);
+        document.getElementById('msgSummary').textContent =
+            `${allMessages.length} message${allMessages.length !== 1 ? 's' : ''} · ${unread} unread`;
+        document.getElementById('msgSelectAll').checked = false;
+    } catch(e) {}
+}
+
+// Close modal when clicking outside
+document.getElementById('msgModal').addEventListener('click', function(e) {
+    if (e.target === this) closeMsgModal();
+});
+
+// ── Firebase ──────────────────────────────────────────────────────────────────
+async function loadFirebaseStatus() {
+    const body = document.getElementById('fbStatusBody');
+    try {
+        const [statusRes, dbRes] = await Promise.all([
+            fetch('/julisunkan/api/firebase/status'),
+            fetch('/julisunkan/api/database/config'),
+        ]);
+        const d = await statusRes.json();
+        const cfg = await dbRes.json();
+        const isDefault = (cfg.db_type === 'firebase');
+
+        if (d.configured) {
+            body.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                    <span style="width:10px;height:10px;border-radius:50%;background:#10b981;display:inline-block;flex-shrink:0;"></span>
+                    <strong style="color:#10b981;">Credentials saved</strong>
+                </div>
+                <div style="color:var(--muted);">Project: <strong style="color:var(--text);">${esc(d.project_id)}</strong></div>
+                <div style="color:var(--muted);margin-top:2px;">Service account: <strong style="color:var(--text);">${esc(d.client_email)}</strong></div>
+                <div style="margin-top:10px;font-size:12px;color:var(--muted);">Click <strong>Test Connection</strong> in the Credentials card to verify live connectivity.</div>
+            `;
+        } else {
+            body.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="width:10px;height:10px;border-radius:50%;background:#6b7280;display:inline-block;flex-shrink:0;"></span>
+                    <span style="color:var(--muted);">No credentials saved yet. Follow the setup instructions below, then paste your service account JSON.</span>
+                </div>
+            `;
+        }
+
+        // Update Default DB status card
+        updateDefaultDbCard(isDefault, d.configured);
+        // Update sync status badge
+        updateSyncBadge(d.configured);
+    } catch(e) {
+        body.textContent = 'Failed to load status.';
+    }
+}
+
+function updateSyncBadge(available) {
+    const dot = document.getElementById('syncDot');
+    const text = document.getElementById('syncStatusText');
+    const badge = document.getElementById('syncStatusBadge');
+    const btnPush = document.getElementById('btnSyncPush');
+    const btnRestore = document.getElementById('btnSyncRestore');
+    if (!dot || !text) return;
+    if (available) {
+        dot.style.background = '#10b981';
+        text.textContent = 'Auto-sync enabled — writes mirror to Firebase automatically';
+        badge.style.background = 'rgba(16,185,129,0.08)';
+        badge.style.borderColor = 'rgba(16,185,129,0.3)';
+        badge.style.color = '#10b981';
+        if (btnPush) btnPush.disabled = false;
+        if (btnRestore) btnRestore.disabled = false;
+    } else {
+        dot.style.background = '#6b7280';
+        text.textContent = 'Auto-sync disabled — add Firebase credentials to enable';
+        badge.style.background = 'rgba(100,116,139,0.1)';
+        badge.style.borderColor = 'var(--border)';
+        badge.style.color = 'var(--muted)';
+        if (btnPush) btnPush.disabled = true;
+        if (btnRestore) btnRestore.disabled = true;
+    }
+}
+
+async function syncPush() {
+    showAlert('fbAlert', '⏳ Pushing all local data to Firebase...', true);
+    try {
+        const r = await fetch('/julisunkan/api/sync/push', { method: 'POST' });
+        const d = await r.json();
+        if (d.success) {
+            showAlert('fbAlert', '✅ ' + d.message, true);
+        } else {
+            showAlert('fbAlert', '❌ ' + (d.error || 'Push failed'), false);
+        }
+    } catch(e) {
+        showAlert('fbAlert', '❌ Request failed: ' + e, false);
+    }
+}
+
+async function syncRestore() {
+    showAlert('fbAlert', '⏳ Restoring data from Firebase into local database...', true);
+    try {
+        const r = await fetch('/julisunkan/api/sync/restore', { method: 'POST' });
+        const d = await r.json();
+        if (d.success) {
+            showAlert('fbAlert', '✅ ' + d.message, true);
+        } else {
+            showAlert('fbAlert', '❌ ' + (d.error || 'Restore failed'), false);
+        }
+    } catch(e) {
+        showAlert('fbAlert', '❌ Request failed: ' + e, false);
+    }
+}
+
+function updateDefaultDbCard(isDefault, hasCredentials) {
+    const statusDiv = document.getElementById('fbDefaultStatus');
+    const btnSet = document.getElementById('btnSetFirebaseDefault');
+    const btnUnset = document.getElementById('btnUnsetFirebaseDefault');
+    if (!statusDiv) return;
+
+    if (isDefault) {
+        statusDiv.innerHTML = `<span style="color:#f97316;font-weight:600;">🔥 Firebase is the active database</span><br><span style="color:var(--muted);font-size:12px;">All resumes, jobs, and messages are being read from and written to Firestore.</span>`;
+        statusDiv.style.borderColor = 'rgba(249,115,22,0.3)';
+        statusDiv.style.background = 'rgba(249,115,22,0.06)';
+        if (btnSet) btnSet.style.display = 'none';
+        if (btnUnset) btnUnset.style.display = '';
+    } else if (!hasCredentials) {
+        statusDiv.innerHTML = `<span style="color:var(--warning);font-weight:600;">⚠ Firebase credentials not saved</span><br><span style="color:var(--muted);font-size:12px;">Save and test your credentials first, then set Firebase as the default database.</span>`;
+        statusDiv.style.borderColor = 'rgba(245,158,11,0.3)';
+        statusDiv.style.background = 'rgba(245,158,11,0.06)';
+        if (btnSet) { btnSet.style.display = ''; btnSet.disabled = true; btnSet.title = 'Save credentials first'; }
+        if (btnUnset) btnUnset.style.display = 'none';
+    } else {
+        statusDiv.innerHTML = `<span style="color:var(--muted);">Currently using <strong style="color:var(--text);">SQLite / MySQL / PostgreSQL</strong> as the primary database.<br>Click "Set Firebase as Default" to switch all reads and writes to Firestore.</span>`;
+        statusDiv.style.borderColor = '';
+        statusDiv.style.background = '';
+        if (btnSet) { btnSet.style.display = ''; btnSet.disabled = false; btnSet.title = ''; }
+        if (btnUnset) btnUnset.style.display = 'none';
+    }
+}
+
+async function setFirebaseDefault() {
+    showAlert('fbAlert', '⏳ Setting Firebase as default database...', true);
+    try {
+        const res = await fetch('/julisunkan/api/database/config', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ db_type: 'firebase' }),
+        });
+        const d = await res.json();
+        if (d.success) {
+            showAlert('fbAlert', '✅ Firebase is now the active database. New reads and writes go to Firestore immediately.', true);
+            loadFirebaseStatus();
+        } else {
+            showAlert('fbAlert', `❌ Failed to update: ${d.error || 'Unknown error'}`, false);
+        }
+    } catch(e) {
+        showAlert('fbAlert', `❌ Request failed: ${e}`, false);
+    }
+}
+
+async function unsetFirebaseDefault() {
+    if (!confirm('Switch the default database back to SQLite? Firestore data will remain intact.')) return;
+    showAlert('fbAlert', '⏳ Switching back to SQLite...', true);
+    try {
+        const res = await fetch('/julisunkan/api/database/config', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ db_type: 'sqlite' }),
+        });
+        const d = await res.json();
+        if (d.success) {
+            showAlert('fbAlert', '✅ Switched back to SQLite. Firestore data is still available for export/import.', true);
+            loadFirebaseStatus();
+        } else {
+            showAlert('fbAlert', `❌ Failed: ${d.error || 'Unknown error'}`, false);
+        }
+    } catch(e) {
+        showAlert('fbAlert', `❌ Request failed: ${e}`, false);
+    }
+}
+
+async function fbSaveCreds() {
+    const creds = document.getElementById('fbCredsInput').value.trim();
+    if (!creds) { showAlert('fbAlert', '⚠ Please paste your service account JSON first.', false); return; }
+    try {
+        const res = await fetch('/julisunkan/api/firebase/save-credentials', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ credentials: creds })
+        });
+        const d = await res.json();
+        if (d.success) {
+            showAlert('fbAlert', `✅ Credentials saved for project "${d.project_id}". Click "Test Connection" to verify.`, true);
+            document.getElementById('fbCredsInput').value = '';
+            loadFirebaseStatus();
+        } else {
+            showAlert('fbAlert', `❌ ${d.error}`, false);
+        }
+    } catch(e) {
+        showAlert('fbAlert', `❌ Request failed: ${e}`, false);
+    }
+}
+
+async function fbClearCreds() {
+    if (!confirm('Remove Firebase credentials? You will need to re-enter them to reconnect.')) return;
+    try {
+        const res = await fetch('/julisunkan/api/firebase/clear-credentials', { method: 'POST' });
+        const d = await res.json();
+        if (d.success) {
+            showAlert('fbAlert', '🗑 Credentials cleared.', true);
+            loadFirebaseStatus();
+        } else {
+            showAlert('fbAlert', `❌ ${d.error}`, false);
+        }
+    } catch(e) {
+        showAlert('fbAlert', `❌ Request failed: ${e}`, false);
+    }
+}
+
+async function fbTest() {
+    showAlert('fbAlert', '🔌 Testing connection...', true);
+    try {
+        const res = await fetch('/julisunkan/api/firebase/test', { method: 'POST' });
+        const d = await res.json();
+        if (d.success) {
+            showAlert('fbAlert', `✅ ${d.message}`, true);
+        } else {
+            showAlert('fbAlert', `❌ Connection failed: ${d.message}`, false);
+        }
+    } catch(e) {
+        showAlert('fbAlert', `❌ Request failed: ${e}`, false);
+    }
+}
+
+async function fbExport() {
+    const collections = [];
+    if (document.getElementById('fb-exp-resumes').checked) collections.push('resumes');
+    if (document.getElementById('fb-exp-jobs').checked) collections.push('jobs');
+    if (document.getElementById('fb-exp-settings').checked) collections.push('settings');
+    if (document.getElementById('fb-exp-messages').checked) collections.push('messages');
+    if (!collections.length) { showAlert('fbAlert', '⚠ Select at least one collection to export.', false); return; }
+
+    const prog = document.getElementById('fbExportProgress');
+    prog.style.display = 'block';
+    prog.textContent = '⏳ Exporting to Firestore...';
+    showAlert('fbAlert', '', true);
+
+    try {
+        const res = await fetch('/julisunkan/api/firebase/export', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ collections })
+        });
+        const d = await res.json();
+        if (d.success) {
+            const summary = Object.entries(d.results).map(([k,v]) => `${v} ${k}`).join(', ');
+            showAlert('fbAlert', `✅ Exported ${d.total} records: ${summary}`, true);
+            prog.style.display = 'none';
+        } else {
+            showAlert('fbAlert', `❌ Export failed: ${d.error}`, false);
+            prog.style.display = 'none';
+        }
+    } catch(e) {
+        showAlert('fbAlert', `❌ Request failed: ${e}`, false);
+        prog.style.display = 'none';
+    }
+}
+
+async function fbImport() {
+    const collections = [];
+    if (document.getElementById('fb-imp-resumes').checked) collections.push('resumes');
+    if (document.getElementById('fb-imp-jobs').checked) collections.push('jobs');
+    if (!collections.length) { showAlert('fbAlert', '⚠ Select at least one collection to import.', false); return; }
+    if (!confirm(`Import ${collections.join(' and ')} from Firestore into local DB? Only new records will be added.`)) return;
+
+    const prog = document.getElementById('fbImportProgress');
+    prog.style.display = 'block';
+    prog.textContent = '⏳ Importing from Firestore...';
+    showAlert('fbAlert', '', true);
+
+    try {
+        const res = await fetch('/julisunkan/api/firebase/import', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ collections })
+        });
+        const d = await res.json();
+        if (d.success) {
+            const summary = Object.entries(d.results).map(([k,v]) => `${v} ${k}`).join(', ');
+            showAlert('fbAlert', `✅ Imported ${d.total} new records: ${summary}`, true);
+            prog.style.display = 'none';
+        } else {
+            showAlert('fbAlert', `❌ Import failed: ${d.error}`, false);
+            prog.style.display = 'none';
+        }
+    } catch(e) {
+        showAlert('fbAlert', `❌ Request failed: ${e}`, false);
+        prog.style.display = 'none';
+    }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+    try {
+        const res = await fetch('/julisunkan/api/stats');
+        const d = await res.json();
+        document.getElementById('ov-resumes').textContent = d.resumes;
+        document.getElementById('ov-jobs').textContent = d.jobs;
+        document.getElementById('ov-interviews').textContent = d.interviews;
+        document.getElementById('ov-offers').textContent = d.offers;
+        document.getElementById('ov-messages').textContent = d.messages || 0;
+        updateMsgBadge(d.unread_messages || 0);
+    } catch(e) {}
+    testGroq(false);
+}
+init();
+</script>
+</body>
+</html>
