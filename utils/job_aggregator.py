@@ -11,7 +11,7 @@ HEADERS = {
     'Accept': 'application/json, text/plain, */*',
     'Accept-Language': 'en-US,en;q=0.9',
 }
-TIMEOUT = 15
+TIMEOUT = 8
 
 
 def clean_text(text: str, multiline: bool = True) -> str:
@@ -243,15 +243,26 @@ def fetch_adzuna(app_id, app_key, query='developer', country='us', limit=20):
 
 
 def aggregate(sources=None, search='', limit_per_source=15, adzuna_app_id=None, adzuna_app_key=None):
+    import concurrent.futures
     if sources is None:
         sources = ['remotive', 'arbeitnow', 'remoteok']
-    all_posts = []
+
+    tasks = {}
     if 'remotive' in sources:
-        all_posts.extend(fetch_remotive(search=search, limit=limit_per_source))
+        tasks['remotive'] = lambda: fetch_remotive(search=search, limit=limit_per_source)
     if 'arbeitnow' in sources:
-        all_posts.extend(fetch_arbeitnow(limit=limit_per_source))
+        tasks['arbeitnow'] = lambda: fetch_arbeitnow(limit=limit_per_source)
     if 'remoteok' in sources:
-        all_posts.extend(fetch_remoteok(limit=limit_per_source))
+        tasks['remoteok'] = lambda: fetch_remoteok(limit=limit_per_source)
     if 'adzuna' in sources and adzuna_app_id and adzuna_app_key:
-        all_posts.extend(fetch_adzuna(adzuna_app_id, adzuna_app_key, query=search or 'developer', limit=limit_per_source))
+        tasks['adzuna'] = lambda: fetch_adzuna(adzuna_app_id, adzuna_app_key, query=search or 'developer', limit=limit_per_source)
+
+    all_posts = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(tasks)) as ex:
+        futures = {ex.submit(fn): name for name, fn in tasks.items()}
+        for f in concurrent.futures.as_completed(futures, timeout=TIMEOUT + 2):
+            try:
+                all_posts.extend(f.result())
+            except Exception as e:
+                logger.warning('Aggregate source %s failed: %s', futures[f], e)
     return all_posts

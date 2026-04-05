@@ -160,7 +160,11 @@ def live_search():
     job_type = request.args.get('type', '').strip().lower()
     search = q.lower()
 
-    db_posts = jobpost_list(status='published')
+    try:
+        db_posts = jobpost_list(status='published')
+    except Exception as e:
+        logger.warning('Could not load local posts for live-search: %s', e)
+        db_posts = []
     if search:
         db_posts = [p for p in db_posts if
                     search in (p.get('title') or '').lower()
@@ -198,7 +202,7 @@ def live_search():
 
         def _remoteok():
             try:
-                raw = fetch_remoteok(limit=50)
+                raw = fetch_remoteok(limit=20)
                 return [r for r in raw if search in (r.get('title') or '').lower()
                         or search in (r.get('company') or '').lower()
                         or search in str(r.get('tags') or '').lower()
@@ -209,7 +213,7 @@ def live_search():
         raw_live = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
             fetch_futures = [ex.submit(_remotive), ex.submit(_arbeitnow), ex.submit(_remoteok)]
-            for f in concurrent.futures.as_completed(fetch_futures, timeout=12):
+            for f in concurrent.futures.as_completed(fetch_futures, timeout=10):
                 try:
                     raw_live.extend(f.result())
                 except Exception:
@@ -229,20 +233,11 @@ def live_search():
             seen_live.add(key)
             r['is_live'] = True
             r['id'] = None
+            r['description'] = r.get('original_description') or r.get('description') or ''
             deduped_live.append(r)
 
         if job_type:
             deduped_live = [r for r in deduped_live if job_type in (r.get('job_type') or '').lower()]
-
-        if deduped_live:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(deduped_live), 8)) as ex:
-                rewrite_futures = {ex.submit(_ai_rewrite_job, job): i for i, job in enumerate(deduped_live)}
-                for f, idx in rewrite_futures.items():
-                    try:
-                        deduped_live[idx]['description'] = f.result(timeout=15)
-                        deduped_live[idx]['ai_rewritten'] = True
-                    except Exception:
-                        pass
 
         live_results = deduped_live
 
