@@ -1,8 +1,0 @@
-[2026-04-05 19:01:22 +0000] [4648] [INFO] Starting gunicorn 25.3.0
-[2026-04-05 19:01:22 +0000] [4648] [INFO] Listening at:  (4648)
-[2026-04-05 19:01:22 +0000] [4648] [INFO] Using worker: sync
-[2026-04-05 19:01:22 +0000] [4659] [INFO] Booting worker with pid: 4659
-[2026-04-05 19:01:22 +0000] [4659] [WARNING] Reloader is on. Use in development only!
-[2026-04-05 19:01:22 +0000] [4648] [INFO] Control socket listening at /home/runner/.gunicorn/gunicorn.ctl
-DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): oauth2.googleapis.com:443
-DEBUG:urllib3.connectionpool:https://oauth2.googleapis.com:443 "POST /token HTTP/1.1" 200 None
