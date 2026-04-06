@@ -30,34 +30,176 @@ def _get_groq_client():
 
 # ── Public API ──────────────────────────────────────────────────────────────
 
+def _do_shorten(target: str) -> str:
+    """Shorten a URL using the admin-configured provider. Falls back to full URL."""
+    import urllib.request
+    import json as _json
+
+    provider = Setting.get('url_shortener', 'bitly').strip().lower()
+
+    def _http_post(url, payload_dict, headers):
+        body = _json.dumps(payload_dict).encode('utf-8')
+        req = urllib.request.Request(url, data=body, headers=headers, method='POST')
+        with urllib.request.urlopen(req, timeout=6) as r:
+            return _json.loads(r.read())
+
+    def _http_get(url):
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=6) as r:
+            return _json.loads(r.read())
+
+    try:
+        if provider == 'bitly':
+            token = Setting.get('bitly_access_token', '').strip()
+            if not token:
+                return target
+            data = _http_post(
+                'https://api-ssl.bitly.com/v4/shorten',
+                {'long_url': target},
+                {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
+            )
+            return data.get('link', target)
+
+        elif provider == 'tly':
+            token = Setting.get('tly_api_key', '').strip()
+            if not token:
+                return target
+            data = _http_post(
+                'https://t.ly/api/v1/link/shorten',
+                {'long_url': target},
+                {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
+            )
+            return data.get('short_url', target)
+
+        elif provider == 'kutt':
+            token = Setting.get('kutt_api_key', '').strip()
+            if not token:
+                return target
+            data = _http_post(
+                'https://kutt.it/api/v2/links',
+                {'target': target},
+                {'X-API-KEY': token, 'Content-Type': 'application/json'},
+            )
+            return data.get('link', target)
+
+        elif provider == 'urlzli':
+            token = Setting.get('urlzli_api_key', '').strip()
+            if not token:
+                return target
+            import urllib.parse
+            encoded = urllib.parse.quote(target, safe='')
+            data = _http_get(f'https://urlz.li/api.php?action=shorturl&url={encoded}&format=json&key={token}')
+            return data.get('shorturl', data.get('url', target))
+
+        elif provider == 'picsee':
+            token = Setting.get('picsee_api_key', '').strip()
+            if not token:
+                return target
+            data = _http_post(
+                'https://api.picsee.io/shorten',
+                {'token': token, 'long_url': target},
+                {'Content-Type': 'application/json'},
+            )
+            inner = data.get('data') or {}
+            ps = inner.get('photo_shorten') or inner
+            return ps.get('tiny_url', ps.get('short_url', target))
+
+    except Exception as e:
+        logger.warning('URL shortener (%s) failed: %s', provider, e)
+
+    return target
+
+
 @job_board_bp.get('/shorten')
 def shorten_url():
-    import urllib.request
-    import urllib.parse
-    import json as _json
     target = request.args.get('url', '').strip()
     if not target:
         return jsonify({'error': 'url parameter required'}), 400
-    token = Setting.get('bitly_access_token', '').strip()
-    if not token:
-        return jsonify({'short_url': target})
+    return jsonify({'short_url': _do_shorten(target)})
+
+
+@job_board_bp.get('/generate-ad/<int:post_id>')
+def generate_ad(post_id):
+    """Generate AI social media job ad copy for a job post."""
+    import json as _json
+    from utils.data_layer import jobpost_get
+    from utils.ai_engine import _get_model
+
+    post = jobpost_get(post_id)
+    if not post or post.get('status') != 'published':
+        return jsonify({'error': 'Not found'}), 404
+
+    site_url = Setting.get('site_url', '').rstrip('/')
+    post_url = f'{site_url}/job-board/{post_id}' if site_url else request.url_root.rstrip('/') + f'/job-board/{post_id}'
+    short_url = _do_shorten(post_url)
+
+    tags = post.get('tags', '')
+    if isinstance(tags, list):
+        tags = ', '.join(tags)
+    hashtags = ' '.join(
+        '#' + t.strip().replace(' ', '').replace('-', '')
+        for t in tags.split(',') if t.strip()
+    )[:120]
+
+    desc = (post.get('description') or post.get('original_description') or '').strip()[:300]
+    salary_line = f"💰 {post['salary']}" if post.get('salary') else ''
+    location_line = post.get('location') or 'Remote'
+    job_type_line = post.get('job_type', '').title()
+    site_name = Setting.get('app_name', 'AI Career Hub')
+
+    prompt = f"""You are a social media marketing expert. Write job advertisement copy for the following role.
+
+Job Details:
+- Title: {post.get('title', '')}
+- Company: {post.get('company', '')}
+- Location: {location_line}
+- Type: {job_type_line}
+- {salary_line}
+- Skills/Tags: {tags}
+- Description: {desc}
+- Apply Link: {short_url}
+- Posted on: {site_name}
+
+Return a JSON object with exactly these three keys:
+{{
+  "linkedin": "A compelling LinkedIn post (150-250 words). Professional tone, highlight growth opportunity, include 3-5 relevant hashtags at the end, and include the apply link.",
+  "twitter": "A punchy Twitter/X post under 270 characters including the link. Use 2-3 hashtags. Must include apply link.",
+  "whatsapp": "A WhatsApp-friendly message (2-4 short paragraphs). Conversational, clear bullet points for key info, ends with the apply link. No markdown formatting."
+}}
+
+Only return valid JSON. No explanations, no markdown code blocks."""
+
     try:
-        payload = _json.dumps({'long_url': target}).encode('utf-8')
-        req = urllib.request.Request(
-            'https://api-ssl.bitly.com/v4/shorten',
-            data=payload,
-            headers={
-                'Authorization': f'Bearer {token}',
-                'Content-Type': 'application/json',
-            },
-            method='POST',
+        import groq
+        key = Setting.get('groq_api_key', '')
+        if not key:
+            return jsonify({'error': 'Groq API key not configured.'}), 503
+        client = groq.Groq(api_key=key)
+        model = _get_model()
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[{'role': 'user', 'content': prompt}],
+            max_tokens=900,
+            temperature=0.8,
         )
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            data = _json.loads(resp.read())
-            return jsonify({'short_url': data.get('link', target)})
+        raw = resp.choices[0].message.content.strip()
+        if raw.startswith('```'):
+            raw = raw.split('```')[1]
+            if raw.startswith('json'):
+                raw = raw[4:]
+        ads = _json.loads(raw.strip())
+        return jsonify({
+            'linkedin': ads.get('linkedin', ''),
+            'twitter': ads.get('twitter', ''),
+            'whatsapp': ads.get('whatsapp', ''),
+            'short_url': short_url,
+        })
+    except _json.JSONDecodeError as e:
+        logger.warning('generate_ad JSON parse error: %s — raw: %s', e, raw[:200])
+        return jsonify({'error': 'AI returned unexpected format. Please try again.'}), 500
     except Exception as e:
-        logger.warning('bit.ly shorten failed: %s', e)
-        return jsonify({'short_url': target})
+        logger.error('generate_ad error: %s', e)
+        return jsonify({'error': str(e)}), 500
 
 
 @job_board_bp.get('/published')

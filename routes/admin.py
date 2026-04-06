@@ -64,7 +64,7 @@ def dashboard():
 @admin_bp.route('/api/settings', methods=['GET'])
 @admin_required
 def get_settings():
-    sensitive = {'groq_api_key', ADMIN_PASSWORD_KEY, 'bitly_access_token'}
+    sensitive = {'groq_api_key', ADMIN_PASSWORD_KEY, 'bitly_access_token', 'tly_api_key', 'kutt_api_key', 'urlzli_api_key', 'picsee_api_key'}
     rows = Setting.query.all()
     result = {}
     for r in rows:
@@ -103,7 +103,12 @@ def get_settings():
         'adzuna_app_id': '',
         'adzuna_app_key': '',
         'hide_footer': '0',
+        'url_shortener': 'bitly',
         'bitly_access_token': '',
+        'tly_api_key': '',
+        'kutt_api_key': '',
+        'urlzli_api_key': '',
+        'picsee_api_key': '',
         'share_twitter': '1',
         'share_facebook': '1',
         'share_linkedin': '1',

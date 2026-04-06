@@ -656,20 +656,84 @@
             </div>
 
             <div class="card">
-                <div class="card-title"><span class="icon">🔗</span> Social Sharing on Job Posts</div>
-                <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
-                    Choose which platforms users can share job postings to. Optionally add a
-                    <a href="https://bitly.com" target="_blank" style="color:var(--primary-l);">Bit.ly</a>
-                    access token to automatically shorten shared URLs.
+                <div class="card-title"><span class="icon">🔗</span> Social Sharing &amp; URL Shortener</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">
+                    Choose which platforms appear on job posts, select your preferred URL shortener, and enter the matching API key.
                 </p>
-                <div class="form-group" style="max-width:420px;margin-bottom:18px;">
-                    <label>Bit.ly Access Token <span style="font-weight:400;color:var(--muted);">(optional)</span></label>
-                    <div class="input-row">
-                        <input type="password" id="s-bitly_access_token" placeholder="Enter your Bit.ly access token">
-                        <button class="btn btn-secondary btn-sm" onclick="this.previousElementSibling.type=this.previousElementSibling.type==='password'?'text':'password'">👁</button>
+
+                <!-- URL Shortener Selector -->
+                <div style="margin-bottom:20px;">
+                    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:10px;">URL Shortener (used when users share job links)</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;" id="shortenerRadios">
+                        {% set providers = [
+                            ('none',   'None',     ''),
+                            ('bitly',  'Bit.ly',   'https://app.bitly.com/settings/api/'),
+                            ('tly',    'T.ly',     'https://t.ly/dashboard'),
+                            ('kutt',   'Kutt.it',  'https://kutt.it/settings'),
+                            ('urlzli', 'Urlz.li',  'https://urlz.li'),
+                            ('picsee', 'PicSee',   'https://picsee.io'),
+                        ] %}
+                        {% for val, lbl, link in providers %}
+                        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:7px 14px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-weight:500;background:var(--bg2);transition:.15s;" class="shortener-radio-label" data-val="{{ val }}">
+                            <input type="radio" name="url_shortener_radio" value="{{ val }}" style="accent-color:#4f46e5;" onchange="onShortenerChange('{{ val }}')">
+                            {{ lbl }}
+                        </label>
+                        {% endfor %}
+                        <input type="hidden" id="s-url_shortener" value="bitly">
                     </div>
-                    <small style="color:var(--muted);font-size:12px;">Get a token at <a href="https://app.bitly.com/settings/api/" target="_blank" style="color:var(--primary-l);">app.bitly.com/settings/api</a>. Leave blank to share the full URL.</small>
+
+                    <!-- Per-provider token fields -->
+                    <div id="shortener-fields" style="max-width:460px;">
+                        <div class="shortener-field" id="sf-bitly">
+                            <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block;">Bit.ly Access Token</label>
+                            <div class="input-row">
+                                <input type="password" id="s-bitly_access_token" placeholder="Enter Bit.ly access token">
+                                <button class="btn btn-secondary btn-sm" onclick="togglePwd('s-bitly_access_token')">👁</button>
+                            </div>
+                            <small style="color:var(--muted);font-size:11px;">Get yours at <a href="https://app.bitly.com/settings/api/" target="_blank" style="color:var(--primary-l);">app.bitly.com/settings/api</a></small>
+                        </div>
+                        <div class="shortener-field" id="sf-tly" style="display:none;">
+                            <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block;">T.ly API Key</label>
+                            <div class="input-row">
+                                <input type="password" id="s-tly_api_key" placeholder="Enter T.ly API key">
+                                <button class="btn btn-secondary btn-sm" onclick="togglePwd('s-tly_api_key')">👁</button>
+                            </div>
+                            <small style="color:var(--muted);font-size:11px;">Get yours at <a href="https://t.ly/dashboard" target="_blank" style="color:var(--primary-l);">t.ly/dashboard</a></small>
+                        </div>
+                        <div class="shortener-field" id="sf-kutt" style="display:none;">
+                            <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block;">Kutt.it API Key</label>
+                            <div class="input-row">
+                                <input type="password" id="s-kutt_api_key" placeholder="Enter Kutt.it API key">
+                                <button class="btn btn-secondary btn-sm" onclick="togglePwd('s-kutt_api_key')">👁</button>
+                            </div>
+                            <small style="color:var(--muted);font-size:11px;">Get yours at <a href="https://kutt.it/settings" target="_blank" style="color:var(--primary-l);">kutt.it/settings</a></small>
+                        </div>
+                        <div class="shortener-field" id="sf-urlzli" style="display:none;">
+                            <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block;">Urlz.li API Key</label>
+                            <div class="input-row">
+                                <input type="password" id="s-urlzli_api_key" placeholder="Enter Urlz.li API key">
+                                <button class="btn btn-secondary btn-sm" onclick="togglePwd('s-urlzli_api_key')">👁</button>
+                            </div>
+                            <small style="color:var(--muted);font-size:11px;">Get yours at <a href="https://urlz.li" target="_blank" style="color:var(--primary-l);">urlz.li</a></small>
+                        </div>
+                        <div class="shortener-field" id="sf-picsee" style="display:none;">
+                            <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block;">PicSee API Token</label>
+                            <div class="input-row">
+                                <input type="password" id="s-picsee_api_key" placeholder="Enter PicSee API token">
+                                <button class="btn btn-secondary btn-sm" onclick="togglePwd('s-picsee_api_key')">👁</button>
+                            </div>
+                            <small style="color:var(--muted);font-size:11px;">Get yours at <a href="https://picsee.io" target="_blank" style="color:var(--primary-l);">picsee.io</a></small>
+                        </div>
+                        <div class="shortener-field" id="sf-none" style="display:none;">
+                            <small style="color:var(--muted);font-size:12px;">No shortening — full URLs will be shared.</small>
+                        </div>
+                    </div>
                 </div>
+
+                <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;">
+
+                <!-- Platform toggles -->
+                <label style="font-size:13px;font-weight:600;display:block;margin-bottom:10px;">Enabled Share Platforms</label>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-bottom:18px;">
                     {% set share_items = [
                         ('share_twitter','Twitter / X','🐦'),
@@ -685,7 +749,7 @@
                     <div class="toggle-wrap">
                         <label class="toggle" style="margin:0;">
                             <input type="checkbox" id="s-{{ key }}_toggle"
-                                   onchange="document.getElementById('s-{{ key }}').value=this.checked?'1':'0';saveSettings(['{{ key }}'])">
+                                   onchange="document.getElementById('s-{{ key }}').value=this.checked?'1':'0';">
                             <span class="slider"></span>
                         </label>
                         <input type="hidden" id="s-{{ key }}" value="1">
@@ -693,7 +757,7 @@
                     </div>
                     {% endfor %}
                 </div>
-                <button class="btn btn-primary" onclick="saveSettings(['bitly_access_token','share_twitter','share_facebook','share_linkedin','share_whatsapp','share_telegram','share_reddit','share_email','share_copy_link'])">Save Sharing Settings</button>
+                <button class="btn btn-primary" onclick="saveSettings(['url_shortener','bitly_access_token','tly_api_key','kutt_api_key','urlzli_api_key','picsee_api_key','share_twitter','share_facebook','share_linkedin','share_whatsapp','share_telegram','share_reddit','share_email','share_copy_link'])">Save Sharing Settings</button>
             </div>
 
             <div class="card">
@@ -1565,6 +1629,14 @@ async function loadSettings() {
         const chk = document.getElementById('s-' + k + '_toggle');
         if (chk) chk.checked = (settings[k] || '1') === '1';
     });
+    // Handle URL shortener radio
+    const shortenerVal = settings['url_shortener'] || 'bitly';
+    const shortenerHidden = document.getElementById('s-url_shortener');
+    if (shortenerHidden) shortenerHidden.value = shortenerVal;
+    document.querySelectorAll('input[name="url_shortener_radio"]').forEach(r => {
+        r.checked = (r.value === shortenerVal);
+    });
+    onShortenerChange(shortenerVal);
     loadAdPlacements(settings);
 }
 
@@ -1627,6 +1699,26 @@ async function saveAdPlacement(p) {
     const res = await fetch('/julisunkan/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     const data = await res.json();
     showAlert('placementsAlert', data.success ? '✅ Placement saved.' : '❌ Error saving placement.', data.success);
+}
+
+function onShortenerChange(val) {
+    const hidden = document.getElementById('s-url_shortener');
+    if (hidden) hidden.value = val;
+    ['none','bitly','tly','kutt','urlzli','picsee'].forEach(p => {
+        const el = document.getElementById('sf-' + p);
+        if (el) el.style.display = (p === val) ? 'block' : 'none';
+    });
+    document.querySelectorAll('.shortener-radio-label').forEach(lbl => {
+        const active = lbl.dataset.val === val;
+        lbl.style.borderColor = active ? '#4f46e5' : '';
+        lbl.style.background  = active ? 'rgba(79,70,229,.12)' : '';
+        lbl.style.color        = active ? '#818cf8' : '';
+    });
+}
+
+function togglePwd(id) {
+    const el = document.getElementById(id);
+    if (el) el.type = el.type === 'password' ? 'text' : 'password';
 }
 
 async function saveSettings(keys) {
