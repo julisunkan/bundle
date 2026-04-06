@@ -216,12 +216,15 @@ def create_app():
     def inject_site_settings():
         from datetime import datetime
         _empty_ads = dict(publisher_id='', auto_ads=False, top_banner=dict(enabled=False, slot=''), results=dict(enabled=False, slot=''), sidebar=dict(enabled=False, slot=''))
+        _empty_sharing = dict(twitter=True, facebook=True, linkedin=True, whatsapp=True,
+                              telegram=False, reddit=False, email=True, copy_link=True, bitly_enabled=False)
         _defaults = dict(
             site_analytics_id='', site_adsense_id='', site_app_name='AI Resume & Cover Letter Creator',
             site_app_tagline='Your intelligent job application assistant.',
             site_url='', contact_email='', meta_description='', meta_keywords='',
             google_search_console='',
             social=dict(twitter='', linkedin='', facebook='', instagram='', youtube=''),
+            sharing=_empty_sharing,
             current_year=datetime.utcnow().year, ads=_empty_ads,
             hide_footer=False,
         )
@@ -242,6 +245,17 @@ def create_app():
                 instagram=Setting.get('instagram_url', ''),
                 youtube=Setting.get('youtube_url', ''),
             )
+            sharing = dict(
+                twitter=Setting.get('share_twitter', '1') == '1',
+                facebook=Setting.get('share_facebook', '1') == '1',
+                linkedin=Setting.get('share_linkedin', '1') == '1',
+                whatsapp=Setting.get('share_whatsapp', '1') == '1',
+                telegram=Setting.get('share_telegram', '0') == '1',
+                reddit=Setting.get('share_reddit', '0') == '1',
+                email=Setting.get('share_email', '1') == '1',
+                copy_link=Setting.get('share_copy_link', '1') == '1',
+                bitly_enabled=bool(Setting.get('bitly_access_token', '').strip()),
+            )
             return dict(
                 site_analytics_id=Setting.get('analytics_id', ''),
                 site_adsense_id=pub_id,
@@ -253,6 +267,7 @@ def create_app():
                 meta_keywords=Setting.get('meta_keywords', ''),
                 google_search_console=Setting.get('google_search_console', ''),
                 social=social,
+                sharing=sharing,
                 current_year=datetime.utcnow().year,
                 ads=ads,
                 hide_footer=Setting.get('hide_footer', '0') == '1',

@@ -31,6 +31,14 @@ gunicorn --bind 0.0.0.0:5000 --reuse-port --reload --workers 4 --timeout 30 main
 - `templates/` — Jinja2 HTML templates
 - `static/` — CSS, images, PWA manifest, service worker
 
+## Social Sharing on Job Posts
+Job detail pages (`/job-board/<id>`) include a "Share:" bar with branded buttons for each enabled platform. The admin controls which platforms appear and optionally provides a Bit.ly token to auto-shorten URLs before sharing.
+- **Settings panel** → "Social Sharing on Job Posts" card (Admin → Settings)
+- **Platforms**: Twitter/X, Facebook, LinkedIn, WhatsApp, Telegram, Reddit, Email, Copy Link
+- **URL shortening**: `/api/jobboard/shorten?url=...` calls Bit.ly v4 API; falls back to original URL if no token is set or the call fails
+- **Keys**: `bitly_access_token` (sensitive), `share_twitter`, `share_facebook`, `share_linkedin`, `share_whatsapp`, `share_telegram`, `share_reddit`, `share_email`, `share_copy_link` (each `'0'`/`'1'`)
+- **Context**: `sharing` dict injected into all templates via `inject_site_settings()`
+
 ## Configuration
 - **Firebase Credentials**: Visit `/setup` (hidden admin-only page) to paste your service account JSON, OR set the `FIREBASE_CREDENTIALS` env var with the full JSON string. Credentials are stored in `instance/credentials.db` — never hardcoded in source code.
 - **Groq API Key**: Set via Admin Panel at `/julisunkan` (stored in Firestore Settings collection)

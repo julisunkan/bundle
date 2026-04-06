@@ -656,6 +656,47 @@
             </div>
 
             <div class="card">
+                <div class="card-title"><span class="icon">🔗</span> Social Sharing on Job Posts</div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+                    Choose which platforms users can share job postings to. Optionally add a
+                    <a href="https://bitly.com" target="_blank" style="color:var(--primary-l);">Bit.ly</a>
+                    access token to automatically shorten shared URLs.
+                </p>
+                <div class="form-group" style="max-width:420px;margin-bottom:18px;">
+                    <label>Bit.ly Access Token <span style="font-weight:400;color:var(--muted);">(optional)</span></label>
+                    <div class="input-row">
+                        <input type="password" id="s-bitly_access_token" placeholder="Enter your Bit.ly access token">
+                        <button class="btn btn-secondary btn-sm" onclick="this.previousElementSibling.type=this.previousElementSibling.type==='password'?'text':'password'">👁</button>
+                    </div>
+                    <small style="color:var(--muted);font-size:12px;">Get a token at <a href="https://app.bitly.com/settings/api/" target="_blank" style="color:var(--primary-l);">app.bitly.com/settings/api</a>. Leave blank to share the full URL.</small>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-bottom:18px;">
+                    {% set share_items = [
+                        ('share_twitter','Twitter / X','🐦'),
+                        ('share_facebook','Facebook','📘'),
+                        ('share_linkedin','LinkedIn','💼'),
+                        ('share_whatsapp','WhatsApp','💬'),
+                        ('share_telegram','Telegram','✈️'),
+                        ('share_reddit','Reddit','🟠'),
+                        ('share_email','Email','📧'),
+                        ('share_copy_link','Copy Link','🔗'),
+                    ] %}
+                    {% for key, label, icon in share_items %}
+                    <div class="toggle-wrap">
+                        <label class="toggle" style="margin:0;">
+                            <input type="checkbox" id="s-{{ key }}_toggle"
+                                   onchange="document.getElementById('s-{{ key }}').value=this.checked?'1':'0';saveSettings(['{{ key }}'])">
+                            <span class="slider"></span>
+                        </label>
+                        <input type="hidden" id="s-{{ key }}" value="1">
+                        <span class="toggle-label">{{ icon }} {{ label }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings(['bitly_access_token','share_twitter','share_facebook','share_linkedin','share_whatsapp','share_telegram','share_reddit','share_email','share_copy_link'])">Save Sharing Settings</button>
+            </div>
+
+            <div class="card">
                 <div class="card-title"><span class="icon">⚡</span> Performance</div>
                 <div class="form-group" style="max-width:260px;">
                     <label>Max Upload Size (MB)</label>
@@ -1519,6 +1560,11 @@ async function loadSettings() {
     // Handle fake stats toggle
     const fakeStatsChk = document.getElementById('s-use_fake_stats_toggle');
     if (fakeStatsChk) fakeStatsChk.checked = (settings['use_fake_stats'] || '0') === '1';
+    // Handle sharing toggles
+    ['share_twitter','share_facebook','share_linkedin','share_whatsapp','share_telegram','share_reddit','share_email','share_copy_link'].forEach(k => {
+        const chk = document.getElementById('s-' + k + '_toggle');
+        if (chk) chk.checked = (settings[k] || '1') === '1';
+    });
     loadAdPlacements(settings);
 }
 

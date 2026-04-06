@@ -30,6 +30,36 @@ def _get_groq_client():
 
 # ── Public API ──────────────────────────────────────────────────────────────
 
+@job_board_bp.get('/shorten')
+def shorten_url():
+    import urllib.request
+    import urllib.parse
+    import json as _json
+    target = request.args.get('url', '').strip()
+    if not target:
+        return jsonify({'error': 'url parameter required'}), 400
+    token = Setting.get('bitly_access_token', '').strip()
+    if not token:
+        return jsonify({'short_url': target})
+    try:
+        payload = _json.dumps({'long_url': target}).encode('utf-8')
+        req = urllib.request.Request(
+            'https://api-ssl.bitly.com/v4/shorten',
+            data=payload,
+            headers={
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json',
+            },
+            method='POST',
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = _json.loads(resp.read())
+            return jsonify({'short_url': data.get('link', target)})
+    except Exception as e:
+        logger.warning('bit.ly shorten failed: %s', e)
+        return jsonify({'short_url': target})
+
+
 @job_board_bp.get('/published')
 def public_list():
     from utils.data_layer import jobpost_list
