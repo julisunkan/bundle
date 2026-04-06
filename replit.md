@@ -1,76 +1,37 @@
 # AI Resume & Cover Letter Creator
 
 ## Overview
-A full-stack Progressive Web App (PWA) that uses Groq's AI (Llama 3) to help users with resume optimization, cover letter generation, job tracking, interview preparation, LinkedIn profile optimization, and career chat.
-
-## Running the App
-The app runs via gunicorn on port 5000:
-```
-gunicorn --bind 0.0.0.0:5000 --reuse-port --reload --workers 4 --timeout 30 main:app
-```
+A Flask-based web application that helps users build resumes, track job applications, practice interviews, chat with an AI career assistant, and optimize their LinkedIn profiles.
 
 ## Architecture
-- **Framework**: Flask (Python)
-- **Database**: Firebase Firestore (sole database)
-- **AI**: Groq API (Llama 3.3-70b) — configured via the Admin Panel at `/julisunkan`
-- **File parsing**: pdfplumber (PDF), python-docx (DOCX)
-- **PDF generation**: reportlab
-- **Frontend**: Jinja2 templates + vanilla JS + CSS (PWA-enabled)
+- **Framework**: Flask (Python 3.11)
+- **Server**: Gunicorn (`python3 -m gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app`)
+- **Database**: Google Cloud Firestore (via `firebase-admin`)
+- **AI**: Groq API (via `groq` package)
+- **Entry point**: `main.py` → `app.py` (`create_app()`)
 
 ## Key Files
 - `main.py` — App entry point
-- `app.py` — Flask application factory, blueprint registration, startup Firebase check
-- `routes/` — Blueprint route handlers (resume, jobs, interview, chat, linkedin, admin, job_board)
-- `models/settings.py` — Firestore-backed Settings class
-- `utils/firestore_manager.py` — Firebase Admin SDK init with startup_check() for non-blocking initialization
-- `utils/credentials_store.py` — Firebase credentials lookup (supports FIREBASE_CREDENTIALS env var)
-- `utils/data_layer.py` — All CRUD operations for resumes, jobs, messages, job posts → Firestore only
-- `utils/ai_engine.py` — Groq AI integration
-- `utils/parser.py` — PDF/DOCX text extraction
-- `utils/job_aggregator.py` — External job board API fetching
+- `app.py` — Flask factory, routes, context processor
+- `utils/firestore_manager.py` — Firestore connection management
+- `utils/credentials_store.py` — Firebase credential storage (env var or SQLite fallback)
+- `utils/data_layer.py` — CRUD abstraction layer over Firestore
+- `utils/ai_engine.py` — AI/Groq integration
+- `routes/` — Flask blueprints (resume, jobs, interview, chat, linkedin, admin, job_board, setup)
+- `models/settings.py` — Settings backed by Firestore
 - `templates/` — Jinja2 HTML templates
-- `static/` — CSS, images, PWA manifest, service worker
+- `static/` — CSS, JS, images
 
-## Social Sharing on Job Posts
-Job detail pages (`/job-board/<id>`) include a "Share:" bar with branded buttons for each enabled platform. The admin controls which platforms appear and optionally provides a Bit.ly token to auto-shorten URLs before sharing.
-- **Settings panel** → "Social Sharing on Job Posts" card (Admin → Settings)
-- **Platforms**: Twitter/X, Facebook, LinkedIn, WhatsApp, Telegram, Reddit, Email, Copy Link
-- **URL shortening**: `/api/jobboard/shorten?url=...` calls Bit.ly v4 API; falls back to original URL if no token is set or the call fails
-- **Keys**: `bitly_access_token` (sensitive), `share_twitter`, `share_facebook`, `share_linkedin`, `share_whatsapp`, `share_telegram`, `share_reddit`, `share_email`, `share_copy_link` (each `'0'`/`'1'`)
-- **Context**: `sharing` dict injected into all templates via `inject_site_settings()`
+## Environment Variables / Secrets
+- `FIREBASE_CREDENTIALS` — Firebase service account JSON (stringified). If not set, the app falls back to SQLite credentials store at `instance/credentials.db`. Configure via `/setup` page.
+- `GROQ_API_KEY` — Groq API key for AI features.
+- `SECRET_KEY` or `SESSION_SECRET` — Flask session secret.
 
-## Configuration
-- **Firebase Credentials**: Visit `/setup` (hidden admin-only page) to paste your service account JSON, OR set the `FIREBASE_CREDENTIALS` env var with the full JSON string. Credentials are stored in `instance/credentials.db` — never hardcoded in source code.
-- **Groq API Key**: Set via Admin Panel at `/julisunkan` (stored in Firestore Settings collection)
-- **Secret Key**: `SECRET_KEY` env var (or `SESSION_SECRET`)
-- **Admin Panel**: Protected at `/julisunkan`
-- **Setup Page**: `/setup` — hidden page to paste Firebase service account JSON before the app loads
+## Setup Notes
+- Firebase credentials must be configured before database features work. Visit `/setup` in the running app.
+- The app gracefully degrades if Firebase is unavailable.
+- Admin panel is at `/julisunkan`.
+- Uploads are stored in the `uploads/` directory (max 10MB per file).
 
-## Security
-- No credentials are hardcoded in source code
-- Firebase credentials stored in SQLite at `instance/credentials.db` (gitignored)
-- Credential priority: `FIREBASE_CREDENTIALS` env var → `instance/credentials.db`
-- Admin password stored in Firestore Settings (default: `admin123` — change after first login)
-- Sensitive keys (`groq_api_key`, `admin_password`) are masked in the admin settings UI
-
-## Database
-- **Firebase Firestore is the only database.** SQLite (credentials.db) stores only Firebase credentials.
-- Firebase credentials are provided via `/setup` page or `FIREBASE_CREDENTIALS` env var.
-- At app startup, `startup_check()` in `firestore_manager.py` verifies connectivity within 15 seconds. If unavailable, all Firestore calls fail fast with an exception (caught by try/except blocks returning empty defaults).
-- Credentials can be updated without a restart via `/setup` or the admin Firebase panel.
-- Collections: `resumes`, `jobs`, `contact_messages`, `job_posts`, `settings`, `_counters`
-- `utils/data_layer.py` is the sole data access layer for all collections.
-
-## Dependencies
-All dependencies listed in `requirements.txt`. Key packages:
-- flask, flask-sqlalchemy, flask-cors
-- groq
-- pdfplumber, python-docx, reportlab
-- gunicorn, psycopg2-binary, email_validator
-- firebase-admin (primary database driver)
-- gevent (installed for async worker support)
-
-## Replit-Specific Notes
-- Workflow: "Start application" runs gunicorn with 4 workers and 30s timeout on port 5000
-- The app gracefully handles Firebase being unavailable — pages load with empty/default data
-- To restore full functionality, provide valid Firebase credentials via the FIREBASE_CREDENTIALS secret
+## Workflow
+- **Start application**: `python3 -m gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app` (port 5000, webview)
