@@ -18,6 +18,8 @@ def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not session.get('admin_logged_in'):
+            if request.path.startswith('/julisunkan/api/') or request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'error': 'Unauthorized', 'redirect': url_for('admin.login_page')}), 401
             return redirect(url_for('admin.login_page'))
         return f(*args, **kwargs)
     return decorated
@@ -127,7 +129,7 @@ def get_settings():
 @admin_bp.route('/api/settings', methods=['POST'])
 @admin_required
 def save_settings():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     skip_mask = {'••••••••'}
     for key, value in data.items():
         if value in skip_mask:

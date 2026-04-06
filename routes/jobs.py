@@ -18,6 +18,17 @@ def list_jobs():
         return jsonify({'error': str(e)}), 500
 
 
+@jobs_bp.route('/<job_id>', methods=['GET'])
+def get_job(job_id):
+    try:
+        j = job_get(job_id)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    if j is None:
+        abort(404)
+    return jsonify(j)
+
+
 @jobs_bp.route('/', methods=['POST'])
 def add_job():
     data = request.get_json(silent=True) or {}

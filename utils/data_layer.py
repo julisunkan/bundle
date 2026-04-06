@@ -164,7 +164,7 @@ def job_create(data):
         'status': data.get('status') or 'Applied',
         'job_description': data.get('job_description') or '',
         'notes': data.get('notes') or '',
-        'applied_date': now,
+        'applied_date': data.get('applied_date') or now,
         'created_at': now,
         'updated_at': now,
     }
