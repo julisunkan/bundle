@@ -2,7 +2,7 @@ import logging
 import os
 from datetime import timedelta
 
-from flask import Flask, render_template, Response, request, abort
+from flask import Flask, render_template, Response, request, jsonify, abort
 from flask_cors import CORS
 
 logging.basicConfig(level=logging.DEBUG)
@@ -86,21 +86,20 @@ def create_app():
 
     @app.route('/api/contact', methods=['POST'])
     def contact_submit():
-        from flask import request as req, jsonify
         from utils.data_layer import message_create
-        data = req.get_json(silent=True) or {}
+        data = request.get_json(silent=True) or {}
         name = (data.get('name') or '').strip()
         email = (data.get('email') or '').strip()
         subject = (data.get('subject') or '').strip()
-        message = (data.get('message') or '').strip()
-        if not all([name, email, subject, message]):
+        message_body = (data.get('message') or '').strip()
+        if not all([name, email, subject, message_body]):
             return jsonify({'success': False, 'error': 'All fields are required.'}), 400
         if '@' not in email or '.' not in email.split('@')[-1]:
             return jsonify({'success': False, 'error': 'Please enter a valid email address.'}), 400
-        if len(message) < 10:
+        if len(message_body) < 10:
             return jsonify({'success': False, 'error': 'Message is too short.'}), 400
         try:
-            message_create({'name': name, 'email': email, 'subject': subject, 'message': message})
+            message_create({'name': name, 'email': email, 'subject': subject, 'message': message_body})
         except Exception as e:
             return jsonify({'success': False, 'error': 'Could not save message. Please try again later.'}), 503
         return jsonify({'success': True})

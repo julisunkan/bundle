@@ -55,11 +55,33 @@ def _fs_col(collection_name):
     return get_firestore_client().collection(collection_name)
 
 
+def _parse_json_field(value, default):
+    """Parse a field that may be stored as a JSON string back to its native type."""
+    if isinstance(value, (list, dict)):
+        return value
+    if isinstance(value, str):
+        try:
+            import json as _j
+            return _j.loads(value)
+        except Exception:
+            pass
+    return default
+
+
 def _doc_to_dict(doc):
     d = doc.to_dict()
     if d is None:
         return None
     d['id'] = int(doc.id) if str(doc.id).isdigit() else doc.id
+    return d
+
+
+def _normalize_resume(d):
+    """Ensure list fields stored as JSON strings are returned as proper lists."""
+    if d is None:
+        return None
+    d['missing_keywords'] = _parse_json_field(d.get('missing_keywords'), [])
+    d['suggestions'] = _parse_json_field(d.get('suggestions'), [])
     return d
 
 
@@ -72,7 +94,8 @@ def get_firestore_client():
 
 def resume_list():
     docs = _fs_col('resumes').stream()
-    rows = [_doc_to_dict(d) for d in docs if d.to_dict()]
+    rows = [_normalize_resume(_doc_to_dict(d)) for d in docs if d.to_dict()]
+    rows = [r for r in rows if r is not None]
     rows.sort(key=lambda r: r.get('created_at') or '', reverse=True)
     return rows
 
@@ -81,7 +104,7 @@ def resume_get(resume_id):
     doc = _fs_col('resumes').document(str(resume_id)).get()
     if not doc.exists:
         return None
-    return _doc_to_dict(doc)
+    return _normalize_resume(_doc_to_dict(doc))
 
 
 def resume_create(data):

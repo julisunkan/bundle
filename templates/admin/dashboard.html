@@ -2739,7 +2739,7 @@ async function fbExport() {
 
     const prog = document.getElementById('fbExportProgress');
     prog.style.display = 'block';
-    prog.textContent = '⏳ Exporting to Firestore...';
+    prog.textContent = '⏳ Downloading Firestore data...';
     showAlert('fbAlert', '', true);
 
     try {
@@ -2748,15 +2748,26 @@ async function fbExport() {
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ collections })
         });
-        const d = await res.json();
-        if (d.success) {
-            const summary = Object.entries(d.results).map(([k,v]) => `${v} ${k}`).join(', ');
-            showAlert('fbAlert', `✅ Exported ${d.total} records: ${summary}`, true);
+        if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            showAlert('fbAlert', `❌ Export failed: ${d.error || res.statusText}`, false);
             prog.style.display = 'none';
-        } else {
-            showAlert('fbAlert', `❌ Export failed: ${d.error}`, false);
-            prog.style.display = 'none';
+            return;
         }
+        // Server returns a file download — save it via a blob URL
+        const blob = await res.blob();
+        const disposition = res.headers.get('Content-Disposition') || '';
+        const fnMatch = disposition.match(/filename=([^;]+)/);
+        const filename = fnMatch ? fnMatch[1].trim() : 'firestore_export.json';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+        showAlert('fbAlert', `✅ Download started: ${filename}`, true);
+        prog.style.display = 'none';
     } catch(e) {
         showAlert('fbAlert', `❌ Request failed: ${e}`, false);
         prog.style.display = 'none';

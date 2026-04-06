@@ -379,6 +379,49 @@ def restart_app():
     return jsonify({'success': True})
 
 
+@admin_bp.route('/api/database/export/sqlite', methods=['GET'])
+@admin_bp.route('/api/database/export/mysql', methods=['GET'])
+@admin_required
+def export_db_sql():
+    """SQLite/MySQL export is not applicable — app uses Firebase only. Returns a JSON data dump instead."""
+    import json as _json
+    from utils.data_layer import resume_list, job_list, message_list
+    from models.settings import Setting
+    sensitive = {'admin_password', 'groq_api_key', 'bitly_access_token',
+                 'tly_api_key', 'kutt_api_key', 'urlzli_api_key', 'picsee_api_key'}
+    rows = Setting.query.all()
+    settings_data = {r.key: r.value or '' for r in rows if r.key not in sensitive}
+    try:
+        data = {
+            'note': 'This app uses Firebase/Firestore exclusively. SQL export is not available. '
+                    'This JSON file contains all your Firestore data.',
+            'exported_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            'resumes': resume_list(),
+            'jobs': job_list(),
+            'contact_messages': message_list(),
+            'settings': settings_data,
+        }
+    except Exception as e:
+        return jsonify({'error': f'Export failed: {e}'}), 500
+    ts = datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+    return Response(
+        _json.dumps(data, indent=2, default=str),
+        mimetype='application/json',
+        headers={'Content-Disposition': f'attachment; filename=firebase_export_{ts}.json'}
+    )
+
+
+@admin_bp.route('/api/database/import-sql', methods=['POST'])
+@admin_required
+def import_sql_dump():
+    """SQL import is not applicable — this app uses Firebase only."""
+    return jsonify({
+        'success': False,
+        'error': 'SQL import is not supported. This app uses Firebase/Firestore exclusively. '
+                 'Use the Firebase panel to manage your data directly.',
+    }), 400
+
+
 # ── SETTINGS JSON EXPORT / IMPORT ─────────────────────────────────────────────
 
 @admin_bp.route('/api/settings/export-json', methods=['GET'])
@@ -498,33 +541,49 @@ def firebase_test():
 @admin_bp.route('/api/firebase/export', methods=['POST'])
 @admin_required
 def firebase_export():
+    """Download all selected Firestore collections as a JSON file."""
+    import json as _json
     from utils.data_layer import (
         resume_list, job_list, message_list, jobpost_list,
     )
-    from utils.firestore_manager import export_collection
     data = request.get_json(silent=True) or {}
     collections = data.get('collections', ['resumes', 'jobs'])
     try:
         results = {}
+        counts = {}
         if 'resumes' in collections:
-            results['resumes'] = export_collection('resumes', resume_list())
+            rows = resume_list()
+            results['resumes'] = rows
+            counts['resumes'] = len(rows)
         if 'jobs' in collections:
-            results['jobs'] = export_collection('jobs', job_list())
+            rows = job_list()
+            results['jobs'] = rows
+            counts['jobs'] = len(rows)
         if 'messages' in collections:
-            results['contact_messages'] = export_collection('contact_messages', message_list())
+            rows = message_list()
+            results['contact_messages'] = rows
+            counts['contact_messages'] = len(rows)
         if 'job_posts' in collections:
-            results['job_posts'] = export_collection('job_posts', jobpost_list())
+            rows = jobpost_list()
+            results['job_posts'] = rows
+            counts['job_posts'] = len(rows)
         if 'settings' in collections:
             sensitive = {'admin_password', 'groq_api_key'}
             rows = Setting.query.all()
-            setting_rows = [
-                {'id': r.key, 'key': r.key, 'value': r.value or ''}
-                for r in rows if r.key not in sensitive
-            ]
-            results['settings'] = export_collection('settings', setting_rows)
-        return jsonify({'success': True, 'results': results, 'total': sum(v for v in results.values() if isinstance(v, int))})
+            results['settings'] = {r.key: r.value or '' for r in rows if r.key not in sensitive}
+            counts['settings'] = len(results['settings'])
+        export_data = {
+            'exported_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            **results,
+        }
+        ts = datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        return Response(
+            _json.dumps(export_data, indent=2, default=str),
+            mimetype='application/json',
+            headers={'Content-Disposition': f'attachment; filename=firestore_export_{ts}.json'},
+        )
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @admin_bp.route('/api/firebase/import', methods=['POST'])
