@@ -344,6 +344,87 @@ function esc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// ── Generate Ad ────────────────────────────────────────────────────────────
+const _postId = {{ post.id }};
+
+async function generateAd() {
+    const btn      = document.getElementById('genAdBtn');
+    const loading  = document.getElementById('adLoading');
+    const errorEl  = document.getElementById('adError');
+    const result   = document.getElementById('adResult');
+
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    loading.style.display  = 'block';
+    errorEl.style.display  = 'none';
+    result.style.display   = 'none';
+
+    try {
+        const res  = await fetch(`/api/jobboard/generate-ad/${_postId}`);
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+            throw new Error(data.error || 'Failed to generate ad. Please try again.');
+        }
+
+        document.getElementById('ad-linkedin').value  = data.linkedin  || '';
+        document.getElementById('ad-twitter').value   = data.twitter   || '';
+        document.getElementById('ad-whatsapp').value  = data.whatsapp  || '';
+        document.getElementById('adShortUrl').textContent = data.short_url || '';
+
+        updateCharCount('linkedin');
+        updateCharCount('twitter');
+        updateCharCount('whatsapp');
+
+        switchAdTab('linkedin');
+        result.style.display = 'block';
+    } catch(e) {
+        errorEl.textContent = e.message;
+        errorEl.style.display = 'block';
+    } finally {
+        loading.style.display = 'none';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+}
+
+function switchAdTab(platform) {
+    document.querySelectorAll('.ad-tab').forEach(t => {
+        t.style.borderBottomColor = 'transparent';
+        t.style.color = '#64748b';
+    });
+    document.querySelectorAll('.ad-panel').forEach(p => p.style.display = 'none');
+
+    const activeTab = document.getElementById('tab-' + platform);
+    if (activeTab) {
+        activeTab.style.borderBottomColor = '#4f46e5';
+        activeTab.style.color = '#818cf8';
+    }
+    const activePanel = document.getElementById('panel-' + platform);
+    if (activePanel) activePanel.style.display = 'block';
+}
+
+function updateCharCount(platform) {
+    const ta  = document.getElementById('ad-' + platform);
+    const el  = document.getElementById('charcount-' + platform);
+    if (ta && el) el.textContent = ta.value.length + ' characters';
+}
+
+async function copyAdText(platform) {
+    const ta  = document.getElementById('ad-' + platform);
+    const btn = document.getElementById('copy-' + platform);
+    if (!ta || !ta.value.trim()) return;
+    try {
+        await navigator.clipboard.writeText(ta.value);
+    } catch(e) {
+        ta.select();
+        document.execCommand('copy');
+    }
+    const orig = btn.innerHTML;
+    btn.innerHTML = btn.innerHTML.replace('Copy', 'Copied!');
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+}
+
 loadRelated();
 </script>
 {% endblock %}
