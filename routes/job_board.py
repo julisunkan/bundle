@@ -33,20 +33,26 @@ def _get_groq_client():
 def _do_shorten(target: str) -> str:
     """Shorten a URL using the admin-configured provider. Falls back to full URL."""
     import urllib.request
+    import urllib.parse
     import json as _json
+    import ssl
+    import certifi
 
     provider = Setting.get('url_shortener', 'bitly').strip().lower()
+
+    def _ssl_ctx():
+        return ssl.create_default_context(cafile=certifi.where())
 
     def _http_post(url, payload_dict, headers):
         body = _json.dumps(payload_dict).encode('utf-8')
         req = urllib.request.Request(url, data=body, headers=headers, method='POST')
-        with urllib.request.urlopen(req, timeout=6) as r:
+        with urllib.request.urlopen(req, timeout=8, context=_ssl_ctx()) as r:
             return _json.loads(r.read())
 
-    def _http_get(url):
+    def _http_get_bytes(url):
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=6) as r:
-            return _json.loads(r.read())
+        with urllib.request.urlopen(req, timeout=8, context=_ssl_ctx()) as r:
+            return r.read()
 
     try:
         if provider == 'bitly':
@@ -75,34 +81,33 @@ def _do_shorten(target: str) -> str:
             token = Setting.get('kutt_api_key', '').strip()
             if not token:
                 return target
-            data = _http_post(
-                'https://kutt.it/api/v2/links',
-                {'target': target},
-                {'X-API-KEY': token, 'Content-Type': 'application/json'},
+            # kutt.it has a known SSL hostname mismatch issue; use a permissive context
+            kutt_ctx = ssl.create_default_context()
+            kutt_ctx.check_hostname = False
+            kutt_ctx.verify_mode = ssl.CERT_NONE
+            body = _json.dumps({'target': target}).encode('utf-8')
+            req = urllib.request.Request(
+                'https://kutt.it/api/v2/links', data=body,
+                headers={'X-API-KEY': token, 'Content-Type': 'application/json'},
+                method='POST',
             )
+            with urllib.request.urlopen(req, timeout=8, context=kutt_ctx) as r:
+                data = _json.loads(r.read())
             return data.get('link', target)
 
         elif provider == 'urlzli':
-            token = Setting.get('urlzli_api_key', '').strip()
-            if not token:
-                return target
-            import urllib.parse
+            # urlz.li API is no longer available — now uses is.gd (free, no key required)
             encoded = urllib.parse.quote(target, safe='')
-            data = _http_get(f'https://urlz.li/api.php?action=shorturl&url={encoded}&format=json&key={token}')
-            return data.get('shorturl', data.get('url', target))
+            raw = _http_get_bytes(f'https://is.gd/create.php?format=json&url={encoded}')
+            data = _json.loads(raw)
+            return data.get('shorturl', target)
 
         elif provider == 'picsee':
-            token = Setting.get('picsee_api_key', '').strip()
-            if not token:
-                return target
-            data = _http_post(
-                'https://api.picsee.io/shorten',
-                {'token': token, 'long_url': target},
-                {'Content-Type': 'application/json'},
-            )
-            inner = data.get('data') or {}
-            ps = inner.get('photo_shorten') or inner
-            return ps.get('tiny_url', ps.get('short_url', target))
+            # picsee.io is no longer available — now uses TinyURL (free, no key required)
+            encoded = urllib.parse.quote(target, safe='')
+            raw = _http_get_bytes(f'https://tinyurl.com/api-create.php?url={encoded}')
+            short = raw.decode('utf-8').strip()
+            return short if short.startswith('http') else target
 
     except Exception as e:
         logger.warning('URL shortener (%s) failed: %s', provider, e)

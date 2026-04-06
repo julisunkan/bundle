@@ -670,8 +670,8 @@
                             ('bitly',  'Bit.ly',   'https://app.bitly.com/settings/api/'),
                             ('tly',    'T.ly',     'https://t.ly/dashboard'),
                             ('kutt',   'Kutt.it',  'https://kutt.it/settings'),
-                            ('urlzli', 'Urlz.li',  'https://urlz.li'),
-                            ('picsee', 'PicSee',   'https://picsee.io'),
+                            ('urlzli', 'Is.gd',    'https://is.gd'),
+                            ('picsee', 'TinyURL',  'https://tinyurl.com'),
                         ] %}
                         {% for val, lbl, link in providers %}
                         <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:7px 14px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-weight:500;background:var(--bg2);transition:.15s;" class="shortener-radio-label" data-val="{{ val }}">
@@ -709,20 +709,10 @@
                             <small style="color:var(--muted);font-size:11px;">Get yours at <a href="https://kutt.it/settings" target="_blank" style="color:var(--primary-l);">kutt.it/settings</a></small>
                         </div>
                         <div class="shortener-field" id="sf-urlzli" style="display:none;">
-                            <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block;">Urlz.li API Key</label>
-                            <div class="input-row">
-                                <input type="password" id="s-urlzli_api_key" placeholder="Enter Urlz.li API key">
-                                <button class="btn btn-secondary btn-sm" onclick="togglePwd('s-urlzli_api_key')">👁</button>
-                            </div>
-                            <small style="color:var(--muted);font-size:11px;">Get yours at <a href="https://urlz.li" target="_blank" style="color:var(--primary-l);">urlz.li</a></small>
+                            <small style="color:var(--muted);font-size:12px;">Is.gd is a free URL shortener — no API key required. Links will be shortened automatically via <a href="https://is.gd" target="_blank" style="color:var(--primary-l);">is.gd</a>.</small>
                         </div>
                         <div class="shortener-field" id="sf-picsee" style="display:none;">
-                            <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block;">PicSee API Token</label>
-                            <div class="input-row">
-                                <input type="password" id="s-picsee_api_key" placeholder="Enter PicSee API token">
-                                <button class="btn btn-secondary btn-sm" onclick="togglePwd('s-picsee_api_key')">👁</button>
-                            </div>
-                            <small style="color:var(--muted);font-size:11px;">Get yours at <a href="https://picsee.io" target="_blank" style="color:var(--primary-l);">picsee.io</a></small>
+                            <small style="color:var(--muted);font-size:12px;">TinyURL is a free URL shortener — no API key required. Links will be shortened automatically via <a href="https://tinyurl.com" target="_blank" style="color:var(--primary-l);">tinyurl.com</a>.</small>
                         </div>
                         <div class="shortener-field" id="sf-none" style="display:none;">
                             <small style="color:var(--muted);font-size:12px;">No shortening — full URLs will be shared.</small>
