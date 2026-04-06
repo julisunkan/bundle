@@ -188,6 +188,24 @@ def create_app():
         )
         return Response(xml, mimetype='application/xml')
 
+    @app.route('/robots.txt')
+    def robots_txt():
+        from models.settings import Setting
+        base_url = (Setting.get('site_url') or '').rstrip('/')
+        if not base_url:
+            base_url = request.url_root.rstrip('/')
+        content = (
+            "User-agent: *\n"
+            "Allow: /\n"
+            "Disallow: /api/\n"
+            "Disallow: /julisunkan\n"
+            "Disallow: /setup\n"
+            "Disallow: /uploads/\n"
+            "\n"
+            f"Sitemap: {base_url}/sitemap.xml\n"
+        )
+        return Response(content, mimetype='text/plain')
+
     @app.route('/ads.txt')
     def ads_txt():
         from models.settings import Setting
