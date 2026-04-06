@@ -183,20 +183,28 @@ Only return valid JSON. No explanations, no markdown code blocks."""
             temperature=0.8,
         )
         raw = resp.choices[0].message.content.strip()
-        if raw.startswith('```'):
-            raw = raw.split('```')[1]
-            if raw.startswith('json'):
-                raw = raw[4:]
-        ads = _json.loads(raw.strip())
+
+        # Robust JSON extraction: strip code fences, then find outermost { }
+        import re as _re
+        cleaned = _re.sub(r'```(?:json)?\s*', '', raw).strip().rstrip('`').strip()
+        # Find the first '{' and last '}' to isolate the JSON object
+        start = cleaned.find('{')
+        end   = cleaned.rfind('}')
+        if start != -1 and end != -1 and end > start:
+            cleaned = cleaned[start:end + 1]
+
+        try:
+            ads = _json.loads(cleaned)
+        except _json.JSONDecodeError:
+            logger.warning('generate_ad JSON parse error — raw: %s', raw[:400])
+            return jsonify({'error': 'AI returned unexpected format. Please try again.'}), 500
+
         return jsonify({
             'linkedin': ads.get('linkedin', ''),
             'twitter': ads.get('twitter', ''),
             'whatsapp': ads.get('whatsapp', ''),
             'short_url': short_url,
         })
-    except _json.JSONDecodeError as e:
-        logger.warning('generate_ad JSON parse error: %s — raw: %s', e, raw[:200])
-        return jsonify({'error': 'AI returned unexpected format. Please try again.'}), 500
     except Exception as e:
         logger.error('generate_ad error: %s', e)
         return jsonify({'error': str(e)}), 500

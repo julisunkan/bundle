@@ -4,14 +4,29 @@ from utils.ai_engine import analyze_match, analyze_job_description
 
 
 def parse_json_safely(text):
+    if not text:
+        return None
     try:
         text = text.strip()
-        text = re.sub(r'^```json\s*', '', text)
-        text = re.sub(r'^```\s*', '', text)
-        text = re.sub(r'```\s*$', '', text)
-        return json.loads(text)
+        # Strip all code fences (```json ... ``` or ``` ... ```)
+        text = re.sub(r'```(?:json)?\s*', '', text).strip().rstrip('`').strip()
+        # Try parsing as-is first
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+        # Fall back: find outermost JSON object { } or array [ ]
+        for open_c, close_c in [('{', '}'), ('[', ']')]:
+            start = text.find(open_c)
+            end   = text.rfind(close_c)
+            if start != -1 and end != -1 and end > start:
+                try:
+                    return json.loads(text[start:end + 1])
+                except json.JSONDecodeError:
+                    pass
     except Exception:
-        return None
+        pass
+    return None
 
 
 def get_match_analysis(resume_text, job_description):
