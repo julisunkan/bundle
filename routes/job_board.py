@@ -121,13 +121,17 @@ def shorten_url():
 @job_board_bp.get('/generate-ad/<int:post_id>')
 def generate_ad(post_id):
     """Generate AI social media job ad copy for a job post."""
-    import json as _json
+    import concurrent.futures
     from utils.data_layer import jobpost_get
-    from utils.ai_engine import _get_model
+    from utils.ai_engine import ai_generate, _get_api_key
 
     post = jobpost_get(post_id)
     if not post or post.get('status') != 'published':
         return jsonify({'error': 'Not found'}), 404
+
+    key = _get_api_key()
+    if not key:
+        return jsonify({'error': 'Groq API key not configured.'}), 503
 
     site_url = Setting.get('site_url', '').rstrip('/')
     post_url = f'{site_url}/job-board/{post_id}' if site_url else request.url_root.rstrip('/') + f'/job-board/{post_id}'
@@ -142,67 +146,68 @@ def generate_ad(post_id):
     )[:120]
 
     desc = (post.get('description') or post.get('original_description') or '').strip()[:300]
-    salary_line = f"💰 {post['salary']}" if post.get('salary') else ''
+    salary_line = f"Salary: {post['salary']}" if post.get('salary') else ''
     location_line = post.get('location') or 'Remote'
     job_type_line = post.get('job_type', '').title()
     site_name = Setting.get('app_name', 'AI Career Hub')
 
-    prompt = f"""You are a social media marketing expert. Write job advertisement copy for the following role.
+    job_context = (
+        f"Job Title: {post.get('title', '')}\n"
+        f"Company: {post.get('company', '')}\n"
+        f"Location: {location_line}\n"
+        f"Type: {job_type_line}\n"
+        + (f"{salary_line}\n" if salary_line else '')
+        + f"Skills/Tags: {tags}\n"
+        f"Description: {desc}\n"
+        f"Apply Link: {short_url}\n"
+        f"Posted on: {site_name}"
+    )
 
-Job Details:
-- Title: {post.get('title', '')}
-- Company: {post.get('company', '')}
-- Location: {location_line}
-- Type: {job_type_line}
-- {salary_line}
-- Skills/Tags: {tags}
-- Description: {desc}
-- Apply Link: {short_url}
-- Posted on: {site_name}
+    system = "You are a social media marketing expert who writes compelling job advertisement copy."
 
-Return a JSON object with exactly these three keys:
-{{
-  "linkedin": "A compelling LinkedIn post (150-250 words). Professional tone, highlight growth opportunity, include 3-5 relevant hashtags at the end, and include the apply link.",
-  "twitter": "A punchy Twitter/X post under 270 characters including the link. Use 2-3 hashtags. Must include apply link.",
-  "whatsapp": "A WhatsApp-friendly message (2-4 short paragraphs). Conversational, clear bullet points for key info, ends with the apply link. No markdown formatting."
-}}
+    def _linkedin():
+        prompt = (
+            f"{job_context}\n\n"
+            "Write a compelling LinkedIn post for this job (150-250 words). "
+            "Use a professional tone, highlight the growth opportunity, "
+            f"include 3-5 relevant hashtags at the end, and include the apply link ({short_url}). "
+            "Return only the post text — no labels, no explanations."
+        )
+        return ai_generate(system, prompt, max_tokens=400, temperature=0.8)
 
-Only return valid JSON. No explanations, no markdown code blocks."""
+    def _twitter():
+        prompt = (
+            f"{job_context}\n\n"
+            f"Write a punchy Twitter/X post for this job. It must be under 270 characters total, "
+            f"include 2-3 hashtags, and include the apply link ({short_url}). "
+            "Return only the tweet text — no labels, no explanations."
+        )
+        return ai_generate(system, prompt, max_tokens=120, temperature=0.8)
+
+    def _whatsapp():
+        prompt = (
+            f"{job_context}\n\n"
+            "Write a WhatsApp-friendly job ad message (2-4 short paragraphs). "
+            "Use a conversational tone with clear bullet points for key details. "
+            f"End with the apply link: {short_url}. "
+            "Do NOT use markdown formatting like ** or __. "
+            "Return only the message text — no labels, no explanations."
+        )
+        return ai_generate(system, prompt, max_tokens=350, temperature=0.8)
 
     try:
-        import groq
-        key = Setting.get('groq_api_key', '')
-        if not key:
-            return jsonify({'error': 'Groq API key not configured.'}), 503
-        client = groq.Groq(api_key=key)
-        model = _get_model()
-        resp = client.chat.completions.create(
-            model=model,
-            messages=[{'role': 'user', 'content': prompt}],
-            max_tokens=900,
-            temperature=0.8,
-        )
-        raw = resp.choices[0].message.content.strip()
-
-        # Robust JSON extraction: strip code fences, then find outermost { }
-        import re as _re
-        cleaned = _re.sub(r'```(?:json)?\s*', '', raw).strip().rstrip('`').strip()
-        # Find the first '{' and last '}' to isolate the JSON object
-        start = cleaned.find('{')
-        end   = cleaned.rfind('}')
-        if start != -1 and end != -1 and end > start:
-            cleaned = cleaned[start:end + 1]
-
-        try:
-            ads = _json.loads(cleaned)
-        except _json.JSONDecodeError:
-            logger.warning('generate_ad JSON parse error — raw: %s', raw[:400])
-            return jsonify({'error': 'AI returned unexpected format. Please try again.'}), 500
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
+            f_li = ex.submit(_linkedin)
+            f_tw = ex.submit(_twitter)
+            f_wa = ex.submit(_whatsapp)
+            linkedin_text = f_li.result(timeout=30)
+            twitter_text  = f_tw.result(timeout=30)
+            whatsapp_text = f_wa.result(timeout=30)
 
         return jsonify({
-            'linkedin': ads.get('linkedin', ''),
-            'twitter': ads.get('twitter', ''),
-            'whatsapp': ads.get('whatsapp', ''),
+            'linkedin': linkedin_text,
+            'twitter': twitter_text,
+            'whatsapp': whatsapp_text,
             'short_url': short_url,
         })
     except Exception as e:
