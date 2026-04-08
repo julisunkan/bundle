@@ -1,6 +1,6 @@
 {
   "name": "AI Resume & Cover Letter Creator",
-  "short_name": "CareerHub",
+  "short_name": "AI Resume and Cover Letter Creator",
   "description": "AI-powered job application assistant for resumes, cover letters, and career prep.",
   "start_url": "/",
   "display": "standalone",
