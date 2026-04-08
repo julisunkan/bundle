@@ -32,12 +32,18 @@
     <div>
         <div id="liResult" style="display:none;">
             <div class="card">
-                <div class="card-title" style="margin-bottom:12px;">✅ Optimized Headline</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <div class="card-title" style="margin-bottom:0;">✅ Optimized Headline</div>
+                    <button class="btn btn-secondary btn-sm" onclick="openReportModal('linkedin', null, 'liResultHeadline')" title="Report this AI content">🚩 Report</button>
+                </div>
                 <div class="result-box" id="liResultHeadline" style="max-height:100px;"></div>
                 <button class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="copyText('liResultHeadline')">Copy</button>
             </div>
             <div class="card" style="margin-top:16px;">
-                <div class="card-title" style="margin-bottom:12px;">✅ Optimized About Section</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <div class="card-title" style="margin-bottom:0;">✅ Optimized About Section</div>
+                    <button class="btn btn-secondary btn-sm" onclick="openReportModal('linkedin', null, 'liResultAbout')" title="Report this AI content">🚩 Report</button>
+                </div>
                 <div class="result-box" id="liResultAbout"></div>
                 <button class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="copyText('liResultAbout')">Copy</button>
             </div>
@@ -64,6 +70,7 @@
     <div class="spinner" style="width:40px;height:40px;"></div>
     <div class="loading-text">Optimizing your LinkedIn profile...</div>
 </div>
+{% include '_report_modal.html' %}
 {% endblock %}
 {% block scripts %}
 <script>

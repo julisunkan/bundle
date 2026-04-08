@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Career Chat - AI Resume & Cover Letter Creator{% endblock %}
 {% block content %}
+{% include '_report_modal.html' %}
 <div class="page-header">
     <div class="page-title">💬 AI Career Assistant</div>
     <div class="page-subtitle">Get personalized career advice, resume tips, and job search strategies.</div>
@@ -17,6 +18,9 @@
             <input type="text" class="form-control chat-input" id="chatInput" placeholder="Ask me anything about your career..." onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendMessage();}">
             <button class="btn btn-primary" onclick="sendMessage()">Send</button>
         </div>
+    </div>
+    <div style="margin-top:10px;text-align:right;">
+        <button class="btn btn-secondary btn-sm" onclick="reportLastChatMessage()" title="Report the last AI response">🚩 Report Last Response</button>
     </div>
 </div>
 
@@ -65,6 +69,58 @@ function addTyping() {
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
     return div;
+}
+
+function reportLastChatMessage() {
+    const bubbles = document.querySelectorAll('#chatMessages .chat-bubble.assistant');
+    if (bubbles.length === 0) return;
+    const last = bubbles[bubbles.length - 1];
+    const snippet = (last.textContent || last.innerText || '').trim().slice(0, 400);
+    window._chatReportSnippet = snippet;
+    window.openReportModal('chat', null, null);
+    const modal = document.getElementById('reportModal');
+    if (modal && window._chatReportSnippet) {
+        window._reportOverrideSnippet = window._chatReportSnippet;
+        const origSubmit = window.submitReport;
+        window.submitReport = function() {
+            const btn = document.getElementById('reportSubmitBtn');
+            const fb = document.getElementById('reportFeedback');
+            btn.disabled = true;
+            btn.textContent = '⏳ Submitting...';
+            fb.style.display = 'none';
+            fetch('/api/report/content', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    content_type: 'chat',
+                    content_id: '',
+                    content_snippet: window._reportOverrideSnippet || '',
+                    reason: document.getElementById('reportReason').value,
+                    details: document.getElementById('reportDetails').value.trim(),
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    fb.style.cssText = 'display:block;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);color:#6ee7b7;';
+                    fb.textContent = '✅ Report submitted. Thank you!';
+                    btn.textContent = '✅ Reported';
+                    setTimeout(() => { window.closeReportModal(); window.submitReport = origSubmit; }, 2400);
+                } else {
+                    fb.style.cssText = 'display:block;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#fca5a5;';
+                    fb.textContent = '❌ ' + (data.error || 'Could not submit report.');
+                    btn.disabled = false;
+                    btn.textContent = '🚩 Submit Report';
+                }
+            })
+            .catch(() => {
+                fb.style.cssText = 'display:block;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#fca5a5;';
+                fb.textContent = '❌ Network error.';
+                btn.disabled = false;
+                btn.textContent = '🚩 Submit Report';
+            });
+        };
+    }
 }
 
 async function sendMessage() {

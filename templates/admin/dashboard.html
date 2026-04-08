@@ -502,6 +502,7 @@
         <button class="nav-item" onclick="show('jobs')"><i class="fa-solid fa-briefcase"></i> Job Applications</button>
         <button class="nav-item" onclick="show('jobboard')"><i class="fa-solid fa-globe"></i> Job Board</button>
         <button class="nav-item" onclick="show('messages')" id="nav-messages"><i class="fa-solid fa-envelope"></i> Messages <span id="msgBadge" style="display:none;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px;margin-left:2px;"></span></button>
+        <button class="nav-item" onclick="show('reports')" id="nav-reports"><i class="fa-solid fa-flag"></i> Reports <span id="rptBadge" style="display:none;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px;margin-left:2px;"></span></button>
 
         <div class="nav-sep"></div>
         <div class="sidebar-section-label">Advanced</div>
@@ -1129,6 +1130,50 @@
             </div>
         </div>
 
+        <!-- ── REPORTS ── -->
+        <div class="panel" id="panel-reports">
+            <div id="rptAlert" class="alert" style="display:none;margin-bottom:12px;"></div>
+            <div class="tab-bar">
+                <div style="display:flex;gap:6px;">
+                    <button class="btn btn-sm" id="rptFilterAll" style="background:rgba(91,80,240,.18);color:#818cf8;border:1px solid rgba(91,80,240,.3);" onclick="loadReports('')">All</button>
+                    <button class="btn btn-sm" id="rptFilterPending" style="background:transparent;color:var(--text-2);border:1px solid var(--border-l);" onclick="loadReports('pending')">Pending</button>
+                    <button class="btn btn-sm" id="rptFilterReviewed" style="background:transparent;color:var(--text-2);border:1px solid var(--border-l);" onclick="loadReports('reviewed')">Reviewed</button>
+                    <button class="btn btn-sm" id="rptFilterDismissed" style="background:transparent;color:var(--text-2);border:1px solid var(--border-l);" onclick="loadReports('dismissed')">Dismissed</button>
+                </div>
+                <div class="spacer"></div>
+                <span style="font-size:13px;color:var(--muted);" id="rptSummary">Loading…</span>
+                <button class="btn btn-secondary btn-sm" onclick="loadReports(currentRptFilter)">↻ Refresh</button>
+            </div>
+            <div class="card" style="padding:0;overflow:hidden;">
+                <table id="rptTable">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Reason</th>
+                            <th>Content Preview</th>
+                            <th>Status</th>
+                            <th>Reported</th>
+                            <th style="width:160px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rptTbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Report detail modal -->
+            <div id="rptModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1000;align-items:center;justify-content:center;padding:24px;">
+                <div style="background:#12121f;border:1px solid #1e1e3a;border-radius:14px;max-width:640px;width:100%;max-height:88vh;overflow-y:auto;padding:28px;position:relative;">
+                    <button onclick="closeRptModal()" style="position:absolute;top:14px;right:18px;background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;">✕</button>
+                    <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:.08em;margin-bottom:6px;" id="rmdType"></div>
+                    <div style="font-size:17px;font-weight:700;color:#e2e8f0;margin-bottom:14px;" id="rmdReason"></div>
+                    <div style="font-size:12px;color:#64748b;margin-bottom:16px;" id="rmdMeta"></div>
+                    <div style="background:#0f0f1a;border:1px solid #1e1e3a;border-radius:8px;padding:14px;font-size:13px;color:#cbd5e1;line-height:1.7;white-space:pre-wrap;margin-bottom:16px;" id="rmdSnippet"></div>
+                    <div style="background:#0f0f1a;border:1px solid #1e1e3a;border-radius:8px;padding:14px;font-size:13px;color:#94a3b8;line-height:1.7;margin-bottom:18px;" id="rmdDetails"></div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;" id="rmdActions"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- ── SECURITY ── -->
         <div class="panel" id="panel-security">
             <div id="secAlert" class="alert"></div>
@@ -1577,8 +1622,8 @@ let allJobs = [];
 let settings = {};
 
 // ── Navigation ──────────────────────────────────────────────────────────────
-const panelOrder = ['overview','settings','ai','resumes','jobs','jobboard','messages','monetization','security','database','firebase'];
-const panelTitles = { overview:'Overview', settings:'App Settings', ai:'AI Configuration', resumes:'Manage Resumes', jobs:'Job Applications', jobboard:'Job Board Manager', messages:'Contact Messages', monetization:'Monetization & Analytics', security:'Security', database:'Database', firebase:'Firebase / Firestore' };
+const panelOrder = ['overview','settings','ai','resumes','jobs','jobboard','messages','reports','monetization','security','database','firebase'];
+const panelTitles = { overview:'Overview', settings:'App Settings', ai:'AI Configuration', resumes:'Manage Resumes', jobs:'Job Applications', jobboard:'Job Board Manager', messages:'Contact Messages', reports:'Content Reports', monetization:'Monetization & Analytics', security:'Security', database:'Database', firebase:'Firebase / Firestore' };
 
 function show(name) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -1594,6 +1639,7 @@ function show(name) {
     if (name === 'monetization') loadAdsTxt();
     if (name === 'database') loadDbConfig();
     if (name === 'messages') loadMessages();
+    if (name === 'reports') loadReports(currentRptFilter || '');
     if (name === 'firebase') loadFirebaseStatus();
 }
 
@@ -2501,6 +2547,156 @@ async function bulkDeleteMessages() {
 document.getElementById('msgModal').addEventListener('click', function(e) {
     if (e.target === this) closeMsgModal();
 });
+
+// ── Content Reports ──────────────────────────────────────────────────────────
+
+let allReports = [];
+let currentRptFilter = '';
+let currentRptId = null;
+
+const reasonLabels = {
+    inaccurate: 'Inaccurate / Misleading',
+    harmful: 'Harmful / Dangerous',
+    offensive: 'Offensive / Inappropriate',
+    misleading: 'Professionally Misleading',
+    other: 'Other',
+};
+
+const typeLabels = {
+    resume: 'Resume', cover_letter: 'Cover Letter', chat: 'Career Chat',
+    interview: 'Interview Prep', linkedin: 'LinkedIn', job_post: 'Job Post', other: 'Other',
+};
+
+const statusColors = {
+    pending: { bg: 'rgba(245,158,11,.15)', color: '#fcd34d', border: 'rgba(245,158,11,.3)' },
+    reviewed: { bg: 'rgba(16,185,129,.12)', color: '#6ee7b7', border: 'rgba(16,185,129,.3)' },
+    dismissed: { bg: 'rgba(100,116,139,.12)', color: '#94a3b8', border: 'rgba(100,116,139,.3)' },
+};
+
+function setRptFilterBtn(filter) {
+    ['All','Pending','Reviewed','Dismissed'].forEach(f => {
+        const id = 'rptFilter' + f;
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const active = (filter === '' && f === 'All') || filter === f.toLowerCase();
+        btn.style.background = active ? 'rgba(91,80,240,.18)' : 'transparent';
+        btn.style.color = active ? '#818cf8' : 'var(--text-2)';
+        btn.style.border = active ? '1px solid rgba(91,80,240,.3)' : '1px solid var(--border-l)';
+    });
+}
+
+async function loadReports(filter) {
+    currentRptFilter = filter || '';
+    setRptFilterBtn(currentRptFilter);
+    const url = '/julisunkan/api/reports' + (filter ? '?status=' + filter : '');
+    try {
+        const res = await fetch(url);
+        allReports = await res.json();
+        renderReports(allReports);
+        const pending = allReports.filter(r => r.status === 'pending').length;
+        document.getElementById('rptSummary').textContent =
+            `${allReports.length} report${allReports.length !== 1 ? 's' : ''}${pending ? ' · ' + pending + ' pending' : ''}`;
+        const badge = document.getElementById('rptBadge');
+        if (pending > 0) { badge.textContent = pending; badge.style.display = ''; }
+        else { badge.style.display = 'none'; }
+    } catch(e) {
+        document.getElementById('rptSummary').textContent = 'Error loading reports';
+    }
+}
+
+function renderReports(reports) {
+    const tbody = document.getElementById('rptTbody');
+    if (!reports.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted);">No reports found.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = reports.map(r => {
+        const sc = statusColors[r.status] || statusColors.pending;
+        const snippet = (r.content_snippet || '').slice(0, 80) + ((r.content_snippet || '').length > 80 ? '…' : '');
+        const date = r.created_at ? r.created_at.slice(0, 10) : '—';
+        return `<tr>
+            <td><span style="font-size:11px;font-weight:600;background:rgba(91,80,240,.12);color:#818cf8;padding:2px 7px;border-radius:4px;">${esc(typeLabels[r.content_type] || r.content_type)}</span></td>
+            <td style="font-size:13px;">${esc(reasonLabels[r.reason] || r.reason)}</td>
+            <td style="font-size:12px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(snippet) || '<em>No preview</em>'}</td>
+            <td><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};">${r.status}</span></td>
+            <td style="font-size:12px;color:var(--muted);">${date}</td>
+            <td>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-secondary" onclick="viewReport(${r.id})">View</button>
+                    ${r.status !== 'reviewed' ? `<button class="btn btn-sm" style="background:rgba(16,185,129,.15);color:#6ee7b7;border:1px solid rgba(16,185,129,.3);" onclick="setRptStatus(${r.id},'reviewed')">✓ Review</button>` : ''}
+                    ${r.status !== 'dismissed' ? `<button class="btn btn-sm" style="background:rgba(100,116,139,.12);color:#94a3b8;border:1px solid rgba(100,116,139,.3);" onclick="setRptStatus(${r.id},'dismissed')">✕ Dismiss</button>` : ''}
+                    <button class="btn btn-sm" style="background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.3);" onclick="deleteReport(${r.id})">🗑</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function viewReport(id) {
+    const r = allReports.find(x => x.id === id);
+    if (!r) return;
+    currentRptId = id;
+    const sc = statusColors[r.status] || statusColors.pending;
+    document.getElementById('rmdType').textContent = (typeLabels[r.content_type] || r.content_type).toUpperCase();
+    document.getElementById('rmdReason').textContent = '🚩 ' + (reasonLabels[r.reason] || r.reason);
+    document.getElementById('rmdMeta').textContent =
+        `Status: ${r.status}  ·  Reported: ${r.created_at ? r.created_at.slice(0,19).replace('T',' ') : '—'}` +
+        (r.reviewed_at ? `  ·  Reviewed: ${r.reviewed_at.slice(0,19).replace('T',' ')}` : '') +
+        (r.content_id ? `  ·  Content ID: ${r.content_id}` : '');
+    document.getElementById('rmdSnippet').textContent = r.content_snippet || '(No content preview available)';
+    document.getElementById('rmdDetails').textContent = r.details || '(No additional details provided)';
+    const actions = document.getElementById('rmdActions');
+    actions.innerHTML = `
+        ${r.status !== 'reviewed' ? `<button class="btn btn-sm" style="background:rgba(16,185,129,.15);color:#6ee7b7;border:1px solid rgba(16,185,129,.3);" onclick="setRptStatus(${id},'reviewed')">✓ Mark Reviewed</button>` : ''}
+        ${r.status !== 'dismissed' ? `<button class="btn btn-sm" style="background:rgba(100,116,139,.12);color:#94a3b8;border:1px solid rgba(100,116,139,.3);" onclick="setRptStatus(${id},'dismissed')">✕ Dismiss</button>` : ''}
+        ${r.status !== 'pending' ? `<button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.3);" onclick="setRptStatus(${id},'pending')">↩ Set Pending</button>` : ''}
+        <button class="btn btn-sm" style="background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.3);" onclick="deleteReport(${id})">🗑 Delete</button>
+        <button class="btn btn-sm btn-secondary" onclick="closeRptModal()">Close</button>
+    `;
+    const modal = document.getElementById('rptModal');
+    modal.style.display = 'flex';
+}
+
+function closeRptModal() {
+    document.getElementById('rptModal').style.display = 'none';
+}
+
+document.getElementById('rptModal').addEventListener('click', function(e) {
+    if (e.target === this) closeRptModal();
+});
+
+async function setRptStatus(id, status) {
+    try {
+        const res = await fetch(`/julisunkan/api/reports/${id}/status`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({status}),
+        });
+        const data = await res.json();
+        if (data.id) {
+            const idx = allReports.findIndex(r => r.id === id);
+            if (idx !== -1) allReports[idx] = data;
+            renderReports(allReports);
+            closeRptModal();
+        }
+    } catch(e) { alert('Failed to update report status.'); }
+}
+
+async function deleteReport(id) {
+    if (!confirm('Delete this report permanently?')) return;
+    try {
+        const res = await fetch(`/julisunkan/api/reports/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            allReports = allReports.filter(r => r.id !== id);
+            renderReports(allReports);
+            closeRptModal();
+            const pending = allReports.filter(r => r.status === 'pending').length;
+            document.getElementById('rptSummary').textContent =
+                `${allReports.length} report${allReports.length !== 1 ? 's' : ''}${pending ? ' · ' + pending + ' pending' : ''}`;
+        }
+    } catch(e) { alert('Failed to delete report.'); }
+}
 
 // ── Firebase ──────────────────────────────────────────────────────────────────
 async function loadFirebaseStatus() {

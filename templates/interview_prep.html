@@ -31,6 +31,7 @@
     <div class="spinner" style="width:40px;height:40px;"></div>
     <div class="loading-text">Generating interview questions...</div>
 </div>
+{% include '_report_modal.html' %}
 {% endblock %}
 {% block scripts %}
 <script>
@@ -58,14 +59,17 @@ async function generateQuestions() {
         if (data.error) { showMsg('interviewMsg', 'Error: ' + data.error); return; }
         const questions = data.questions || [];
         const html = questions.map((q, i) => `
-            <div class="accordion-item">
+            <div class="accordion-item" id="q-item-${i}">
                 <div class="accordion-header" onclick="toggleAccordion(this)">
                     <span>${i+1}. ${q.question}</span>
                     <span>▼</span>
                 </div>
                 <div class="accordion-body">
                     <strong style="color:var(--primary-light);">Sample Answer:</strong>
-                    <p style="margin-top:8px;">${q.sample_answer}</p>
+                    <p style="margin-top:8px;" id="q-answer-${i}">${q.sample_answer}</p>
+                    <div style="margin-top:10px;text-align:right;">
+                        <button class="btn btn-secondary btn-sm" onclick="openReportModal('interview', null, 'q-answer-${i}')" title="Report this AI content">🚩 Report</button>
+                    </div>
                 </div>
             </div>
         `).join('');

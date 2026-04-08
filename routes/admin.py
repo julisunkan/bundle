@@ -596,6 +596,49 @@ def firebase_import():
     })
 
 
+# ── CONTENT REPORTS API ───────────────────────────────────────────────────────
+
+@admin_bp.route('/api/reports', methods=['GET'])
+@admin_required
+def list_reports():
+    from utils.data_layer import report_list
+    status = request.args.get('status')
+    return jsonify(report_list(status=status or None))
+
+
+@admin_bp.route('/api/reports/<rid>', methods=['GET'])
+@admin_required
+def get_report(rid):
+    from utils.data_layer import report_get
+    r = report_get(rid)
+    if r is None:
+        abort(404)
+    return jsonify(r)
+
+
+@admin_bp.route('/api/reports/<rid>/status', methods=['POST'])
+@admin_required
+def update_report_status(rid):
+    from utils.data_layer import report_update_status
+    data = request.get_json(silent=True) or {}
+    status = data.get('status')
+    if status not in ('pending', 'reviewed', 'dismissed'):
+        return jsonify({'error': 'Invalid status'}), 400
+    r = report_update_status(rid, status)
+    if r is None:
+        abort(404)
+    return jsonify(r)
+
+
+@admin_bp.route('/api/reports/<rid>', methods=['DELETE'])
+@admin_required
+def delete_report(rid):
+    from utils.data_layer import report_delete
+    if not report_delete(rid):
+        abort(404)
+    return jsonify({'success': True})
+
+
 # ── SYNC API (Firebase is now primary — no sync needed) ───────────────────────
 
 @admin_bp.route('/api/sync/status', methods=['GET'])

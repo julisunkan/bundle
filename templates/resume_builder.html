@@ -76,7 +76,10 @@
         <div class="card card-blue">
             <div class="card-header">
                 <div class="card-title">✅ Optimized Resume</div>
-                <button class="btn btn-success btn-sm" onclick="downloadDoc('resume')">⬇ PDF</button>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-success btn-sm" onclick="downloadDoc('resume')">⬇ PDF</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openReportModal('resume', currentResumeId, 'optimizedText')" title="Report this AI content">🚩 Report</button>
+                </div>
             </div>
             <div class="result-box" id="optimizedText"></div>
         </div>
@@ -98,7 +101,10 @@
         <div class="card card-green">
             <div class="card-header">
                 <div class="card-title">✉️ Cover Letter</div>
-                <button class="btn btn-success btn-sm" onclick="downloadDoc('cover_letter')">⬇ PDF</button>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-success btn-sm" onclick="downloadDoc('cover_letter')">⬇ PDF</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openReportModal('cover_letter', currentResumeId, 'coverLetterText')" title="Report this AI content">🚩 Report</button>
+                </div>
             </div>
             <div class="result-box" id="coverLetterText"></div>
         </div>
@@ -131,7 +137,10 @@
         <button class="btn btn-brown btn-lg" onclick="generateFromSkills()">✦ Generate My Resume</button>
         <div id="studentMsg" style="display:none;margin-top:12px;"></div>
         <div id="stuResult" style="margin-top:24px;display:none;">
-            <div class="card-title" style="margin-bottom:10px;">Generated Resume</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div class="card-title" style="margin-bottom:0;">Generated Resume</div>
+                <button class="btn btn-secondary btn-sm" onclick="openReportModal('resume', null, 'stuResultText')" title="Report this AI content">🚩 Report</button>
+            </div>
             <div class="result-box" id="stuResultText"></div>
         </div>
     </div>
@@ -159,7 +168,10 @@
         <button class="btn btn-warning btn-lg" onclick="rewriteSection()">⚡ Rewrite Section</button>
         <div id="sectionMsg" style="display:none;margin-top:12px;"></div>
         <div id="secResult" style="margin-top:24px;display:none;">
-            <div class="card-title" style="margin-bottom:10px;">Rewritten Section</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div class="card-title" style="margin-bottom:0;">Rewritten Section</div>
+                <button class="btn btn-secondary btn-sm" onclick="openReportModal('resume', null, 'secResultText')" title="Report this AI content">🚩 Report</button>
+            </div>
             <div class="result-box" id="secResultText"></div>
             <button class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="copyText('secResultText')">📋 Copy</button>
         </div>
@@ -181,6 +193,8 @@
     <div class="loading-spinner"></div>
     <div class="loading-text" id="loadingText">Processing with AI...</div>
 </div>
+
+{% include '_report_modal.html' %}
 {% endblock %}
 {% block scripts %}
 <script>

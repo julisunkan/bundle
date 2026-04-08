@@ -534,3 +534,66 @@ def jobpost_find_by_external_id(external_id):
         d = _jobpost_doc_to_dict(docs[0])
         return _jobpost_to_api(d)
     return None
+
+
+# ── CONTENT REPORTS ───────────────────────────────────────────────────────────
+
+_REPORT_STATUSES = {'pending', 'reviewed', 'dismissed'}
+
+
+def report_create(data):
+    new_id = _next_id('content_reports')
+    now = _now()
+    doc = {
+        'id': new_id,
+        'content_type': data.get('content_type') or 'unknown',
+        'content_id': str(data.get('content_id') or ''),
+        'content_snippet': (data.get('content_snippet') or '')[:500],
+        'reason': data.get('reason') or 'other',
+        'details': (data.get('details') or '')[:1000],
+        'status': 'pending',
+        'created_at': now,
+        'reviewed_at': None,
+    }
+    _fs_col('content_reports').document(str(new_id)).set(doc)
+    return dict(doc)
+
+
+def report_list(status=None):
+    docs = _fs_col('content_reports').stream()
+    rows = [_doc_to_dict(d) for d in docs if d.to_dict()]
+    rows = [r for r in rows if r is not None]
+    if status:
+        rows = [r for r in rows if r.get('status') == status]
+    rows.sort(key=lambda r: r.get('created_at') or '', reverse=True)
+    return rows
+
+
+def report_get(report_id):
+    doc = _fs_col('content_reports').document(str(report_id)).get()
+    if not doc.exists:
+        return None
+    return _doc_to_dict(doc)
+
+
+def report_update_status(report_id, status):
+    if status not in _REPORT_STATUSES:
+        return None
+    ref = _fs_col('content_reports').document(str(report_id))
+    if not ref.get().exists:
+        return None
+    ref.update({'status': status, 'reviewed_at': _now()})
+    return _doc_to_dict(ref.get())
+
+
+def report_delete(report_id):
+    ref = _fs_col('content_reports').document(str(report_id))
+    if not ref.get().exists:
+        return False
+    ref.delete()
+    return True
+
+
+def report_count(status=None):
+    rows = report_list(status=status)
+    return len(rows)

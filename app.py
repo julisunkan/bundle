@@ -34,6 +34,7 @@ def create_app():
     from routes.admin import admin_bp
     from routes.job_board import job_board_bp
     from routes.setup import setup_bp
+    from routes.report import report_bp
 
     app.register_blueprint(resume_bp, url_prefix='/api/resume')
     app.register_blueprint(jobs_bp, url_prefix='/api/jobs')
@@ -43,6 +44,7 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/julisunkan')
     app.register_blueprint(job_board_bp)
     app.register_blueprint(setup_bp)
+    app.register_blueprint(report_bp)
 
     @app.route('/')
     def index():
