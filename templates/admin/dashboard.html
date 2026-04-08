@@ -542,6 +542,7 @@
                 <div class="stat"><div class="stat-val" id="ov-interviews" style="color:var(--warning)">—</div><div class="stat-lbl">Interviews</div></div>
                 <div class="stat"><div class="stat-val" id="ov-offers" style="color:var(--success)">—</div><div class="stat-lbl">Offers</div></div>
                 <div class="stat" onclick="show('messages')" style="cursor:pointer;"><div class="stat-val" id="ov-messages" style="color:#818cf8;">—</div><div class="stat-lbl">Messages <span id="ov-unread" style="display:none;font-size:11px;color:#ef4444;font-weight:700;"></span></div></div>
+                <div class="stat" onclick="show('reports')" style="cursor:pointer;"><div class="stat-val" id="ov-reports" style="color:#f59e0b;">—</div><div class="stat-lbl">Reports <span id="ov-pending-reports" style="display:none;font-size:11px;color:#ef4444;font-weight:700;"></span></div></div>
             </div>
 
             <div class="card">
@@ -3004,6 +3005,14 @@ async function init() {
         document.getElementById('ov-offers').textContent = d.offers;
         document.getElementById('ov-messages').textContent = d.messages || 0;
         updateMsgBadge(d.unread_messages || 0);
+        document.getElementById('ov-reports').textContent = d.reports || 0;
+        const pendingEl = document.getElementById('ov-pending-reports');
+        if (d.pending_reports > 0) {
+            pendingEl.textContent = d.pending_reports + ' pending';
+            pendingEl.style.display = '';
+        } else {
+            pendingEl.style.display = 'none';
+        }
     } catch(e) {}
     testGroq(false);
 }

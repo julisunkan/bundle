@@ -280,16 +280,25 @@ def save_ads_txt():
 def get_stats():
     from utils.data_layer import (
         resume_count, job_count, job_count_by_status,
-        message_count, message_count_unread,
+        message_count, message_count_unread, report_count,
     )
-    by_status = job_count_by_status()
+
+    def _safe(fn, *args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception:
+            return 0
+
+    by_status = _safe(job_count_by_status) or {}
     return jsonify({
-        'resumes': resume_count(),
-        'jobs': job_count(),
+        'resumes': _safe(resume_count),
+        'jobs': _safe(job_count),
         'interviews': by_status.get('Interview', 0),
         'offers': by_status.get('Offer', 0),
-        'messages': message_count(),
-        'unread_messages': message_count_unread(),
+        'messages': _safe(message_count),
+        'unread_messages': _safe(message_count_unread),
+        'reports': _safe(report_count),
+        'pending_reports': _safe(report_count, status='pending'),
     })
 
 
